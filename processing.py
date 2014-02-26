@@ -71,7 +71,7 @@ class Run(object):
         # Load metadata
         with open(self.folder + "/" + "metadata.json") as f:
             self.metadata = json.load(f)
-        self.U = np.round(self.metadata["Tow speed (m/s)"], decimals=1)
+        self.U_nom = np.round(self.metadata["Tow speed (m/s)"], decimals=1)
         self.y_R = self.metadata["Vectrino y/R"]
         # Load NI data
         nidata = loadmat(self.folder + "/" + "nidata.mat", squeeze_me=True)
@@ -80,6 +80,10 @@ class Run(object):
             self.lin_enc = True
             self.carriage_pos = nidata["carriage_pos"]
             self.U_ni = fdiff.second_order_diff(self.carriage_pos, self.t_ni)
+            self.U_ref = self.U_ni
+        else:
+            self.lin_enc = False
+            self.U_ref = self.U_nom
         self.sr_ni = (1.0/(self.t_ni[1] - self.t_ni[0]))
         self.torque = nidata["torque_trans"]
         self.drag = nidata["drag_left"] + nidata["drag_right"]
@@ -94,7 +98,7 @@ class Run(object):
         self.torque = self.torque - np.mean(self.torque[:self.sr_ni*t0])
         self.drag = self.drag - np.mean(self.drag[0:self.sr_ni*t0])
         # Subtract tare drag
-        self.drag = self.drag - tare_drag[self.U]
+        self.drag = self.drag - tare_drag[self.U_nom]
         # Compute RPM and omega
         self.angle = nidata["turbine_angle"]
         self.rpm_ni = np.zeros(len(self.torque))
@@ -106,10 +110,10 @@ class Run(object):
         self.torque = self.torque + tare_torque
         # Compute power
         self.power = self.torque*self.omega_ni
-        self.tsr = self.omega_ni*R/self.U
+        self.tsr = self.omega_ni*R/self.U_ref
         # Compute power and drag coefficients
-        self.cp = self.power/(0.5*rho*A*self.U**3)
-        self.cd = self.drag/(0.5*rho*A*self.U**2)
+        self.cp = self.power/(0.5*rho*A*self.U_ref**3)
+        self.cd = self.drag/(0.5*rho*A*self.U_ref**2)
         # Load Vectrino data
         try:
             vecdata = loadmat(self.folder + "/" + "vecdata.mat", 
@@ -122,7 +126,7 @@ class Run(object):
         except IOError:
             self.vecdata = None
         # Put in some guesses for t1 and t2
-        self.t1, self.t2 = times[self.U]
+        self.t1, self.t2 = times[self.U_nom]
         self.loaded = True
         
     def find_t2(self):
@@ -145,7 +149,7 @@ class Run(object):
         self.meantsr, x = ts.calcstats(self.tsr, self.t1, self.t2, self.sr_ni)
         self.meancd, x = ts.calcstats(self.cd, self.t1, self.t2, self.sr_ni)
         self.meancp, x = ts.calcstats(self.cp, self.t1, self.t2, self.sr_ni)
-        print("U_nom =", self.U)
+        print("U_nom =", self.U_nom)
         if self.lin_enc:
             self.meanu_enc, x = ts.calcstats(self.U_ni, self.t1, self.t2, self.sr_ni)
             print("U_enc =", self.meanu_enc)
@@ -436,11 +440,9 @@ if __name__ == "__main__":
         run = Run("Perf-0.4", 7)
     plt.close("all")
     p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
-    run.t1 = 20
-    run.t2 = 60
-    run = Run("Perf-0.4", 13)
-    run.plotperf("torque")
-    run.calcperf()
-#    pc = PerfCurve(0.4)
-#    pc.process()
-#    pc.plotcp()
+#    run = Run("Perf-0.4", 13)
+#    run.plotperf("torque")
+#    run.calcperf()
+    pc = PerfCurve(0.4)
+    pc.process()
+    pc.plotcp()
