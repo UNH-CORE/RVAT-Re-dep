@@ -16,6 +16,7 @@ from scipy.io import loadmat
 from styleplot import styleplot
 import json
 import os
+import fdiff
 
 folders = {"Perf-0.4" : "Performance/U_0.4",
            "Perf-0.6" : "Performance/U_0.6",
@@ -23,7 +24,7 @@ folders = {"Perf-0.4" : "Performance/U_0.4",
            "Perf-1.0" : "Performance/U_1.0",
            "Perf-1.2" : "Performance/U_1.2",
            "Perf-1.4" : "Performance/U_1.4",
-           "Wake-U_0.5" : "Wake/U_0.5",
+           "Wake-0.5" : "Wake/U_0.5",
            "Shakedown" : "Shakedown"}
            
 # Constants
@@ -44,12 +45,13 @@ tare_drag = {0.5 : 8.0110528524,
              0.7 : 30.0,
              0.8 : 35.0,
              0.9 : 40.0,
-             1.1 : 55}
+             1.1 : 55,
+             0.6 : 20.0}
              
-times = {0.4 : (20.0, 55.0),
-         0.6 : (),
-         0.8 : (),
-         1.0 : (14.0, 28.0),
+times = {0.4 : (20.0, 60.0),
+         0.6 : (18.0, 42.0),
+         0.8 : (18.0, 34.0),
+         1.0 : (15.0, 29.0),
          1.2 : (14.0, 24.0),
          1.4 : (12.0, 20.0)}
 
@@ -74,6 +76,10 @@ class Run(object):
         # Load NI data
         nidata = loadmat(self.folder + "/" + "nidata.mat", squeeze_me=True)
         self.t_ni = nidata["t"]
+        if "carriage_pos" in nidata:
+            self.lin_enc = True
+            self.carriage_pos = nidata["carriage_pos"]
+            self.U_ni = fdiff.second_order_diff(self.carriage_pos, self.t_ni)
         self.sr_ni = (1.0/(self.t_ni[1] - self.t_ni[0]))
         self.torque = nidata["torque_trans"]
         self.drag = nidata["drag_left"] + nidata["drag_right"]
@@ -139,7 +145,10 @@ class Run(object):
         self.meantsr, x = ts.calcstats(self.tsr, self.t1, self.t2, self.sr_ni)
         self.meancd, x = ts.calcstats(self.cd, self.t1, self.t2, self.sr_ni)
         self.meancp, x = ts.calcstats(self.cp, self.t1, self.t2, self.sr_ni)
-        print("U =", self.U)
+        print("U_nom =", self.U)
+        if self.lin_enc:
+            self.meanu_enc, x = ts.calcstats(self.U_ni, self.t1, self.t2, self.sr_ni)
+            print("U_enc =", self.meanu_enc)
         print("tsr =", self.meantsr)
         print("C_P =", self.meancp)
         print("C_D =", self.meancd)
@@ -207,7 +216,14 @@ class Run(object):
         plt.hold(True)
         plt.plot(self.t_ni, self.rpm_ni)
         plt.show()
-
+        
+    def plotvel(self):
+        if not self.loaded:
+            self.load()
+        plt.figure()
+        plt.plot(self.t_ni, self.U_ni)
+        styleplot()
+        plt.show()
 
 class PerfCurve(object):
     """Object that represents a performance curve."""
@@ -229,6 +245,7 @@ class PerfCurve(object):
         cp = np.zeros(len(self.runs))
         cd = np.zeros(len(self.runs))
         for nrun in self.runs:
+            print("Processing run " + str(self.runs[nrun]) + "...")
             run = Run("Perf-{:0.1f}".format(self.U), nrun)
             run.calcperf()
             tsr[nrun] = run.meantsr
@@ -416,12 +433,14 @@ if __name__ == "__main__":
         nrun = int(sys.argv[2])
         run = Run(section, nrun)
     else:
-        run = Run("Perf-0.4", 6)
+        run = Run("Perf-0.4", 7)
     plt.close("all")
     p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
-#    run.t1 = 20
-#    run.t2 = 60
-#    run.plotperf("drag")
-#    run.calcperf()
-    pc = PerfCurve(0.4)
-    pc.plotcp()
+    run.t1 = 20
+    run.t2 = 60
+    run = Run("Perf-0.4", 13)
+    run.plotperf("torque")
+    run.calcperf()
+#    pc = PerfCurve(0.4)
+#    pc.process()
+#    pc.plotcp()
