@@ -49,7 +49,7 @@ tare_drag = {0.5 : 8.0110528524,
              0.6 : 20.0}
              
 times = {0.4 : (20.0, 60.0),
-         0.6 : (18.0, 42.0),
+         0.6 : (18.0, 45.0),
          0.8 : (18.0, 34.0),
          1.0 : (15.0, 29.0),
          1.2 : (14.0, 24.0),
@@ -91,6 +91,7 @@ class Run(object):
         acsdata = loadmat(self.folder + "/" + "acsdata.mat", squeeze_me=True)
         self.U_acs = acsdata["carriage_vel"]
         self.rpm_acs = acsdata["turbine_rpm"]
+        self.rpm_acs = ts.sigmafilter(self.rpm_acs, 5, 1)
         self.omega_acs = self.rpm_acs*2*np.pi/60.0
         self.t_acs = acsdata["t"]
         self.omega_acs_interp = np.interp(self.t_ni, self.t_acs, self.omega_acs)
@@ -104,7 +105,7 @@ class Run(object):
         # Compute RPM and omega
         self.angle = nidata["turbine_angle"]
         self.rpm_ni = fdiff.second_order_diff(self.angle, self.t_ni)/6.0
-        self.rpm_ni = ts.smooth(self.rpm_ni, 50)
+        self.rpm_ni = ts.smooth(self.rpm_ni, 20)
         self.omega_ni = self.rpm_ni*2*np.pi/60.0
         # Add tare torque
         tare_torque = 0.00174094659759*self.rpm_acs_interp + 0.465846267394
@@ -247,10 +248,14 @@ class PerfCurve(object):
     def process(self, reprocess=True):
         """Calculates power and drag coefficients for each run"""
         if not reprocess:
-            runsdone = np.load(self.folder+"/Processed/runs.npy")
-            tsr_old = np.load(self.folder+"/Processed/tsr.npy")
-            cp_old = np.load(self.folder+"/Processed/cp.npy")
-            cd_old = np.load(self.folder+"/Processed/cp.npy")
+            try:
+                runsdone = np.load(self.folder+"/Processed/runs.npy")
+                tsr_old = np.load(self.folder+"/Processed/tsr.npy")
+                cp_old = np.load(self.folder+"/Processed/cp.npy")
+                cd_old = np.load(self.folder+"/Processed/cp.npy")
+            except IOError:
+                reprocess = False
+                runsdone = []
         tsr = np.zeros(len(self.runs))
         cp = np.zeros(len(self.runs))
         cd = np.zeros(len(self.runs))
@@ -453,10 +458,10 @@ if __name__ == "__main__":
         run = Run("Perf-0.4", 7)
     plt.close("all")
     p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
-#    run = Run("Perf-0.4", 23)
-#    run.plotperf("torque")
-#    run.calcperf()
-#    run.plotacs()
-    pc = PerfCurve(0.4)
-    pc.process(reprocess=False)
-    pc.plotcp()
+    run = Run("Perf-0.6", 0)
+    run.plotperf("torque")
+    run.calcperf()
+    run.plotacs()
+#    pc = PerfCurve(0.6)
+#    pc.process(reprocess=False)
+#    pc.plotcp()
