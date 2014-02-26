@@ -88,11 +88,13 @@ class Run(object):
         self.torque = nidata["torque_trans"]
         self.drag = nidata["drag_left"] + nidata["drag_right"]
         # Load ACS data
-        acsdata = loadmat(self.folder + "/" + "acsdata.mat")
+        acsdata = loadmat(self.folder + "/" + "acsdata.mat", squeeze_me=True)
         self.U_acs = acsdata["carriage_vel"]
         self.rpm_acs = acsdata["turbine_rpm"]
         self.omega_acs = self.rpm_acs*2*np.pi/60.0
         self.t_acs = acsdata["t"]
+        self.omega_acs_interp = np.interp(self.t_ni, self.t_acs, self.omega_acs)
+        self.rpm_acs_interp = self.omega_acs_interp*60.0/(2*np.pi)
         # Remove offsets from torque and drag
         t0 = 2
         self.torque = self.torque - np.mean(self.torque[:self.sr_ni*t0])
@@ -101,16 +103,15 @@ class Run(object):
         self.drag = self.drag - tare_drag[self.U_nom]
         # Compute RPM and omega
         self.angle = nidata["turbine_angle"]
-        self.rpm_ni = np.zeros(len(self.torque))
-        self.rpm_ni[0:len(self.angle)-1] = np.diff(self.angle)*self.sr_ni/6.0
+        self.rpm_ni = fdiff.second_order_diff(self.angle, self.t_ni)/6.0
         self.rpm_ni = ts.smooth(self.rpm_ni, 50)
         self.omega_ni = self.rpm_ni*2*np.pi/60.0
         # Add tare torque
-        tare_torque = 0.00174094659759*self.rpm_ni + 0.465846267394
+        tare_torque = 0.00174094659759*self.rpm_acs_interp + 0.465846267394
         self.torque = self.torque + tare_torque
         # Compute power
-        self.power = self.torque*self.omega_ni
-        self.tsr = self.omega_ni*R/self.U_ref
+        self.power = self.torque*self.omega_acs_interp
+        self.tsr = self.omega_acs_interp*R/self.U_ref
         # Compute power and drag coefficients
         self.cp = self.power/(0.5*rho*A*self.U_ref**3)
         self.cd = self.drag/(0.5*rho*A*self.U_ref**2)
@@ -243,21 +244,33 @@ class PerfCurve(object):
                 pass
         self.runs.sort()
         
-    def process(self):
+    def process(self, reprocess=True):
         """Calculates power and drag coefficients for each run"""
+        if not reprocess:
+            runsdone = np.load(self.folder+"/Processed/runs.npy")
+            tsr_old = np.load(self.folder+"/Processed/tsr.npy")
+            cp_old = np.load(self.folder+"/Processed/cp.npy")
+            cd_old = np.load(self.folder+"/Processed/cp.npy")
         tsr = np.zeros(len(self.runs))
         cp = np.zeros(len(self.runs))
         cd = np.zeros(len(self.runs))
-        for nrun in self.runs:
-            print("Processing run " + str(self.runs[nrun]) + "...")
-            run = Run("Perf-{:0.1f}".format(self.U), nrun)
-            run.calcperf()
-            tsr[nrun] = run.meantsr
-            cp[nrun] = run.meancp
-            cd[nrun] = run.meancd
+        for n in range(len(self.runs)):
+            nrun = self.runs[n]
+            if reprocess or nrun not in runsdone:
+                print("Processing run " + str(self.runs[nrun]) + "...")
+                run = Run("Perf-{:0.1f}".format(self.U), nrun)
+                run.calcperf()
+                tsr[n] = run.meantsr
+                cp[n] = run.meancp
+                cd[n] = run.meancd
+            else:
+                tsr[n] = tsr_old[np.where(runsdone==nrun)[0]]
+                cp[n] = cp_old[np.where(runsdone==nrun)[0]]
+                cd[n] = cd_old[np.where(runsdone==nrun)[0]]
         # Save processed data in the folder
         if not os.path.isdir(self.folder+"/Processed"):
             os.mkdir(self.folder+"/Processed")
+        np.save(self.folder+"/Processed/runs.npy", self.runs)
         np.save(self.folder+"/Processed/tsr.npy", tsr)
         np.save(self.folder+"/Processed/cp.npy", cp)
         np.save(self.folder+"/Processed/cd.npy", cd)
@@ -440,9 +453,10 @@ if __name__ == "__main__":
         run = Run("Perf-0.4", 7)
     plt.close("all")
     p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
-#    run = Run("Perf-0.4", 13)
+#    run = Run("Perf-0.4", 23)
 #    run.plotperf("torque")
 #    run.calcperf()
+#    run.plotacs()
     pc = PerfCurve(0.4)
-    pc.process()
+    pc.process(reprocess=False)
     pc.plotcp()
