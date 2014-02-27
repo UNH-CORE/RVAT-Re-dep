@@ -91,7 +91,7 @@ class Run(object):
         acsdata = loadmat(self.folder + "/" + "acsdata.mat", squeeze_me=True)
         self.U_acs = acsdata["carriage_vel"]
         self.rpm_acs = acsdata["turbine_rpm"]
-        self.rpm_acs = ts.sigmafilter(self.rpm_acs, 5, 1)
+        self.rpm_acs = ts.sigmafilter(self.rpm_acs, 3, 3)
         self.omega_acs = self.rpm_acs*2*np.pi/60.0
         self.t_acs = acsdata["t"]
         self.omega_acs_interp = np.interp(self.t_ni, self.t_acs, self.omega_acs)
@@ -107,11 +107,18 @@ class Run(object):
         self.rpm_ni = fdiff.second_order_diff(self.angle, self.t_ni)/6.0
         self.rpm_ni = ts.smooth(self.rpm_ni, 20)
         self.omega_ni = self.rpm_ni*2*np.pi/60.0
+        # Choose reference RPM, using NI for all except Perf-0.4
+        if self.section == "Perf-0.4":
+            rpm_ref = self.rpm_acs_interp
+            omega_ref = self.omega_acs_interp
+        else:
+            rpm_ref = self.rpm_ni
+            omega_ref = self.omega_ni
         # Add tare torque
-        tare_torque = 0.00174094659759*self.rpm_acs_interp + 0.465846267394
+        tare_torque = 0.00174094659759*rpm_ref + 0.465846267394
         self.torque = self.torque + tare_torque
         # Compute power
-        self.power = self.torque*self.omega_acs_interp
+        self.power = self.torque*omega_ref
         self.tsr = self.omega_acs_interp*R/self.U_ref
         # Compute power and drag coefficients
         self.cp = self.power/(0.5*rho*A*self.U_ref**3)
@@ -247,7 +254,9 @@ class PerfCurve(object):
         
     def process(self, reprocess=True):
         """Calculates power and drag coefficients for each run"""
+        print("Processing Perf-" + str(self.U) + "...")
         if not reprocess:
+            print("Leaving processed runs as is...")
             try:
                 runsdone = np.load(self.folder+"/Processed/runs.npy")
                 tsr_old = np.load(self.folder+"/Processed/tsr.npy")
@@ -458,10 +467,10 @@ if __name__ == "__main__":
         run = Run("Perf-0.4", 7)
     plt.close("all")
     p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
-    run = Run("Perf-0.6", 0)
-    run.plotperf("torque")
-    run.calcperf()
-    run.plotacs()
-#    pc = PerfCurve(0.6)
-#    pc.process(reprocess=False)
-#    pc.plotcp()
+#    run = Run("Perf-0.6", 22)
+#    run.plotperf("torque")
+#    run.calcperf()
+#    run.plotacs()
+    pc = PerfCurve(0.6)
+    pc.process(reprocess=True)
+    pc.plotcp()
