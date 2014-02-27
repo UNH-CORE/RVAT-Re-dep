@@ -13,6 +13,7 @@ import numpy as np
 import timeseries as ts
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
+from scipy.interpolate import spline
 from styleplot import styleplot
 import json
 import os
@@ -65,12 +66,17 @@ class Run(object):
         self.folder = folders[section] + "/" + str(nrun)
         self.loaded = False
         self.t2found = False
+        self.not_loadable = False
         
     def load(self):
         """Loads the data from the run into memory"""
         # Load metadata
-        with open(self.folder + "/" + "metadata.json") as f:
-            self.metadata = json.load(f)
+        try: 
+            with open(self.folder + "/" + "metadata.json") as f:
+                self.metadata = json.load(f)
+        except IOError:
+            self.not_loadable = True
+            return None
         self.U_nom = np.round(self.metadata["Tow speed (m/s)"], decimals=1)
         self.y_R = self.metadata["Vectrino y/R"]
         # Load NI data
@@ -94,6 +100,10 @@ class Run(object):
         self.rpm_acs = ts.sigmafilter(self.rpm_acs, 3, 3)
         self.omega_acs = self.rpm_acs*2*np.pi/60.0
         self.t_acs = acsdata["t"]
+        if len(self.t_acs) != len(self.omega_acs):
+            newlen = np.min((len(self.t_acs), len(self.omega_acs)))
+            self.t_acs = self.t_acs[:newlen]
+            self.omega_acs = self.omega_acs[:newlen]
         self.omega_acs_interp = np.interp(self.t_ni, self.t_acs, self.omega_acs)
         self.rpm_acs_interp = self.omega_acs_interp*60.0/(2*np.pi)
         # Remove offsets from torque and drag
@@ -154,6 +164,11 @@ class Run(object):
         """Calculates mean performance based on data between t0 and t1"""
         if not self.loaded:
             self.load()
+        if self.not_loadable:
+            self.meantsr = np.nan
+            self.meancp = np.nan
+            self.meancd = np.nan
+            return None
         self.find_t2()
         self.meantsr, x = ts.calcstats(self.tsr, self.t1, self.t2, self.sr_ni)
         self.meancd, x = ts.calcstats(self.cd, self.t1, self.t2, self.sr_ni)
@@ -289,7 +304,8 @@ class PerfCurve(object):
         np.save(self.folder+"/Processed/cp.npy", cp)
         np.save(self.folder+"/Processed/cd.npy", cd)
         
-    def plotcp(self, newfig=True, show=True, save=False, figname="test.pdf"):
+    def plotcp(self, newfig=True, show=True, save=False, figname="test.pdf",
+               splinefit=False):
         """Generates power coefficient curve plot."""
         # Check to see if processed data exists and if not, process it
         try:
@@ -299,7 +315,14 @@ class PerfCurve(object):
             self.process()
         if newfig:
             plt.figure()
-        plt.plot(self.tsr, self.cp, "-ok", markerfacecolor="None")
+        if splinefit:
+            plt.plot(self.tsr, self.cp, "ok", markerfacecolor="None")
+            plt.hold(True)
+            tsr_fit = np.linspace(self.tsr.min(), self.tsr.max(), 20)
+            cp_fit = spline(self.tsr[::-1], self.cp[::-1], tsr_fit, order=4)
+            plt.plot(tsr_fit, cp_fit, "k")
+        else:
+            plt.plot(self.tsr, self.cp, "-ok", markerfacecolor="None")
         plt.xlabel(r"$\lambda$")
         plt.ylabel(r"$C_P$")
         plt.grid(True)
@@ -472,5 +495,5 @@ if __name__ == "__main__":
 #    run.calcperf()
 #    run.plotacs()
     pc = PerfCurve(0.6)
-    pc.process(reprocess=True)
-    pc.plotcp()
+    pc.process(reprocess=False)
+    pc.plotcp(splinefit=False)
