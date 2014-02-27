@@ -285,7 +285,7 @@ class PerfCurve(object):
         cd = np.zeros(len(self.runs))
         for n in range(len(self.runs)):
             nrun = self.runs[n]
-            if reprocess or nrun not in runsdone:
+            if reprocess or nrun not in runsdone or np.isnan(tsr_old[n]):
                 print("Processing run " + str(self.runs[nrun]) + "...")
                 run = Run("Perf-{:0.1f}".format(self.U), nrun)
                 run.calcperf()
@@ -315,13 +315,15 @@ class PerfCurve(object):
             self.process()
         if newfig:
             plt.figure()
-        if splinefit:
+        if splinefit and not True in np.isnan(self.tsr):
             plt.plot(self.tsr, self.cp, "ok", markerfacecolor="None")
             plt.hold(True)
-            tsr_fit = np.linspace(self.tsr.min(), self.tsr.max(), 20)
-            cp_fit = spline(self.tsr[::-1], self.cp[::-1], tsr_fit, order=4)
+            tsr_fit = np.linspace(np.min(self.tsr), np.min(self.tsr), 5)
+            cp_fit = spline(self.tsr[::-1], self.cp[::-1], tsr_fit)
             plt.plot(tsr_fit, cp_fit, "k")
         else:
+            if splinefit:
+                print("Cannot fit spline. NaN present in array.")
             plt.plot(self.tsr, self.cp, "-ok", markerfacecolor="None")
         plt.xlabel(r"$\lambda$")
         plt.ylabel(r"$C_P$")
@@ -496,4 +498,4 @@ if __name__ == "__main__":
 #    run.plotacs()
     pc = PerfCurve(0.6)
     pc.process(reprocess=False)
-    pc.plotcp(splinefit=False)
+    pc.plotcp(splinefit=True)
