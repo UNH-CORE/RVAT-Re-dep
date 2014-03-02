@@ -90,6 +90,7 @@ class Run(object):
             return None
         self.U_nom = np.round(self.metadata["Tow speed (m/s)"], decimals=1)
         self.y_R = self.metadata["Vectrino y/R"]
+        self.z_H = self.metadata["Vectrino z/H"]
         # Load NI data
         nidata = loadmat(self.folder + "/" + "nidata.mat", squeeze_me=True)
         self.t_ni = nidata["t"]
@@ -226,6 +227,7 @@ class Run(object):
         uv = (self.u_f - self.meanu)*(self.v_f - self.meanv)
         self.meanuv, self.stduv = ts.calcstats(uv, self.t1, self.t2, self.sr_vec)
         print("y/R =", self.y_R)
+        print("z/H =", self.z_H)
         print("U_vec/U_nom =", self.meanu/self.U_nom)
         print("std_u/U_nom =", self.stdu/self.U_nom)
         print(self.nbad, "data points omitted")
@@ -540,7 +542,7 @@ if __name__ == "__main__":
     p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
     
     run = Run("Wake-0.4", -1)
-    run.plotperf("torque")
+#    run.plotperf("torque")
     run.calcperf()
     run.calcwake()
 
