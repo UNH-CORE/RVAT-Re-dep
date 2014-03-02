@@ -202,10 +202,10 @@ class Run(object):
         self.u_f[200*self.t1:200*self.t2] = \
                 ts.sigmafilter(self.u[200*self.t1:200*self.t2], std, passes)
         meanu, x = ts.calcstats(self.u, self.t1, self.t2, self.sr_vec)
-        ibad = np.where(self.u > 1.5*meanu)[0]
-        ibad = np.append(ibad, np.where(self.u < 0.5*meanu)[0])
+        ibad = np.where(self.u > 2*meanu)[0]
+        ibad = np.append(ibad, np.where(self.u < -0.5*meanu)[0])
         i = np.where(np.logical_and(ibad > self.t1*200, ibad < self.t2*200))[0]
-#        self.u_f[ibad[i]] = np.nan
+        self.u_f[ibad[i]] = np.nan
         self.nbad = len(i)
         self.v_f = self.v*1
         self.v_f[200*self.t1:200*self.t2] = \
@@ -541,10 +541,11 @@ if __name__ == "__main__":
     plt.close("all")
     p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
     
-    run = Run("Wake-0.4", -1)
+    run = Run("Wake-0.4", 11)
 #    run.plotperf("torque")
     run.calcperf()
     run.calcwake()
+#    run.plotwake()
 
 #    pc = PerfCurve(1.2)
 #    pc.process(reprocess=False)
