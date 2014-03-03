@@ -64,14 +64,14 @@ class Run(object):
     """Object that represents a single turbine tow"""
     def __init__(self, section, nrun):
         self.section = section
-        if nrun in ["last", -1]:
+        if nrun < 0:
             runs = []
             for f in os.listdir(folders[section]):
                 try: 
                     runs.append(int(f))
                 except ValueError:
                     pass
-            self.nrun = np.max(runs)
+            self.nrun = sorted(runs)[nrun]
         else:
             self.nrun = nrun
         self.folder = folders[section] + "/" + str(self.nrun)
@@ -83,6 +83,12 @@ class Run(object):
         """Loads the data from the run into memory"""
         # Load metadata
         try: 
+            with open(self.folder + "/" + "metadata.json") as f:
+                self.metadata = json.load(f)
+        except IOError:
+            self.nrun -= 1
+            self.folder = folders[section] + "/" + str(self.nrun)
+        try:
             with open(self.folder + "/" + "metadata.json") as f:
                 self.metadata = json.load(f)
         except IOError:
@@ -161,6 +167,12 @@ class Run(object):
         self.t1, self.t2 = times[self.U_nom]
         self.loaded = True
         
+    def loadvectxt(self):
+        """Loads Vectrino data from text (*.dat) file."""
+        data = np.loadtxt(self.folder + "/vecdata.dat", unpack=True)
+        self.t_vec_txt = data[0]
+        self.u_txt = data[3]
+        
     def find_t2(self):
         sr = self.sr_ni
         angle1 = self.angle[sr*self.t1]
@@ -197,13 +209,13 @@ class Run(object):
         
     def filter_wake(self):
         std = 3
-        passes = 2
+        passes = 1
         self.u_f = self.u*1
         self.u_f[200*self.t1:200*self.t2] = \
                 ts.sigmafilter(self.u[200*self.t1:200*self.t2], std, passes)
         meanu, x = ts.calcstats(self.u, self.t1, self.t2, self.sr_vec)
-        ibad = np.where(self.u > 2*meanu)[0]
-        ibad = np.append(ibad, np.where(self.u < -0.5*meanu)[0])
+        ibad = np.where(self.u > 3*meanu)[0]
+        ibad = np.append(ibad, np.where(self.u < -2*meanu)[0])
         i = np.where(np.logical_and(ibad > self.t1*200, ibad < self.t2*200))[0]
         self.u_f[ibad[i]] = np.nan
         self.nbad = len(i)
@@ -360,8 +372,9 @@ class PerfCurve(object):
             plt.savefig(figname)
         
 class WakeProfile(object):
-    def __init__(self, U):
+    def __init__(self, U, z_H):
         self.U = U
+        self.z_H = z_H
         self.section = "Wake-U_" + str(U)
         self.folder = folders[self.section]
         self.runs = range(45)
@@ -541,7 +554,7 @@ if __name__ == "__main__":
     plt.close("all")
     p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
     
-    run = Run("Wake-0.4", 11)
+    run = Run("Wake-0.4", -2)
 #    run.plotperf("torque")
     run.calcperf()
     run.calcwake()
