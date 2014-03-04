@@ -78,6 +78,7 @@ class Run(object):
         self.loaded = False
         self.t2found = False
         self.not_loadable = False
+        self.load()
         
     def load(self):
         """Loads the data from the run into memory"""
@@ -87,7 +88,7 @@ class Run(object):
                 self.metadata = json.load(f)
         except IOError:
             self.nrun -= 1
-            self.folder = folders[section] + "/" + str(self.nrun)
+            self.folder = folders[self.section] + "/" + str(self.nrun)
         try:
             with open(self.folder + "/" + "metadata.json") as f:
                 self.metadata = json.load(f)
@@ -214,8 +215,8 @@ class Run(object):
         self.u_f[200*self.t1:200*self.t2] = \
                 ts.sigmafilter(self.u[200*self.t1:200*self.t2], std, passes)
         meanu, x = ts.calcstats(self.u, self.t1, self.t2, self.sr_vec)
-        ibad = np.where(self.u > 3*meanu)[0]
-        ibad = np.append(ibad, np.where(self.u < -2*meanu)[0])
+        ibad = np.where(self.u > 2*meanu)[0]
+        ibad = np.append(ibad, np.where(self.u < -meanu)[0])
         i = np.where(np.logical_and(ibad > self.t1*200, ibad < self.t2*200))[0]
         self.u_f[ibad[i]] = np.nan
         self.nbad = len(i)
@@ -375,9 +376,13 @@ class WakeProfile(object):
     def __init__(self, U, z_H):
         self.U = U
         self.z_H = z_H
-        self.section = "Wake-U_" + str(U)
+        self.section = "Wake-" + str(U)
         self.folder = folders[self.section]
-        self.runs = range(45)
+        rundict = {0.0 : np.arange(0, 45),
+                   0.125 : np.arange(45, 90),
+                   0.25 : np.arange(90, 135),
+                   0.375 : np.arange(135, 180)}
+        self.runs = rundict[z_H]
         
     def process(self):
         """Runs through data to calculate statistics"""
@@ -444,14 +449,44 @@ class WakeProfile(object):
             plt.ylabel(ylab)
             plt.xlabel(r"$y/R$")
             plt.grid()
-        plt.plot(y_R, q, "-.^k", label=r"$Re_D=0.5 \times 10^6$")
-        plot_old_wake(quantity, y_R)
+        plt.plot(y_R, q, "-.^k", label=r"$Re_D=0.4 \times 10^6$")
+#        plot_old_wake(quantity, y_R)
         plt.legend(loc=loc)
         styleplot()
         if show:
             plt.show()
         if save:
             plt.savefig(savepath+quantity+"_Re_dep_exp"+savetype)
+            
+def calc_all_wake(U, reprocess=True):
+    """Processes all wake data in a section. Will skip already processed
+    runs if `reprocess = False`."""
+    section = "Wake-" + str(U)
+    folder = folders[section]
+    if not reprocess:
+        try:
+            runsproc = np.load(folder+"/Processed/runs.npy")
+            meanu_old = np.load(folder+"/Processed/meanu.npy")
+            meanv_old = np.load(folder+"/Processed/meanv.npy")
+            meanw_old = np.load(folder+"/Processed/meanu.npy")
+            stdu_old = np.load(folder+"/Processed/meanu.npy")
+        except IOError:
+            runsproc = []
+    runs = os.listdir(folder)
+    if "Processed" in runs: 
+        runs.remove("Processed")
+    else:
+        os.mkdir(folder+"/Processed")
+    runs = sorted([int(run) for run in runs])
+    for run in runs:
+        if reprocess or run not in runsproc:
+            r = Run(section, run)
+            if not r.not_loadable:
+                r.calcwake()
+            else:
+                runs.remove(run)
+    np.save(folder+"/Processed/runs.npy", runs)
+            
 
 def calc_re_dep():
     runs = [3, 4, 5, 8] # this will need to be fixed later...
@@ -554,11 +589,16 @@ if __name__ == "__main__":
     plt.close("all")
     p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
     
-    run = Run("Wake-0.4", -2)
+    run = Run("Wake-0.4", -1)
 #    run.plotperf("torque")
     run.calcperf()
     run.calcwake()
 #    run.plotwake()
+    calc_all_wake(0.4, reprocess=False)
+    
+#    wp = WakeProfile(0.4, 0.125)
+#    wp.process()
+#    wp.plot("stdu")
 
 #    pc = PerfCurve(1.2)
 #    pc.process(reprocess=False)
