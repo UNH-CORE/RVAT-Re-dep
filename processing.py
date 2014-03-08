@@ -26,7 +26,10 @@ folders = {"Perf-0.4" : "Performance/U_0.4",
            "Perf-1.2" : "Performance/U_1.2",
            "Perf-1.4" : "Performance/U_1.4",
            "Wake-0.4" : "Wake/U_0.4",
-           "Shakedown" : "Shakedown"}
+           "Wake-0.6" : "Wake/U_0.6",
+           "Wake-0.8" : "Wake/U_0.8",
+           "Shakedown" : "Shakedown",
+           "Trash-Wake-0.4" : "Trash/Wake/U_0.4"}
            
 # Constants
 H = 1.0
@@ -52,11 +55,14 @@ tare_drag = {0.5 : 8.0110528524,
              1.2 : 80.0}
              
 times = {0.4 : (20.0, 60.0),
-         0.6 : (18.0, 45.0),
+         0.6 : (20.0, 45.0),
          0.8 : (18.0, 34.0),
          1.0 : (15.0, 30.0),
          1.2 : (15.0, 26.0),
          1.4 : (12.0, 20.0)}
+         
+ylabels = {"meanu" : r"$U/U_\infty$",
+           "stdu" : r"$\sigma_u/U_\infty$"}
 
 cfd_path = "C:/Users/Pete/Google Drive/OpenFOAM/pete-2.2.2/run/unh-rvat-2d_Re-dep/processed/"
 
@@ -215,7 +221,7 @@ class Run(object):
         self.u_f[200*self.t1:200*self.t2] = \
                 ts.sigmafilter(self.u[200*self.t1:200*self.t2], std, passes)
         meanu, x = ts.calcstats(self.u, self.t1, self.t2, self.sr_vec)
-        ibad = np.where(self.u > 2*meanu)[0]
+        ibad = np.where(self.u > 3*meanu)[0]
         ibad = np.append(ibad, np.where(self.u < -meanu)[0])
         i = np.where(np.logical_and(ibad > self.t1*200, ibad < self.t2*200))[0]
         self.u_f[ibad[i]] = np.nan
@@ -244,6 +250,18 @@ class Run(object):
         print("U_vec/U_nom =", self.meanu/self.U_nom)
         print("std_u/U_nom =", self.stdu/self.U_nom)
         print(self.nbad, "data points omitted")
+        
+    def detect_badvec(self):
+        """Detects if Vectrino data is bad by looking at first 2 seconds of
+        data, and checking if there are many datapoints."""
+        nbad = len(np.where(np.abs(self.u[:400]) > 0.5)[0])
+        print(nbad, "bad Vectrino datapoints in first 2 seconds")
+        if nbad > 50:
+            self.badvec = True
+            print("Vectrino data bad")
+        else:
+            self.badvec = False
+            print("Vectrino data okay")
         
     def plotperf(self, quantity="torque"):
         """Plots the run's data"""
@@ -458,35 +476,101 @@ class WakeProfile(object):
         if save:
             plt.savefig(savepath+quantity+"_Re_dep_exp"+savetype)
             
-def calc_all_wake(U, reprocess=True):
-    """Processes all wake data in a section. Will skip already processed
+def batch_process_all(section, reprocess=True):
+    """Processes all data in a section. Will skip already processed
     runs if `reprocess = False`."""
-    section = "Wake-" + str(U)
     folder = folders[section]
     if not reprocess:
         try:
-            runsproc = np.load(folder+"/Processed/runs.npy")
+            runs_old = np.load(folder+"/Processed/runs.npy")
+            y_R_old = np.load(folder+"/Processed/y_R.npy")
+            z_H_old = np.load(folder+"/Processed/z_H.npy")
+            tsr_old = np.load(folder+"/Processed/tsr.npy")
+            cp_old = np.load(folder+"/Processed/cp.npy")
+            cd_old = np.load(folder+"/Processed/cd.npy")
             meanu_old = np.load(folder+"/Processed/meanu.npy")
             meanv_old = np.load(folder+"/Processed/meanv.npy")
             meanw_old = np.load(folder+"/Processed/meanu.npy")
-            stdu_old = np.load(folder+"/Processed/meanu.npy")
+            stdu_old = np.load(folder+"/Processed/stdu.npy")
         except IOError:
-            runsproc = []
+            runs_old = []
     runs = os.listdir(folder)
     if "Processed" in runs: 
         runs.remove("Processed")
     else:
         os.mkdir(folder+"/Processed")
     runs = sorted([int(run) for run in runs])
-    for run in runs:
-        if reprocess or run not in runsproc:
-            r = Run(section, run)
-            if not r.not_loadable:
-                r.calcwake()
+    # Create a empty arrays for all quantities
+    tsr = np.zeros(len(runs))
+    cp = np.zeros(len(runs))
+    cd = np.zeros(len(runs))
+    y_R = np.zeros(len(runs))
+    z_H = np.zeros(len(runs))
+    meanu = np.zeros(len(runs))
+    meanv = np.zeros(len(runs))
+    meanw = np.zeros(len(runs))
+    stdu = np.zeros(len(runs))
+    for n in range(len(runs)):
+        nrun = runs[n]
+        if reprocess or nrun not in runs_old or np.isnan(meanu_old[n]):
+            r = Run(section, nrun)
+            if r.not_loadable:
+                meanu[n] = np.nan
             else:
-                runs.remove(run)
+                print("Processing run " + str(runs[nrun]) + "...")
+                y_R[n] = r.y_R
+                z_H[n] = r.z_H
+                r.calcperf()
+                r.calcwake()
+                tsr[n] = r.meantsr
+                cp[n] = r.meancp
+                cd[n] = r.meancd
+                meanu[n] = r.meanu
+                meanv[n] = r.meanv
+                meanw[n] = r.meanw
+                stdu[n] = r.stdu
+        else:
+            y_R[n] = y_R_old[np.where(runs_old==nrun)[0]]
+            z_H[n] = z_H_old[np.where(runs_old==nrun)[0]]
+            tsr[n] = tsr_old[np.where(runs_old==nrun)[0]]
+            cp[n] = cp_old[np.where(runs_old==nrun)[0]]
+            cd[n] = cd_old[np.where(runs_old==nrun)[0]]
+            meanu[n] = meanu_old[np.where(runs_old==nrun)[0]]
+            meanv[n] = meanv_old[np.where(runs_old==nrun)[0]]
+            meanw[n] = meanw_old[np.where(runs_old==nrun)[0]]
+            stdu[n] = stdu_old[np.where(runs_old==nrun)[0]]
     np.save(folder+"/Processed/runs.npy", runs)
-            
+    np.save(folder+"/Processed/y_R.npy", y_R)
+    np.save(folder+"/Processed/z_H.npy", z_H)
+    np.save(folder+"/Processed/tsr.npy", tsr)
+    np.save(folder+"/Processed/cp.npy", cp)
+    np.save(folder+"/Processed/cd.npy", cd)
+    np.save(folder+"/Processed/meanu.npy", meanu)
+    np.save(folder+"/Processed/meanv.npy", meanv)
+    np.save(folder+"/Processed/meanw.npy", meanw)
+    np.save(folder+"/Processed/stdu.npy", stdu)
+    
+def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="", 
+                            savetype=".pdf", newfig=True):
+    """Plots the transverse wake profile of some quantity. These can be
+      * meanu
+      * meanv
+      * meanw
+      * stdu
+    """
+    section = "Wake-" + str(U)
+    folder = folders[section] + "/Processed/"
+    z_H_arr = np.load(folder + "z_H.npy")
+    i = np.where(z_H_arr==z_H)
+    q = np.load(folder + quantity + ".npy")[i]
+    y_R = np.load(folder + "y_R.npy")[i]
+    if newfig:
+        plt.figure()
+    plt.plot(y_R, q/U, "-ok", markerfacecolor="none")
+    plt.xlabel(r"$y/R$")
+    plt.ylabel(ylabels[quantity])
+    plt.grid(True)
+    styleplot()
 
 def calc_re_dep():
     runs = [3, 4, 5, 8] # this will need to be fixed later...
@@ -577,24 +661,18 @@ def plot_settling(U):
     plt.xlabel("t (s)")
     plt.ylabel(r"$\sigma_u$")
     styleplot()
-        
-
-if __name__ == "__main__":
-    import sys
-    if len(sys.argv) == 3:
-        section = sys.argv[1]
-        nrun = int(sys.argv[2])
-        run = Run(section, nrun)
-
-    plt.close("all")
-    p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
     
-    run = Run("Wake-0.4", -1)
+def main():
+    plt.close("all")
+#    p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
+#    run = Run("Wake-0.8", -1)
 #    run.plotperf("torque")
-    run.calcperf()
-    run.calcwake()
+#    run.calcperf()
+#    run.calcwake()
 #    run.plotwake()
-    calc_all_wake(0.4, reprocess=False)
+    
+    batch_process_all("Wake-0.8", reprocess=False)
+    plot_trans_wake_profile("stdu", U=0.8, z_H=0.0)    
     
 #    wp = WakeProfile(0.4, 0.125)
 #    wp.process()
@@ -608,3 +686,14 @@ if __name__ == "__main__":
 #    PerfCurve(0.8).plotcp(newfig=False, marker="<")
 #    PerfCurve(0.4).plotcp(newfig=False, marker=">")
 #    plot_settling(1.0)
+        
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) == 3:
+        section = sys.argv[1]
+        nrun = int(sys.argv[2])
+        run = Run(section, nrun)
+        run.calcperf()
+        run.calcwake()
+    else:
+        main()
