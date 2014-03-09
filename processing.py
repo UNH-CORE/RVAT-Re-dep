@@ -62,7 +62,8 @@ times = {0.4 : (20.0, 60.0),
          1.4 : (12.0, 20.0)}
          
 ylabels = {"meanu" : r"$U/U_\infty$",
-           "stdu" : r"$\sigma_u/U_\infty$"}
+           "stdu" : r"$\sigma_u/U_\infty$",
+           "meanw" : r"$W/U_\infty$"}
 
 cfd_path = "C:/Users/Pete/Google Drive/OpenFOAM/pete-2.2.2/run/unh-rvat-2d_Re-dep/processed/"
 
@@ -93,8 +94,11 @@ class Run(object):
             with open(self.folder + "/" + "metadata.json") as f:
                 self.metadata = json.load(f)
         except IOError:
-            self.nrun -= 1
-            self.folder = folders[self.section] + "/" + str(self.nrun)
+            if self.nrun < 0:
+                self.nrun -= 1
+                self.folder = folders[self.section] + "/" + str(self.nrun)
+            else:
+                pass
         try:
             with open(self.folder + "/" + "metadata.json") as f:
                 self.metadata = json.load(f)
@@ -478,7 +482,8 @@ class WakeProfile(object):
             
 def batch_process_all(section, reprocess=True):
     """Processes all data in a section. Will skip already processed
-    runs if `reprocess = False`."""
+    runs if `reprocess = False`. Something is up with this algorith, as it
+    sometimes will save the wrong y_R value."""
     folder = folders[section]
     if not reprocess:
         try:
@@ -490,7 +495,7 @@ def batch_process_all(section, reprocess=True):
             cd_old = np.load(folder+"/Processed/cd.npy")
             meanu_old = np.load(folder+"/Processed/meanu.npy")
             meanv_old = np.load(folder+"/Processed/meanv.npy")
-            meanw_old = np.load(folder+"/Processed/meanu.npy")
+            meanw_old = np.load(folder+"/Processed/meanw.npy")
             stdu_old = np.load(folder+"/Processed/stdu.npy")
         except IOError:
             runs_old = []
@@ -512,10 +517,10 @@ def batch_process_all(section, reprocess=True):
     stdu = np.zeros(len(runs))
     for n in range(len(runs)):
         nrun = runs[n]
-        if reprocess or nrun not in runs_old or np.isnan(meanu_old[n]):
+        if reprocess or nrun not in runs_old:
             r = Run(section, nrun)
             if r.not_loadable:
-                meanu[n] = np.nan
+                runs[n] = np.nan
             else:
                 print("Processing run " + str(runs[nrun]) + "...")
                 y_R[n] = r.y_R
@@ -549,9 +554,10 @@ def batch_process_all(section, reprocess=True):
     np.save(folder+"/Processed/meanv.npy", meanv)
     np.save(folder+"/Processed/meanw.npy", meanw)
     np.save(folder+"/Processed/stdu.npy", stdu)
-    
+
+
 def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="", 
-                            savetype=".pdf", newfig=True):
+                            savetype=".pdf", newfig=True, marker="-ok"):
     """Plots the transverse wake profile of some quantity. These can be
       * meanu
       * meanv
@@ -566,41 +572,32 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
     y_R = np.load(folder + "y_R.npy")[i]
     if newfig:
         plt.figure()
-    plt.plot(y_R, q/U, "-ok", markerfacecolor="none")
+    plt.plot(y_R, q/U, marker, markerfacecolor="none")
     plt.xlabel(r"$y/R$")
     plt.ylabel(ylabels[quantity])
     plt.grid(True)
     styleplot()
 
-def calc_re_dep():
-    runs = [3, 4, 5, 8] # this will need to be fixed later...
-    cp = np.zeros(len(runs))
-    cd = np.zeros(len(runs))
-    U = np.zeros(len(runs))
-    for n in range(len(runs)):
-        run = Run("Shakedown", runs[n])
+    
+def plot_perf_re_dep(save=False, savepath=""):
+    nrun = 12 # 12 for tsr = 1.9
+    speeds = np.array([0.4, 0.6, 0.8, 1.0, 1.2])
+    cp = np.zeros(len(speeds))
+    cd = np.zeros(len(speeds))
+    Re_D = speeds*D/1e-6
+    for n in range(len(speeds)):
+        U = speeds[n]
+        run = Run("Perf-"+str(U), nrun)
         run.calcperf()
         cp[n] = run.meancp
         cd[n] = run.meancd
-        U[n] = run.U
-    if not os.path.isdir("Shakedown/Processed"):
-        os.mkdir("Shakedown/Processed")
-    np.save("Shakedown/Processed/cp.npy", cp)
-    np.save("Shakedown/Processed/cd.npy", cd)
-    np.save("Shakedown/Processed/U.npy", U)
-    
-def plot_re_dep(save=False, savepath=""):
-    cp = np.load("Shakedown/Processed/cp.npy")
-    cd = np.load("Shakedown/Processed/cd.npy")
-    U = np.load("Shakedown/Processed/U.npy")
-    Re_D = U*D/1e-6
     plt.figure()
-    plt.plot(Re_D, cp/cp[1], '-ok', markerfacecolor="none", label="Experiment")
+    plt.plot(Re_D, cp/cp[-2], '-ok', markerfacecolor="none", label="Experiment")
     plt.hold(True)
-    plot_cfd_perf("cp")
+#    plot_cfd_perf("cp")
     plt.xlabel(r"$Re_D$")
     plt.ylabel(r"$C_P/C_{P0}$")
-    plt.ylim((0.6, 1.6))
+#    plt.ylim((0.6, 1.6))
     ax = plt.gca()
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.grid()
@@ -609,11 +606,11 @@ def plot_re_dep(save=False, savepath=""):
     if save:
         plt.savefig(savepath+"re_dep_cp.pdf")
     plt.figure()
-    plt.plot(Re_D, cd/cd[1], '-ok', markerfacecolor="none", label="Experiment")
+    plt.plot(Re_D, cd/cd[-2], '-ok', markerfacecolor="none", label="Experiment")
     plt.xlabel(r"$Re_D$")
     plt.ylabel(r"$C_D/C_{D0}$")
     plt.hold(True)
-    plot_cfd_perf("cd")
+#    plot_cfd_perf("cd")
     plt.ylim((0.8,1.1))
     plt.grid()
     plt.legend(loc=3)
@@ -665,6 +662,7 @@ def plot_settling(U):
 def main():
     plt.close("all")
 #    p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
+
 #    run = Run("Wake-0.8", -1)
 #    run.plotperf("torque")
 #    run.calcperf()
@@ -672,11 +670,13 @@ def main():
 #    run.plotwake()
     
     batch_process_all("Wake-0.8", reprocess=False)
-    plot_trans_wake_profile("stdu", U=0.8, z_H=0.0)    
+    z_H = 0.25
+    q = "stdu"
+    plot_trans_wake_profile(q, U=0.6, z_H=z_H)
+    plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=False, marker="--^k") 
+    plot_trans_wake_profile(q, U=0.8, z_H=z_H, newfig=False, marker="-.sk")
     
-#    wp = WakeProfile(0.4, 0.125)
-#    wp.process()
-#    wp.plot("stdu")
+#    plot_perf_re_dep()
 
 #    pc = PerfCurve(1.2)
 #    pc.process(reprocess=False)
@@ -685,6 +685,7 @@ def main():
 #    PerfCurve(0.6).plotcp(newfig=False, marker="s")
 #    PerfCurve(0.8).plotcp(newfig=False, marker="<")
 #    PerfCurve(0.4).plotcp(newfig=False, marker=">")
+
 #    plot_settling(1.0)
         
 if __name__ == "__main__":
