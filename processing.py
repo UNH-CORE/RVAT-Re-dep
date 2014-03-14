@@ -221,12 +221,12 @@ class Run(object):
         print("C_P =", self.meancp)
         print("C_D =", self.meancd)
         
-    def filter_wake(self, stdfilt=False, threshfilt=True):
+    def filter_wake(self, stdfilt=True, threshfilt=True):
         """Applies filtering to wake velocity data with a standard deviation
         filter, threshold filter, or both."""
-        std = 5
+        std = 8
         passes = 1
-        fthresh = 1.0
+        fthresh = 0.9
         # Calculate means
         meanu, x = ts.calcstats(self.u, self.t1, self.t2, self.sr_vec)
         meanv, x = ts.calcstats(self.v, self.t1, self.t2, self.sr_vec)
@@ -270,8 +270,11 @@ class Run(object):
         
     def calcwake(self):
         print("Calculating wake stats for", self.section, "run "+str(self.nrun)+"...")
-        if not self.loaded:
-            self.load()
+        if self.not_loadable:
+            self.meanu = np.nan
+            self.meanv = np.nan
+            self.meanw = np.nan
+            return None
         if not self.t2found:
             self.find_t2()
         self.filter_wake()
@@ -280,11 +283,12 @@ class Run(object):
         self.meanw, self.stdw = ts.calcstats(self.w_f, self.t1, self.t2, self.sr_vec)
         uv = (self.u_f - self.meanu)*(self.v_f - self.meanv)
         self.meanuv, self.stduv = ts.calcstats(uv, self.t1, self.t2, self.sr_vec)
+        ntotal = int((self.t2 - self.t1)*self.sr_vec*3)      
         print("y/R =", self.y_R)
         print("z/H =", self.z_H)
         print("U_vec/U_nom =", self.meanu/self.U_nom)
         print("std_u/U_nom =", self.stdu/self.U_nom)
-        print(self.nbad, "data points omitted")
+        print(str(self.nbad)+"/"+str(ntotal), "data points omitted")
         
     def detect_badvec(self):
         """Detects if Vectrino data is bad by looking at first 2 seconds of
@@ -696,9 +700,7 @@ def main():
     plt.close("all")
 #    p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
 
-#    run = Run("Wake-1.0", -1)
-#    run.plotperf("torque")
-#    run.calcperf()
+#    run = Run("Wake-1.0", 135)
 #    run.calcwake()
 #    run.plotwake()
     
