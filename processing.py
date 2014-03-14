@@ -28,6 +28,8 @@ folders = {"Perf-0.4" : "Performance/U_0.4",
            "Wake-0.4" : "Wake/U_0.4",
            "Wake-0.6" : "Wake/U_0.6",
            "Wake-0.8" : "Wake/U_0.8",
+           "Wake-1.0" : "Wake/U_1.0",
+           "Wake-1.2" : "Wake/U_1.2",
            "Shakedown" : "Shakedown",
            "Trash-Wake-0.4" : "Trash/Wake/U_0.4"}
            
@@ -63,6 +65,7 @@ times = {0.4 : (20.0, 60.0),
          
 ylabels = {"meanu" : r"$U/U_\infty$",
            "stdu" : r"$\sigma_u/U_\infty$",
+           "meanv" : r"$V/U_\infty$",
            "meanw" : r"$W/U_\infty$"}
 
 cfd_path = "C:/Users/Pete/Google Drive/OpenFOAM/pete-2.2.2/run/unh-rvat-2d_Re-dep/processed/"
@@ -218,24 +221,52 @@ class Run(object):
         print("C_P =", self.meancp)
         print("C_D =", self.meancd)
         
-    def filter_wake(self):
-        std = 3
+    def filter_wake(self, stdfilt=False, threshfilt=True):
+        """Applies filtering to wake velocity data with a standard deviation
+        filter, threshold filter, or both."""
+        std = 5
         passes = 1
-        self.u_f = self.u*1
-        self.u_f[200*self.t1:200*self.t2] = \
-                ts.sigmafilter(self.u[200*self.t1:200*self.t2], std, passes)
+        fthresh = 1.0
+        # Calculate means
         meanu, x = ts.calcstats(self.u, self.t1, self.t2, self.sr_vec)
-        ibad = np.where(self.u > 3*meanu)[0]
-        ibad = np.append(ibad, np.where(self.u < -meanu)[0])
-        i = np.where(np.logical_and(ibad > self.t1*200, ibad < self.t2*200))[0]
-        self.u_f[ibad[i]] = np.nan
-        self.nbad = len(i)
+        meanv, x = ts.calcstats(self.v, self.t1, self.t2, self.sr_vec)
+        meanw, x = ts.calcstats(self.w, self.t1, self.t2, self.sr_vec)
+        # Create new filtered arrays
+        self.u_f = self.u*1
         self.v_f = self.v*1
-        self.v_f[200*self.t1:200*self.t2] = \
-                ts.sigmafilter(self.v[200*self.t1:200*self.t2], std, passes)
         self.w_f = self.w*1
-        self.w_f[200*self.t1:200*self.t2] = \
+        if stdfilt:
+        # Do standard deviation filters
+            self.u_f[200*self.t1:200*self.t2] = \
+                ts.sigmafilter(self.u[200*self.t1:200*self.t2], std, passes)
+            self.v_f[200*self.t1:200*self.t2] = \
+                ts.sigmafilter(self.v[200*self.t1:200*self.t2], std, passes)
+            self.w_f[200*self.t1:200*self.t2] = \
                 ts.sigmafilter(self.w[200*self.t1:200*self.t2], std, passes)
+        if threshfilt:
+            # Do threshold filter on u
+            ibad = np.where(self.u > meanu + fthresh)[0]
+            ibad = np.append(ibad, np.where(self.u < meanu - fthresh)[0])
+            i = np.where(np.logical_and(ibad > self.t1*200, 
+                                        ibad < self.t2*200))[0]
+            self.u_f[ibad[i]] = np.nan
+            # Do threshold filter on v
+            ibad = np.where(self.v > meanv + fthresh)[0]
+            ibad = np.append(ibad, np.where(self.v < meanv - fthresh)[0])
+            i = np.where(np.logical_and(ibad > self.t1*200, 
+                                        ibad < self.t2*200))[0]
+            self.v_f[ibad[i]] = np.nan
+            # Do threshold filter on w
+            ibad = np.where(self.w > meanw + fthresh)[0]
+            ibad = np.append(ibad, np.where(self.w < meanw - fthresh)[0])
+            i = np.where(np.logical_and(ibad > self.t1*200, 
+                                        ibad < self.t2*200))[0]
+            self.w_f[ibad[i]] = np.nan
+        # Count up bad datapoints
+        self.nbadu = len(np.where(np.isnan(self.u_f)==True)[0])
+        self.nbadv = len(np.where(np.isnan(self.v_f)==True)[0])
+        self.nbadw = len(np.where(np.isnan(self.w_f)==True)[0])
+        self.nbad = self.nbadu + self.nbadv + self.nbadw
         
     def calcwake(self):
         print("Calculating wake stats for", self.section, "run "+str(self.nrun)+"...")
@@ -521,6 +552,7 @@ def batch_process_all(section, reprocess=True):
             r = Run(section, nrun)
             if r.not_loadable:
                 runs[n] = np.nan
+                y_R[n] = np.nan
             else:
                 print("Processing run " + str(runs[nrun]) + "...")
                 y_R[n] = r.y_R
@@ -557,7 +589,8 @@ def batch_process_all(section, reprocess=True):
 
 
 def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="", 
-                            savetype=".pdf", newfig=True, marker="-ok"):
+                            savetype=".pdf", newfig=True, marker="-ok",
+                            fill="none"):
     """Plots the transverse wake profile of some quantity. These can be
       * meanu
       * meanv
@@ -572,7 +605,7 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
     y_R = np.load(folder + "y_R.npy")[i]
     if newfig:
         plt.figure()
-    plt.plot(y_R, q/U, marker, markerfacecolor="none")
+    plt.plot(y_R, q/U, marker, markerfacecolor=fill)
     plt.xlabel(r"$y/R$")
     plt.ylabel(ylabels[quantity])
     plt.grid(True)
@@ -663,18 +696,20 @@ def main():
     plt.close("all")
 #    p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
 
-#    run = Run("Wake-0.8", -1)
+#    run = Run("Wake-1.0", -1)
 #    run.plotperf("torque")
 #    run.calcperf()
 #    run.calcwake()
 #    run.plotwake()
     
-    batch_process_all("Wake-0.8", reprocess=False)
-    z_H = 0.25
+    batch_process_all("Wake-1.0", reprocess=False)
+    z_H = 0.375
     q = "stdu"
-    plot_trans_wake_profile(q, U=0.6, z_H=z_H)
+    plot_trans_wake_profile(q, U=1.0, z_H=z_H, marker="or", fill="b")
+    plot_trans_wake_profile(q, U=0.8, z_H=z_H, marker="sk", newfig=False)
+    plot_trans_wake_profile(q, U=1.2, z_H=z_H, newfig=False, marker="->k")
     plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=False, marker="--^k") 
-    plot_trans_wake_profile(q, U=0.8, z_H=z_H, newfig=False, marker="-.sk")
+    plot_trans_wake_profile(q, U=0.6, z_H=z_H, newfig=False, marker="-.ok")
     
 #    plot_perf_re_dep()
 
