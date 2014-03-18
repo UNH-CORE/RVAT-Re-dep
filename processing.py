@@ -46,21 +46,6 @@ A = D*H
 R = D/2
 rho = 1000.0
 nu = 1e-6
-
-# Tare drag in Newtons for each speed
-tare_drag = {0.5 : 8.0110528524,
-             1.0 : 45.462475976,
-             1.5 : 107.981,
-             2.0 : 193.399,
-             0.3 : 4.0,
-             0.4 : 5.0,
-             0.7 : 30.0,
-             0.8 : 35.0,
-             0.9 : 40.0,
-             1.1 : 55,
-             0.6 : 20.0,
-             1.2 : 80.0,
-             1.3 : 95.0}
              
 def calc_tare_torque(rpm):
     """Returns tare torque array given RPM array."""
@@ -160,6 +145,12 @@ class Run(object):
 #        self.torque = self.torque - np.mean(self.torque[:self.sr_ni*t0])
         self.drag = self.drag - np.mean(self.drag[0:self.sr_ni*t0])
         # Subtract tare drag
+        # Tare drag in Newtons for each speed
+        tare_drag = {}
+        vals = np.load("Tare drag/Processed/taredrag.npy")
+        speeds = np.load("Tare drag/Processed/U_nom.npy")
+        for n in range(len(speeds)):
+            tare_drag[speeds[n]] = vals[n]
         self.drag = self.drag - tare_drag[self.U_nom]
         # Compute RPM and omega
         self.angle = nidata["turbine_angle"]
@@ -645,20 +636,29 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
 def plot_perf_re_dep(save=False, savepath=""):
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
+    std_cp = np.zeros(len(speeds))
     cd = np.zeros(len(speeds))
+    std_cd = np.zeros(len(speeds))
     Re_D = speeds*D/1e-6
     for n in range(len(speeds)):
         if speeds[n] in [0.3, 0.5, 0.7, 0.9, 1.1, 1.3]:
-            nrun = 1
+            section = "Perf-"+str(speeds[n])
+            folder = folders[section]
+            cp_s = np.load(folder+"/Processed/cp.npy")
+            cd_s = np.load(folder+"/Processed/cd.npy")
+            cp[n] = np.mean(cp_s)
+            cd[n] = np.mean(cd_s)
         else:
-            nrun = 12 # 12 for tsr = 1.9
-        U = speeds[n]
-        run = Run("Perf-"+str(U), nrun)
-        run.calcperf()
-        cp[n] = run.meancp
-        cd[n] = run.meancd
+            section = "Wake-"+str(speeds[n])
+            folder = folders[section]
+            cp_s = np.load(folder+"/Processed/cp.npy")
+            cd_s = np.load(folder+"/Processed/cd.npy")
+            cp[n], std_cp[n] = np.mean(cp_s), np.std(cp_s)
+            cd[n], std_cd[n] = np.mean(cd_s), np.std(cd_s)
     plt.figure()
-    plt.plot(Re_D, cp/cp[-2], '-ok', markerfacecolor="none", label="Experiment")
+#    plt.plot(Re_D, cp/cp[-4], 'ok', markerfacecolor="none", label="Experiment")
+    plt.errorbar(Re_D, cp/cp[-4], yerr=std_cp, fmt="-ok", ecolor="b",
+                 markerfacecolor="none", label="Exp.")
     plt.hold(True)
 #    plot_cfd_perf("cp")
     plt.xlabel(r"$Re_D$")
@@ -672,7 +672,7 @@ def plot_perf_re_dep(save=False, savepath=""):
     if save:
         plt.savefig(savepath+"re_dep_cp.pdf")
     plt.figure()
-    plt.plot(Re_D, cd/cd[-2], '-ok', markerfacecolor="none", label="Experiment")
+    plt.plot(Re_D, cd/cd[-4], 'ok', markerfacecolor="none", label="Experiment")
     plt.xlabel(r"$Re_D$")
     plt.ylabel(r"$C_D/C_{D0}$")
     plt.hold(True)
@@ -724,6 +724,59 @@ def plot_settling(U):
     plt.xlabel("t (s)")
     plt.ylabel(r"$\sigma_u$")
     styleplot()
+    
+def process_tare_drag(nrun, plot=False):
+    """Processes a single tare drag run."""
+    print("Processing tare drag run", str(nrun)+"...")
+    times = {0.3 : (10, 77),
+             0.4 : (8, 60),
+             0.5 : (8, 47),
+             0.6 : (10, 38),
+             0.7 : (8, 33),
+             0.8 : (7, 30),
+             0.9 : (8, 27),
+             1.0 : (6, 24),
+             1.1 : (6, 22),
+             1.2 : (7, 21),
+             1.3 : (7, 19),
+             1.4 : (6, 18)}
+    with open("Tare drag/" + str(nrun)  + "/metadata.json") as f:
+        metadata = json.load(f)
+    speed = float(metadata["Tow speed (m/s)"])
+    nidata = loadmat("Tare drag/" + str(nrun) + "/nidata.mat", 
+                     squeeze_me=True)
+    t_ni  = nidata["t"]
+    drag = nidata["drag_left"] + nidata["drag_right"]
+    drag = drag - np.mean(drag[:2000])
+    t1, t2 = times[speed]
+    meandrag, x = ts.calcstats(drag, t1, t2, 2000) 
+    print("Tare drag =", meandrag, "N at", speed, "m/s")
+    if plot:
+        plt.figure()
+        plt.plot(t_ni, drag, 'k')
+    return speed, meandrag
+        
+def batch_process_tare_drag(plot=False):
+    """Processes all tare drag data."""
+    folder = "Tare drag"
+    runs = os.listdir(folder)
+    if "Processed" in runs: 
+        runs.remove("Processed")
+    else:
+        os.mkdir(folder+"/Processed")
+    runs = sorted([int(run) for run in runs])
+    speed = np.zeros(len(runs))
+    taredrag = np.zeros(len(runs))
+    for n in range(len(runs)):
+        speed[n], taredrag[n] = process_tare_drag(runs[n])
+    np.save(folder + "/Processed/U_nom.npy", speed)
+    np.save(folder + "/Processed/taredrag.npy", taredrag)
+    if plot:
+        plt.figure()
+        plt.plot(speed, taredrag, "-ok", markerfacecolor="None")
+        plt.xlabel("Tow speed (m/s)")
+        plt.ylabel("Tare drag (N)")
+        styleplot()
     
 def process_tare_torque(nrun, plot=False):
     """Processes a single tare torque run."""
@@ -787,6 +840,9 @@ def main():
 #    process_tare_torque(2, plot=True)
 #    batch_process_tare_torque(plot=True)
 
+#    process_tare_drag(5, plot=True)
+#    batch_process_tare_drag(plot=True)
+
 #    run = Run("Perf-0.7", 1)
 #    run.calcperf()
     
@@ -800,15 +856,15 @@ def main():
 #    plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=False, marker="--^k") 
 #    plot_trans_wake_profile(q, U=0.6, z_H=z_H, newfig=False, marker="-.ok")
     
-#    plot_perf_re_dep()
+    plot_perf_re_dep()
 
-    pc = PerfCurve(1.2)
-    pc.process(reprocess=False)
-    pc.plotcp(splinefit=False)
-    PerfCurve(1.0).plotcp(newfig=False, marker="x")
-    PerfCurve(0.6).plotcp(newfig=False, marker="s")
-    PerfCurve(0.8).plotcp(newfig=False, marker="<")
-    PerfCurve(0.4).plotcp(newfig=False, marker=">")
+#    pc = PerfCurve(1.2)
+#    pc.process(reprocess=False)
+#    pc.plotcp(splinefit=False)
+#    PerfCurve(1.0).plotcp(newfig=False, marker="x")
+#    PerfCurve(0.6).plotcp(newfig=False, marker="s")
+#    PerfCurve(0.8).plotcp(newfig=False, marker="<")
+#    PerfCurve(0.4).plotcp(newfig=False, marker=">")
 
 #    plot_settling(1.0)
         
