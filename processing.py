@@ -19,11 +19,17 @@ import json
 import os
 import fdiff
 
-folders = {"Perf-0.4" : "Performance/U_0.4",
+folders = {"Perf-0.3" : "Performance/U_0.3",
+           "Perf-0.4" : "Performance/U_0.4",
+           "Perf-0.5" : "Performance/U_0.5",
            "Perf-0.6" : "Performance/U_0.6",
+           "Perf-0.7" : "Performance/U_0.7",
            "Perf-0.8" : "Performance/U_0.8",
+           "Perf-0.9" : "Performance/U_0.9",
            "Perf-1.0" : "Performance/U_1.0",
+           "Perf-1.1" : "Performance/U_1.1",
            "Perf-1.2" : "Performance/U_1.2",
+           "Perf-1.3" : "Performance/U_1.3",
            "Perf-1.4" : "Performance/U_1.4",
            "Wake-0.4" : "Wake/U_0.4",
            "Wake-0.6" : "Wake/U_0.6",
@@ -40,7 +46,6 @@ A = D*H
 R = D/2
 rho = 1000.0
 nu = 1e-6
-tare_torque = 1.0 # Approximate
 
 # Tare drag in Newtons for each speed
 tare_drag = {0.5 : 8.0110528524,
@@ -54,13 +59,24 @@ tare_drag = {0.5 : 8.0110528524,
              0.9 : 40.0,
              1.1 : 55,
              0.6 : 20.0,
-             1.2 : 80.0}
+             1.2 : 80.0,
+             1.3 : 95.0}
              
-times = {0.4 : (20.0, 60.0),
+def calc_tare_torque(rpm):
+    """Returns tare torque array given RPM array."""
+    return 0.000474675989476*rpm + 0.876750155952
+             
+times = {0.3 : (20.0, 80.0),
+         0.4 : (20.0, 60.0),
+         0.5 : (20.0, 50.0),
          0.6 : (20.0, 45.0),
+         0.7 : (20.0, 38.0),
          0.8 : (18.0, 34.0),
+         0.9 : (16.0, 32.0),
          1.0 : (15.0, 30.0),
+         1.1 : (15.0, 28.0),
          1.2 : (15.0, 26.0),
+         1.3 : (13.0, 23.0),
          1.4 : (12.0, 20.0)}
          
 ylabels = {"meanu" : r"$U/U_\infty$",
@@ -139,9 +155,9 @@ class Run(object):
             self.omega_acs = self.omega_acs[:newlen]
         self.omega_acs_interp = np.interp(self.t_ni, self.t_acs, self.omega_acs)
         self.rpm_acs_interp = self.omega_acs_interp*60.0/(2*np.pi)
-        # Remove offsets from torque and drag
+        # Remove offsets from drag, not torque
         t0 = 2
-        self.torque = self.torque - np.mean(self.torque[:self.sr_ni*t0])
+#        self.torque = self.torque - np.mean(self.torque[:self.sr_ni*t0])
         self.drag = self.drag - np.mean(self.drag[0:self.sr_ni*t0])
         # Subtract tare drag
         self.drag = self.drag - tare_drag[self.U_nom]
@@ -158,7 +174,7 @@ class Run(object):
             rpm_ref = self.rpm_ni
             omega_ref = self.omega_ni
         # Add tare torque
-        tare_torque = 0.00174094659759*rpm_ref + 0.465846267394
+        tare_torque = calc_tare_torque(rpm_ref)
         self.torque = self.torque + tare_torque
         # Compute power
         self.power = self.torque*omega_ref
@@ -515,7 +531,7 @@ class WakeProfile(object):
         if save:
             plt.savefig(savepath+quantity+"_Re_dep_exp"+savetype)
             
-def batch_process_all(section, reprocess=True):
+def batch_process_section(section, reprocess=True):
     """Processes all data in a section. Will skip already processed
     runs if `reprocess = False`. Something is up with this algorith, as it
     sometimes will save the wrong y_R value."""
@@ -590,8 +606,18 @@ def batch_process_all(section, reprocess=True):
     np.save(folder+"/Processed/meanv.npy", meanv)
     np.save(folder+"/Processed/meanw.npy", meanw)
     np.save(folder+"/Processed/stdu.npy", stdu)
-
-
+    
+def batch_process_all():
+    """Batch processes all sections."""
+    sections = ["Perf-0.3", "Perf-0.4", "Perf-0.5",
+                "Perf-0.6", "Perf-0.7", "Perf-0.8",
+                "Perf-0.9", "Perf-1.0", "Perf-1.1",
+                "Perf-1.2", "Perf-1.3", "Wake-0.4",
+                "Wake-0.6", "Wake-0.8", "Wake-1.0",
+                "Wake-1.2"]
+    for section in sections:
+        batch_process_section(section)
+    
 def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="", 
                             savetype=".pdf", newfig=True, marker="-ok",
                             fill="none"):
@@ -617,12 +643,15 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
 
     
 def plot_perf_re_dep(save=False, savepath=""):
-    nrun = 12 # 12 for tsr = 1.9
-    speeds = np.array([0.4, 0.6, 0.8, 1.0, 1.2])
+    speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
     cd = np.zeros(len(speeds))
     Re_D = speeds*D/1e-6
     for n in range(len(speeds)):
+        if speeds[n] in [0.3, 0.5, 0.7, 0.9, 1.1, 1.3]:
+            nrun = 1
+        else:
+            nrun = 12 # 12 for tsr = 1.9
         U = speeds[n]
         run = Run("Perf-"+str(U), nrun)
         run.calcperf()
@@ -634,7 +663,7 @@ def plot_perf_re_dep(save=False, savepath=""):
 #    plot_cfd_perf("cp")
     plt.xlabel(r"$Re_D$")
     plt.ylabel(r"$C_P/C_{P0}$")
-#    plt.ylim((0.6, 1.6))
+    plt.ylim((0.4, 1.2))
     ax = plt.gca()
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.grid()
@@ -648,7 +677,7 @@ def plot_perf_re_dep(save=False, savepath=""):
     plt.ylabel(r"$C_D/C_{D0}$")
     plt.hold(True)
 #    plot_cfd_perf("cd")
-    plt.ylim((0.8,1.1))
+    plt.ylim((0.5,1.1))
     plt.grid()
     plt.legend(loc=3)
     ax = plt.gca()
@@ -696,32 +725,90 @@ def plot_settling(U):
     plt.ylabel(r"$\sigma_u$")
     styleplot()
     
+def process_tare_torque(nrun, plot=False):
+    """Processes a single tare torque run."""
+    print("Processing tare torque run", str(nrun)+"...")
+    times = {0 : (35, 86),
+             1 : (12, 52),
+             2 : (11, 32),
+             3 : (7, 30)}
+    nidata = loadmat("Tare torque/" + str(nrun) + "/nidata.mat", 
+                     squeeze_me=True)
+    # Compute RPM
+    t_ni  = nidata["t"]
+    angle = nidata["turbine_angle"]
+    rpm_ni = fdiff.second_order_diff(angle, t_ni)/6.0
+    rpm_ni = ts.smooth(rpm_ni, 8)
+    try:
+        t1, t2 = times[nrun]
+    except KeyError:
+        t1, t2 = times[3]
+    meanrpm, x = ts.calcstats(rpm_ni, t1, t2, 2000)
+    torque = nidata["torque_trans"]
+#    torque = torque - np.mean(torque[:2000]) # 2000 samples of zero torque
+    meantorque, x = ts.calcstats(torque, t1, t2, 2000)
+    print("Tare torque =", meantorque, "Nm at", meanrpm, "RPM")
+    if plot:
+        plt.figure()
+        plt.plot(t_ni, torque)
+        styleplot()
+    return meanrpm, -meantorque
+    
+def batch_process_tare_torque(plot=False):
+    """Processes all tare torque data."""
+    folder = "Tare torque"
+    runs = os.listdir(folder)
+    if "Processed" in runs: 
+        runs.remove("Processed")
+    else:
+        os.mkdir(folder+"/Processed")
+    runs = sorted([int(run) for run in runs])
+    rpm = np.zeros(len(runs))
+    taretorque = np.zeros(len(runs))
+    for n in range(len(runs)):
+        rpm[n], taretorque[n] = process_tare_torque(runs[n])
+    np.save(folder + "/Processed/rpm.npy", rpm)
+    np.save(folder + "/Processed/taretorque.npy", taretorque)
+    m, b = np.polyfit(rpm, taretorque, 1)
+    print("tare_torque = "+str(m)+"*rpm +", b)
+    if plot:
+        plt.figure()
+        plt.plot(rpm, taretorque, "-ok", markerfacecolor="None")
+        plt.plot(rpm, m*rpm + b)
+        plt.xlabel("RPM")
+        plt.ylabel("Tare torque (Nm)")
+        plt.ylim((0, 1))
+        styleplot()
+    
 def main():
     plt.close("all")
 #    p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
 
-#    run = Run("Wake-1.0", 135)
-#    run.calcwake()
-#    run.plotwake()
+#    process_tare_torque(2, plot=True)
+#    batch_process_tare_torque(plot=True)
+
+#    run = Run("Perf-0.7", 1)
+#    run.calcperf()
     
-    batch_process_all("Wake-1.0", reprocess=False)
-    z_H = 0.375
-    q = "stdu"
-    plot_trans_wake_profile(q, U=1.0, z_H=z_H, marker="or", fill="b")
-    plot_trans_wake_profile(q, U=0.8, z_H=z_H, marker="sk", newfig=False)
-    plot_trans_wake_profile(q, U=1.2, z_H=z_H, newfig=False, marker="->k")
-    plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=False, marker="--^k") 
-    plot_trans_wake_profile(q, U=0.6, z_H=z_H, newfig=False, marker="-.ok")
+#    batch_process_all()
+    
+#    z_H = 0.625
+#    q = "stdu"
+#    plot_trans_wake_profile(q, U=1.0, z_H=z_H, marker="or", fill="b")
+#    plot_trans_wake_profile(q, U=0.8, z_H=z_H, marker="sk", newfig=False)
+#    plot_trans_wake_profile(q, U=1.2, z_H=z_H, newfig=False, marker="->k")
+#    plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=False, marker="--^k") 
+#    plot_trans_wake_profile(q, U=0.6, z_H=z_H, newfig=False, marker="-.ok")
     
 #    plot_perf_re_dep()
 
-#    pc = PerfCurve(1.2)
-#    pc.process(reprocess=False)
-#    pc.plotcp(splinefit=False)
-#    PerfCurve(1.0).plotcp(newfig=False, marker="x")
-#    PerfCurve(0.6).plotcp(newfig=False, marker="s")
-#    PerfCurve(0.8).plotcp(newfig=False, marker="<")
-#    PerfCurve(0.4).plotcp(newfig=False, marker=">")
+    pc = PerfCurve(1.2)
+    pc.process(reprocess=False)
+    pc.plotcp(splinefit=False)
+    PerfCurve(1.0).plotcp(newfig=False, marker="x")
+    PerfCurve(0.6).plotcp(newfig=False, marker="s")
+    PerfCurve(0.8).plotcp(newfig=False, marker="<")
+    PerfCurve(0.4).plotcp(newfig=False, marker=">")
 
 #    plot_settling(1.0)
         
