@@ -435,6 +435,41 @@ class PerfCurve(object):
             plt.show()
         if save:
             plt.savefig(figname)
+            
+    def plotcd(self, newfig=True, show=True, save=False, figname="test.pdf",
+               splinefit=False, marker="o"):
+        """Generates power coefficient curve plot."""
+        # Check to see if processed data exists and if not, process it
+        label = "$Re_D = {:0.1e}$".format(self.Re_D)
+        try:
+            self.tsr = np.load(self.folder+"/Processed/tsr.npy")
+            self.cd = np.load(self.folder+"/Processed/cd.npy")
+        except IOError:
+            self.process()
+        if newfig:
+            plt.figure()
+        if splinefit and not True in np.isnan(self.tsr):
+            plt.plot(self.tsr, self.cd, marker+"k", markerfacecolor="None", 
+                     label=label)
+            plt.hold(True)
+            tsr_fit = np.linspace(np.min(self.tsr), np.max(self.tsr), 200)
+            tck = interpolate.splrep(self.tsr[::-1], self.cd[::-1], s=1e-3)
+            cd_fit = interpolate.splev(tsr_fit, tck)
+            plt.plot(tsr_fit, cd_fit, "k")
+        else:
+            if splinefit:
+                print("Cannot fit spline. NaN present in array.")
+            plt.plot(self.tsr, self.cd, "-"+marker+"k", markerfacecolor="None",
+                     label=label)
+        plt.xlabel(r"$\lambda$")
+        plt.ylabel(r"$C_D$")
+        plt.ylim((0, 1.2))
+        plt.grid(True)
+        styleplot()
+        if show:
+            plt.show()
+        if save:
+            plt.savefig(figname)
         
 class WakeProfile(object):
     def __init__(self, U, z_H):
@@ -832,6 +867,21 @@ def batch_process_tare_torque(plot=False):
         plt.ylabel("Tare torque (Nm)")
         plt.ylim((0, 1))
         styleplot()
+        
+def plot_perf_curves():
+    """Plots all performance curves."""
+    PerfCurve(0.4).plotcp(newfig=True, marker=">")
+    PerfCurve(0.6).plotcp(newfig=False, marker="s")
+    PerfCurve(0.8).plotcp(newfig=False, marker="<")
+    PerfCurve(1.0).plotcp(newfig=False, marker="o")
+    PerfCurve(1.2).plotcp(newfig=False, marker="^")
+    
+    PerfCurve(0.4).plotcd(newfig=True, marker=">")
+    PerfCurve(0.6).plotcd(newfig=False, marker="s")
+    PerfCurve(0.8).plotcd(newfig=False, marker="<")
+    PerfCurve(1.0).plotcd(newfig=False, marker="o")
+    PerfCurve(1.2).plotcd(newfig=False, marker="^")
+    
     
 def main():
     plt.close("all")
@@ -856,15 +906,8 @@ def main():
 #    plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=False, marker="--^k") 
 #    plot_trans_wake_profile(q, U=0.6, z_H=z_H, newfig=False, marker="-.ok")
     
-    plot_perf_re_dep()
-
-#    pc = PerfCurve(1.2)
-#    pc.process(reprocess=False)
-#    pc.plotcp(splinefit=False)
-#    PerfCurve(1.0).plotcp(newfig=False, marker="x")
-#    PerfCurve(0.6).plotcp(newfig=False, marker="s")
-#    PerfCurve(0.8).plotcp(newfig=False, marker="<")
-#    PerfCurve(0.4).plotcp(newfig=False, marker=">")
+    plot_perf_curves()
+#    plot_perf_re_dep()
 
 #    plot_settling(1.0)
         
