@@ -11,6 +11,7 @@ Tare drag and torque will have to be done after APS...
 from __future__ import division, print_function
 import numpy as np
 import uncertainties as unc
+from uncertainties import unumpy as unp
 import timeseries as ts
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
@@ -53,6 +54,12 @@ d_torque = 1.0
 d_theta = 6.28e-5
 d_speed = 1e-5
 d_force = 0.556
+
+def calc_d_vel(vel):
+    """Calculates the experimental error of a Vectrino measurement (in m/s)
+    from their published specs. Returns the full delta, i.e. error is +/- 
+    half the returned value."""
+    return 0.01*np.abs(vel) + 0.002
              
 def calc_tare_torque(rpm):
     """Returns tare torque array given RPM array."""
@@ -315,12 +322,28 @@ class Run(object):
         uv = (self.u_f - self.meanu)*(self.v_f - self.meanv)
         self.meanuv, self.stduv = ts.calcstats(uv, self.t1, self.t2, self.sr_vec)
         self.k = 0.5*(self.stdu**2 + self.stdv**2 + self.stdw**2)
-        ntotal = int((self.t2 - self.t1)*self.sr_vec*3)      
+        ntotal = int((self.t2 - self.t1)*self.sr_vec*3)
+        self.calc_unc_wake()
         print("y/R =", self.y_R)
         print("z/H =", self.z_H)
-        print("U_vec/U_nom =", self.meanu/self.U_nom)
-        print("std_u/U_nom =", self.stdu/self.U_nom)
+        print("U_vec/U_nom =", self.meanu/self.U_nom, "+/-", 
+              self.delta_meanu/2/self.U_nom)
+        print("std_u/U_nom =", self.stdu/self.U_nom, "+/-",
+              self.delta_stdu/2/self.U_nom)
         print(str(self.nbad)+"/"+str(ntotal), "data points omitted")
+        
+    def calc_unc_wake(self):
+        """Computes delta values for wake measurements from Vectrino accuracy
+        specs, not statistical uncertainties."""
+        u_seg = self.u_f[self.t1*200:self.t2*200]
+        u_seg = u_seg[~np.isnan(u_seg)]
+        d_u = calc_d_vel(u_seg)
+        u_seg = np.array(unp.uarray(u_seg, d_u/2))
+        meanu = u_seg.sum()/len(u_seg)
+        self.delta_meanu = meanu.std_dev*2
+        upup = (u_seg - self.meanu)**2
+        stdu = upup.sum()**0.5/len(u_seg)**0.5
+        self.delta_stdu = stdu.std_dev*2
         
     def detect_badvec(self):
         """Detects if Vectrino data is bad by looking at first 2 seconds of
@@ -794,8 +817,8 @@ def plot_old_wake(quantity, y_R):
              markerfacecolor="none")
              
 def plot_cfd_perf(quantity="cp"):
-    Re_D = np.load(cfd_path+"Re_D.npy")
-    q = np.load(cfd_path+quantity+".npy")
+    Re_D = np.load(cfd_path + "Re_D.npy")
+    q = np.load(cfd_path + quantity+".npy")
     plt.plot(Re_D, q/q[1], "--^k", label="Simulation")
     
 def plot_settling(U):
@@ -961,8 +984,9 @@ def main():
     plt.close("all")
     p = "C:/Users/Pete/Google Drive/Research/Papers/2014 METS/Figures"
 
-#    r = Run("Perf-1.2", 12)
-#    r.calcperf()
+    r = Run("Perf-1.2", 12)
+    r.calcperf()
+    r.calcwake()
 #    r.plotperf()
 #    r.plotwake()
 
@@ -975,9 +999,9 @@ def main():
 #    batch_process_all()
     
 #    plot_perf_curves()
-    plot_perf_re_dep(save=False, savepath=p)
+#    plot_perf_re_dep(save=False, savepath=p)
     
-    plot_wake_profiles(z_H=0.25, save=False, savepath=p)
+#    plot_wake_profiles(z_H=0.25, save=False, savepath=p)
 
 #    plot_settling(1.0)
         
