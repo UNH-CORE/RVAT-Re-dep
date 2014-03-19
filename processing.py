@@ -712,7 +712,8 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
     styleplot()
 
     
-def plot_perf_re_dep(save=False, savepath=""):
+def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=True,
+                     cfd=False):
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
     std_cp = np.zeros(len(speeds))
@@ -745,28 +746,34 @@ def plot_perf_re_dep(save=False, savepath=""):
             delta_cp[n] = np.mean(dcp_s)
             delta_cd[n] = np.mean(dcd_s)
     plt.figure()
-#    plt.plot(Re_D, cp/cp[-4], 'ok', markerfacecolor="none", label="Experiment")
-    plt.errorbar(Re_D, cp/cp[-4], yerr=delta_cp/2/cp[-4], fmt="-ok",
-                 markerfacecolor="none", label="Exp.")
-    plt.hold(True)
-#    plot_cfd_perf("cp")
+    if errorbars:    
+        plt.errorbar(Re_D, cp/cp[-4], yerr=delta_cp/2/cp[-4], fmt="-ok",
+                     markerfacecolor="none", label="Exp.")
+    else:
+        plt.plot(Re_D, cp/cp[-4], 'ok', markerfacecolor="none", label="Exp.")
+    if cfd:
+        plot_cfd_perf("cp")
     plt.xlabel(r"$Re_D$")
     plt.ylabel(r"$C_P/C_{P0}$")
-#    plt.ylim((0.4, 1.2))
+    plt.ylim((0.4, 1.2))
     ax = plt.gca()
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.grid()
     plt.legend(loc=2)
     styleplot()
     if save:
-        plt.savefig(savepath+"re_dep_cp.pdf")
+        plt.savefig(savepath + "/re_dep_cp" + savetype)
     plt.figure()
-    plt.errorbar(Re_D, cd/cd[-4], yerr=delta_cd/cd[-4]/2, fmt="-ok",
-                 markerfacecolor="none", label="Exp.")
+    if errorbars:
+        plt.errorbar(Re_D, cd/cd[-4], yerr=delta_cd/cd[-4]/2, fmt="-ok",
+                     markerfacecolor="none", label="Exp.")
+    else:
+        plt.plot(Re_D, cd/cd[-4], 'ok', markerfacecolor="none", label="Exp.")
     plt.xlabel(r"$Re_D$")
     plt.ylabel(r"$C_D/C_{D0}$")
     plt.hold(True)
-#    plot_cfd_perf("cd")
+    if cfd:
+        plot_cfd_perf("cd")
     plt.ylim((0.5,1.1))
     plt.grid()
     plt.legend(loc=3)
@@ -775,7 +782,7 @@ def plot_perf_re_dep(save=False, savepath=""):
     styleplot()
     plt.show()
     if save:
-        plt.savefig(savepath+"re_dep_cd.pdf")
+        plt.savefig(savepath + "/re_dep_cd" + savetype)
     
 def plot_old_wake(quantity, y_R):
     plt.hold(True)
@@ -952,7 +959,7 @@ def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
     
 def main():
     plt.close("all")
-#    p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
+    p = "C:/Users/Pete/Google Drive/Research/Papers/2014 METS/Figures"
 
 #    r = Run("Perf-1.2", 12)
 #    r.calcperf()
@@ -968,9 +975,9 @@ def main():
 #    batch_process_all()
     
 #    plot_perf_curves()
-#    plot_perf_re_dep()
+    plot_perf_re_dep(save=False, savepath=p)
     
-    plot_wake_profiles(z_H=0.25)
+    plot_wake_profiles(z_H=0.25, save=False, savepath=p)
 
 #    plot_settling(1.0)
         
