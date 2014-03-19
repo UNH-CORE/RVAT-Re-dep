@@ -686,13 +686,15 @@ def batch_process_all():
     
 def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="", 
                             savetype=".pdf", newfig=True, marker="-ok",
-                            fill="none", oldwake=False):
+                            fill="none", oldwake=False, figsize=(10, 5)):
     """Plots the transverse wake profile of some quantity. These can be
       * meanu
       * meanv
       * meanw
       * stdu
     """
+    Re_D = U*D/nu
+    label = str((Re_D/1e6)) + "e6"
     section = "Wake-" + str(U)
     folder = folders[section] + "/Processed/"
     z_H_arr = np.load(folder + "z_H.npy")
@@ -700,10 +702,10 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
     q = np.load(folder + quantity + ".npy")[i]
     y_R = np.load(folder + "y_R.npy")[i]
     if newfig:
-        plt.figure()
+        plt.figure(figsize=figsize)
     if oldwake:
         plot_old_wake(quantity, y_R)
-    plt.plot(y_R, q/U, marker, markerfacecolor=fill)
+    plt.plot(y_R, q/U, marker, markerfacecolor=fill, label=label)
     plt.xlabel(r"$y/R$")
     plt.ylabel(ylabels[quantity])
     plt.grid(True)
@@ -934,14 +936,19 @@ def plot_perf_curves():
     PerfCurve(1.0).plotcd(newfig=False, marker="o")
     PerfCurve(1.2).plotcd(newfig=False, marker="^")
     
-def plot_wake_profiles(z_H=0.25):
+def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
     """Plots all wake profiles of interest."""
+    legendlocs = {"meanu" : 4,
+                  "stdu" : 1}
     for q in ["meanu", "stdu"]:
-        plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=True, marker="-->k")
-        plot_trans_wake_profile(q, U=0.6, z_H=z_H, newfig=False, marker="--sk")
-        plot_trans_wake_profile(q, U=0.8, z_H=z_H, newfig=False, marker="--<k")
-        plot_trans_wake_profile(q, U=1.0, z_H=z_H, newfig=False, marker="--ok")
-        plot_trans_wake_profile(q, U=1.2, z_H=z_H, newfig=False, marker="--^k")    
+        plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=True, marker="--vk")
+        plot_trans_wake_profile(q, U=0.6, z_H=z_H, newfig=False, marker="sk")
+        plot_trans_wake_profile(q, U=0.8, z_H=z_H, newfig=False, marker="<k")
+        plot_trans_wake_profile(q, U=1.0, z_H=z_H, newfig=False, marker="-ok")
+        plot_trans_wake_profile(q, U=1.2, z_H=z_H, newfig=False, marker="^k")
+        plt.legend(loc=legendlocs[q])
+        if save:
+            plt.savefig(savepath + "/" + q + savetype)
     
 def main():
     plt.close("all")
@@ -957,16 +964,13 @@ def main():
 
 #    process_tare_drag(5, plot=True)
 #    batch_process_tare_drag(plot=True)
-
-#    run = Run("Perf-0.7", 1)
-#    run.calcperf()
     
-    batch_process_all()
+#    batch_process_all()
     
 #    plot_perf_curves()
 #    plot_perf_re_dep()
     
-#    plot_wake_profiles(z_H=0.25)
+    plot_wake_profiles(z_H=0.25)
 
 #    plot_settling(1.0)
         
