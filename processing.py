@@ -314,6 +314,7 @@ class Run(object):
         self.meanw, self.stdw = ts.calcstats(self.w_f, self.t1, self.t2, self.sr_vec)
         uv = (self.u_f - self.meanu)*(self.v_f - self.meanv)
         self.meanuv, self.stduv = ts.calcstats(uv, self.t1, self.t2, self.sr_vec)
+        self.k = 0.5*(self.stdu**2 + self.stdv**2 + self.stdw**2)
         ntotal = int((self.t2 - self.t1)*self.sr_vec*3)      
         print("y/R =", self.y_R)
         print("z/H =", self.z_H)
@@ -600,6 +601,7 @@ def batch_process_section(section, reprocess=True):
             meanv_old = np.load(folder+"/Processed/meanv.npy")
             meanw_old = np.load(folder+"/Processed/meanw.npy")
             stdu_old = np.load(folder+"/Processed/stdu.npy")
+            k_old = np.load(folder+"/Processed/k.npy")
         except IOError:
             runs_old = []
     runs = os.listdir(folder)
@@ -620,6 +622,7 @@ def batch_process_section(section, reprocess=True):
     meanv = np.zeros(len(runs))
     meanw = np.zeros(len(runs))
     stdu = np.zeros(len(runs))
+    k = np.zeros(len(runs))
     for n in range(len(runs)):
         nrun = runs[n]
         if reprocess or nrun not in runs_old:
@@ -642,6 +645,7 @@ def batch_process_section(section, reprocess=True):
                 meanv[n] = r.meanv
                 meanw[n] = r.meanw
                 stdu[n] = r.stdu
+                k[n] = r.k
         else:
             y_R[n] = y_R_old[np.where(runs_old==nrun)[0]]
             z_H[n] = z_H_old[np.where(runs_old==nrun)[0]]
@@ -654,6 +658,7 @@ def batch_process_section(section, reprocess=True):
             meanv[n] = meanv_old[np.where(runs_old==nrun)[0]]
             meanw[n] = meanw_old[np.where(runs_old==nrun)[0]]
             stdu[n] = stdu_old[np.where(runs_old==nrun)[0]]
+            k[n] = k_old[np.where(runs_old==nrun)[0]]
     np.save(folder+"/Processed/runs.npy", runs)
     np.save(folder+"/Processed/y_R.npy", y_R)
     np.save(folder+"/Processed/z_H.npy", z_H)
@@ -666,6 +671,7 @@ def batch_process_section(section, reprocess=True):
     np.save(folder+"/Processed/meanv.npy", meanv)
     np.save(folder+"/Processed/meanw.npy", meanw)
     np.save(folder+"/Processed/stdu.npy", stdu)
+    np.save(folder+"/Processed/k.npy", k)
     
 def batch_process_all():
     """Batch processes all sections."""
@@ -941,10 +947,10 @@ def main():
     plt.close("all")
 #    p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
 
-    r = Run("Perf-1.2", 12)
-    r.calcperf()
-    r.plotperf()
-    r.plotwake()
+#    r = Run("Perf-1.2", 12)
+#    r.calcperf()
+#    r.plotperf()
+#    r.plotwake()
 
 #    process_tare_torque(2, plot=True)
 #    batch_process_tare_torque(plot=True)
@@ -955,7 +961,7 @@ def main():
 #    run = Run("Perf-0.7", 1)
 #    run.calcperf()
     
-#    batch_process_all()
+    batch_process_all()
     
 #    plot_perf_curves()
 #    plot_perf_re_dep()
