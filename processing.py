@@ -10,6 +10,7 @@ Tare drag and torque will have to be done after APS...
 """
 from __future__ import division, print_function
 import numpy as np
+import uncertainties as unc
 import timeseries as ts
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
@@ -46,6 +47,12 @@ A = D*H
 R = D/2
 rho = 1000.0
 nu = 1e-6
+
+# Experimental error from instruments (+/- half this value)
+d_torque = 1.0
+d_theta = 6.28e-5
+d_speed = 1e-5
+d_force = 0.556
              
 def calc_tare_torque(rpm):
     """Returns tare torque array given RPM array."""
@@ -151,7 +158,8 @@ class Run(object):
         speeds = np.load("Tare drag/Processed/U_nom.npy")
         for n in range(len(speeds)):
             tare_drag[speeds[n]] = vals[n]
-        self.drag = self.drag - tare_drag[self.U_nom]
+        self.tare_drag = tare_drag[self.U_nom]
+        self.drag = self.drag - self.tare_drag
         # Compute RPM and omega
         self.angle = nidata["turbine_angle"]
         self.rpm_ni = fdiff.second_order_diff(self.angle, self.t_ni)/6.0
@@ -165,8 +173,8 @@ class Run(object):
             rpm_ref = self.rpm_ni
             omega_ref = self.omega_ni
         # Add tare torque
-        tare_torque = calc_tare_torque(rpm_ref)
-        self.torque = self.torque + tare_torque
+        self.tare_torque = calc_tare_torque(rpm_ref)
+        self.torque = self.torque + self.tare_torque
         # Compute power
         self.power = self.torque*omega_ref
         self.tsr = self.omega_acs_interp*R/self.U_ref
@@ -220,13 +228,29 @@ class Run(object):
         self.meantsr, x = ts.calcstats(self.tsr, self.t1, self.t2, self.sr_ni)
         self.meancd, x = ts.calcstats(self.cd, self.t1, self.t2, self.sr_ni)
         self.meancp, x = ts.calcstats(self.cp, self.t1, self.t2, self.sr_ni)
+        self.calc_unc_perf()
         print("U_nom =", self.U_nom)
         if self.lin_enc:
             self.meanu_enc, x = ts.calcstats(self.U_ni, self.t1, self.t2, self.sr_ni)
             print("U_enc =", self.meanu_enc)
         print("tsr =", self.meantsr)
-        print("C_P =", self.meancp)
-        print("C_D =", self.meancd)
+        print("C_P =", self.meancp, "+/-", self.delta_cp/2)
+        print("C_D =", self.meancd, "+/-", self.delta_cd/2)
+        
+    def calc_unc_perf(self):
+        torque, x = ts.calcstats(self.torque, self.t1, self.t2, self.sr_ni)
+        omega, x = ts.calcstats(self.omega_ni, self.t1, self.t2, self.sr_ni)
+        drag, x = ts.calcstats(self.drag, self.t1, self.t2, self.sr_ni)
+        taretorque, x = ts.calcstats(self.tare_torque, self.t1, self.t2, 
+                                     self.sr_ni)
+        torque = unc.ufloat(torque, d_torque/2)
+        taretorque = unc.ufloat(taretorque, d_torque/2)
+        drag = unc.ufloat(drag, np.sqrt(2*(d_force/2)**2))
+        taredrag = unc.ufloat(self.tare_drag, np.sqrt(2*(d_force/2)**2))
+        cp = (torque + taretorque)*omega/(0.5*rho*A*self.U_nom**3)
+        cd = (drag - taredrag)/(0.5*rho*A*self.U_nom**2)
+        self.delta_cp = cp.std_dev*2
+        self.delta_cd = cd.std_dev*2
         
     def filter_wake(self, stdfilt=True, threshfilt=True):
         """Applies filtering to wake velocity data with a standard deviation
@@ -570,6 +594,8 @@ def batch_process_section(section, reprocess=True):
             tsr_old = np.load(folder+"/Processed/tsr.npy")
             cp_old = np.load(folder+"/Processed/cp.npy")
             cd_old = np.load(folder+"/Processed/cd.npy")
+            delta_cp_old = np.load(folder+"/Processed/delta_cp.npy")
+            delta_cd_old = np.load(folder+"/Processed/delta_cd.npy")
             meanu_old = np.load(folder+"/Processed/meanu.npy")
             meanv_old = np.load(folder+"/Processed/meanv.npy")
             meanw_old = np.load(folder+"/Processed/meanw.npy")
@@ -586,6 +612,8 @@ def batch_process_section(section, reprocess=True):
     tsr = np.zeros(len(runs))
     cp = np.zeros(len(runs))
     cd = np.zeros(len(runs))
+    delta_cp = np.zeros(len(runs))
+    delta_cd = np.zeros(len(runs))
     y_R = np.zeros(len(runs))
     z_H = np.zeros(len(runs))
     meanu = np.zeros(len(runs))
@@ -608,6 +636,8 @@ def batch_process_section(section, reprocess=True):
                 tsr[n] = r.meantsr
                 cp[n] = r.meancp
                 cd[n] = r.meancd
+                delta_cp[n] = r.delta_cp
+                delta_cd[n] = r.delta_cd
                 meanu[n] = r.meanu
                 meanv[n] = r.meanv
                 meanw[n] = r.meanw
@@ -618,6 +648,8 @@ def batch_process_section(section, reprocess=True):
             tsr[n] = tsr_old[np.where(runs_old==nrun)[0]]
             cp[n] = cp_old[np.where(runs_old==nrun)[0]]
             cd[n] = cd_old[np.where(runs_old==nrun)[0]]
+            delta_cp[n] = delta_cp_old[np.where(runs_old==nrun)[0]]
+            delta_cd[n] = delta_cd_old[np.where(runs_old==nrun)[0]]
             meanu[n] = meanu_old[np.where(runs_old==nrun)[0]]
             meanv[n] = meanv_old[np.where(runs_old==nrun)[0]]
             meanw[n] = meanw_old[np.where(runs_old==nrun)[0]]
@@ -628,6 +660,8 @@ def batch_process_section(section, reprocess=True):
     np.save(folder+"/Processed/tsr.npy", tsr)
     np.save(folder+"/Processed/cp.npy", cp)
     np.save(folder+"/Processed/cd.npy", cd)
+    np.save(folder+"/Processed/delta_cp.npy", delta_cp)
+    np.save(folder+"/Processed/delta_cd.npy", delta_cd)
     np.save(folder+"/Processed/meanu.npy", meanu)
     np.save(folder+"/Processed/meanv.npy", meanv)
     np.save(folder+"/Processed/meanw.npy", meanw)
@@ -896,6 +930,9 @@ def main():
     plt.close("all")
 #    p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
 
+    r = Run("Perf-0.4", 12)
+    r.calcperf()
+
 #    process_tare_torque(2, plot=True)
 #    batch_process_tare_torque(plot=True)
 
@@ -910,7 +947,7 @@ def main():
 #    plot_perf_curves()
 #    plot_perf_re_dep()
     
-    plot_wake_profiles(z_H=0.25)
+#    plot_wake_profiles(z_H=0.25)
 
 #    plot_settling(1.0)
         
