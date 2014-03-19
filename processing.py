@@ -708,33 +708,43 @@ def plot_perf_re_dep(save=False, savepath=""):
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
     std_cp = np.zeros(len(speeds))
+    delta_cp = np.zeros(len(speeds))
     cd = np.zeros(len(speeds))
     std_cd = np.zeros(len(speeds))
+    delta_cd = np.zeros(len(speeds))
     Re_D = speeds*D/1e-6
     for n in range(len(speeds)):
         if speeds[n] in [0.3, 0.5, 0.7, 0.9, 1.1, 1.3]:
             section = "Perf-"+str(speeds[n])
             folder = folders[section]
             cp_s = np.load(folder+"/Processed/cp.npy")
+            dcp_s = np.load(folder+"/Processed/delta_cp.npy")
             cd_s = np.load(folder+"/Processed/cd.npy")
+            dcd_s = np.load(folder+"/Processed/delta_cd.npy")
             cp[n] = np.mean(cp_s)
+            delta_cp[n] = np.mean(dcp_s)
             cd[n] = np.mean(cd_s)
+            delta_cd[n] = np.mean(dcd_s)
         else:
             section = "Wake-"+str(speeds[n])
             folder = folders[section]
             cp_s = np.load(folder+"/Processed/cp.npy")
+            dcp_s = np.load(folder+"/Processed/delta_cp.npy")
             cd_s = np.load(folder+"/Processed/cd.npy")
+            dcd_s = np.load(folder+"/Processed/delta_cd.npy")
             cp[n], std_cp[n] = np.mean(cp_s), np.std(cp_s)
             cd[n], std_cd[n] = np.mean(cd_s), np.std(cd_s)
+            delta_cp[n] = np.mean(dcp_s)
+            delta_cd[n] = np.mean(dcd_s)
     plt.figure()
 #    plt.plot(Re_D, cp/cp[-4], 'ok', markerfacecolor="none", label="Experiment")
-    plt.errorbar(Re_D, cp/cp[-4], yerr=std_cp, fmt="-ok", ecolor="b",
+    plt.errorbar(Re_D, cp/cp[-4], yerr=delta_cp/2/cp[-4], fmt="-ok",
                  markerfacecolor="none", label="Exp.")
     plt.hold(True)
 #    plot_cfd_perf("cp")
     plt.xlabel(r"$Re_D$")
     plt.ylabel(r"$C_P/C_{P0}$")
-    plt.ylim((0.4, 1.2))
+#    plt.ylim((0.4, 1.2))
     ax = plt.gca()
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.grid()
@@ -743,7 +753,8 @@ def plot_perf_re_dep(save=False, savepath=""):
     if save:
         plt.savefig(savepath+"re_dep_cp.pdf")
     plt.figure()
-    plt.plot(Re_D, cd/cd[-4], 'ok', markerfacecolor="none", label="Experiment")
+    plt.errorbar(Re_D, cd/cd[-4], yerr=delta_cd/cd[-4]/2, fmt="-ok",
+                 markerfacecolor="none", label="Exp.")
     plt.xlabel(r"$Re_D$")
     plt.ylabel(r"$C_D/C_{D0}$")
     plt.hold(True)
@@ -930,8 +941,8 @@ def main():
     plt.close("all")
 #    p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
 
-    r = Run("Perf-0.4", 12)
-    r.calcperf()
+#    r = Run("Perf-0.4", 12)
+#    r.calcperf()
 
 #    process_tare_torque(2, plot=True)
 #    batch_process_tare_torque(plot=True)
@@ -945,7 +956,7 @@ def main():
 #    batch_process_all()
     
 #    plot_perf_curves()
-#    plot_perf_re_dep()
+    plot_perf_re_dep()
     
 #    plot_wake_profiles(z_H=0.25)
 
