@@ -67,7 +67,7 @@ times = {0.3 : (20.0, 80.0),
          0.9 : (16.0, 32.0),
          1.0 : (15.0, 30.0),
          1.1 : (15.0, 28.0),
-         1.2 : (15.0, 26.0),
+         1.2 : (14.0, 25.0),
          1.3 : (13.0, 23.0),
          1.4 : (12.0, 20.0)}
          
@@ -941,8 +941,10 @@ def main():
     plt.close("all")
 #    p = "C:/Users/Pete/Google Drive/Research/Presentations/2013.11.24 APS-DFD/Figures/"
 
-#    r = Run("Perf-0.4", 12)
-#    r.calcperf()
+    r = Run("Perf-1.2", 12)
+    r.calcperf()
+    r.plotperf()
+    r.plotwake()
 
 #    process_tare_torque(2, plot=True)
 #    batch_process_tare_torque(plot=True)
@@ -956,7 +958,7 @@ def main():
 #    batch_process_all()
     
 #    plot_perf_curves()
-    plot_perf_re_dep()
+#    plot_perf_re_dep()
     
 #    plot_wake_profiles(z_H=0.25)
 
