@@ -20,6 +20,7 @@ from styleplot import styleplot
 import json
 import os
 import fdiff
+import sys
 
 folders = {"Perf-0.3" : "Performance/U_0.3",
            "Perf-0.4" : "Performance/U_0.4",
@@ -81,9 +82,13 @@ times = {0.3 : (20.0, 80.0),
 ylabels = {"meanu" : r"$U/U_\infty$",
            "stdu" : r"$\sigma_u/U_\infty$",
            "meanv" : r"$V/U_\infty$",
-           "meanw" : r"$W/U_\infty$"}
+           "meanw" : r"$W/U_\infty$",
+           "meanuv" : r"$\overline{u'v'}/U_\infty^2$"}
 
-cfd_path = "C:/Users/Pete/Google Drive/OpenFOAM/pete-2.2.2/run/unh-rvat-2d_Re-dep/processed/"
+if "linux" in sys.platform:
+    cfd_path = "/media/pete/BigPocket/OpenFOAM/pete-2.3.0/run/unh-rvat-2d_re-dep_2"
+elif "win" in sys.platform:
+    cfd_path = "G:/OpenFOAM/pete-2.3.0/run/unh-rvat-2d_re-dep_2"
 
 class Run(object):
     """Object that represents a single turbine tow"""
@@ -335,15 +340,20 @@ class Run(object):
     def calc_unc_wake(self):
         """Computes delta values for wake measurements from Vectrino accuracy
         specs, not statistical uncertainties."""
-        u_seg = self.u_f[self.t1*200:self.t2*200]
-        u_seg = u_seg[~np.isnan(u_seg)]
-        d_u = calc_d_vel(u_seg)
-        u_seg = np.array(unp.uarray(u_seg, d_u/2))
-        meanu = u_seg.sum()/len(u_seg)
-        self.delta_meanu = meanu.std_dev*2
-        upup = (u_seg - self.meanu)**2
-        stdu = upup.sum()**0.5/len(u_seg)**0.5
-        self.delta_stdu = stdu.std_dev*2
+#        u_seg = self.u_f[self.t1*200:self.t2*200]
+#        u_seg = u_seg[~np.isnan(u_seg)]
+#        d_u = calc_d_vel(u_seg)
+#        u_seg = np.array(unp.uarray(u_seg, d_u/2))
+#        meanu = u_seg.sum()/len(u_seg)
+#        self.delta_meanu = meanu.std_dev*2
+#        upup = (u_seg - self.meanu)**2
+#        stdu = upup.sum()**0.5/len(u_seg)**0.5
+#        self.delta_stdu = stdu.std_dev*2
+#        print(meanu/self.U_nom)
+#        print(stdu/self.U_nom)
+#        self.delta_meanu = np.sqrt(np.sum(d_u**2))/len(u_seg)
+        self.delta_meanu = 0
+        self.delta_stdu = 0
         
     def detect_badvec(self):
         """Detects if Vectrino data is bad by looking at first 2 seconds of
@@ -591,7 +601,7 @@ class WakeProfile(object):
             ylab = r"$\overline{u'v'}/U_\infty^2$" 
         if newfig:
             if quantity == "meanu":
-                plt.figure(figsize=(11,6))
+                plt.figure(figsize=(10,5))
             else: plt.figure()
             plt.ylabel(ylab)
             plt.xlabel(r"$y/R$")
@@ -624,6 +634,7 @@ def batch_process_section(section, reprocess=True):
             meanv_old = np.load(folder+"/Processed/meanv.npy")
             meanw_old = np.load(folder+"/Processed/meanw.npy")
             stdu_old = np.load(folder+"/Processed/stdu.npy")
+            meanuv_old = np.load(folder+"/Processed/meanuv.npy")
             k_old = np.load(folder+"/Processed/k.npy")
         except IOError:
             runs_old = []
@@ -645,6 +656,7 @@ def batch_process_section(section, reprocess=True):
     meanv = np.zeros(len(runs))
     meanw = np.zeros(len(runs))
     stdu = np.zeros(len(runs))
+    meanuv = np.zeros(len(runs))
     k = np.zeros(len(runs))
     for n in range(len(runs)):
         nrun = runs[n]
@@ -667,6 +679,7 @@ def batch_process_section(section, reprocess=True):
                 meanu[n] = r.meanu
                 meanv[n] = r.meanv
                 meanw[n] = r.meanw
+                meanuv[n] = r.meanuv
                 stdu[n] = r.stdu
                 k[n] = r.k
         else:
@@ -681,6 +694,7 @@ def batch_process_section(section, reprocess=True):
             meanv[n] = meanv_old[np.where(runs_old==nrun)[0]]
             meanw[n] = meanw_old[np.where(runs_old==nrun)[0]]
             stdu[n] = stdu_old[np.where(runs_old==nrun)[0]]
+            meanuv[n] = meanuv_old[np.where(runs_old==nrun)[0]]
             k[n] = k_old[np.where(runs_old==nrun)[0]]
     np.save(folder+"/Processed/runs.npy", runs)
     np.save(folder+"/Processed/y_R.npy", y_R)
@@ -694,6 +708,7 @@ def batch_process_section(section, reprocess=True):
     np.save(folder+"/Processed/meanv.npy", meanv)
     np.save(folder+"/Processed/meanw.npy", meanw)
     np.save(folder+"/Processed/stdu.npy", stdu)
+    np.save(folder+"/Processed/meanuv.npy", meanuv)
     np.save(folder+"/Processed/k.npy", k)
     
 def batch_process_all():
@@ -728,14 +743,18 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
         plt.figure(figsize=figsize)
     if oldwake:
         plot_old_wake(quantity, y_R)
-    plt.plot(y_R, q/U, marker, markerfacecolor=fill, label=label)
+    if quantity in ["meanuv"]:
+        unorm = U**2
+    else:
+        unorm = U
+    plt.plot(y_R, q/unorm, marker, markerfacecolor=fill, label=label)
     plt.xlabel(r"$y/R$")
     plt.ylabel(ylabels[quantity])
     plt.grid(True)
     styleplot()
 
     
-def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=True,
+def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
                      cfd=False):
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
@@ -771,35 +790,35 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=True,
     plt.figure()
     if errorbars:    
         plt.errorbar(Re_D, cp/cp[-4], yerr=delta_cp/2/cp[-4], fmt="-ok",
-                     markerfacecolor="none", label="Exp.")
+                     markerfacecolor="none", label="Experiment")
     else:
-        plt.plot(Re_D, cp/cp[-4], 'ok', markerfacecolor="none", label="Exp.")
+        plt.plot(Re_D, cp/cp[-4], '-ok', markerfacecolor="none", label="Experiment")
     if cfd:
-        plot_cfd_perf("cp")
+        plot_cfd_perf("cp", normalize_by="CFD")
     plt.xlabel(r"$Re_D$")
     plt.ylabel(r"$C_P/C_{P0}$")
-    plt.ylim((0.4, 1.2))
+#    plt.ylim((0.4, 1.2))
     ax = plt.gca()
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.grid()
-    plt.legend(loc=2)
+    plt.legend(loc=4)
     styleplot()
     if save:
         plt.savefig(savepath + "/re_dep_cp" + savetype)
     plt.figure()
     if errorbars:
         plt.errorbar(Re_D, cd/cd[-4], yerr=delta_cd/cd[-4]/2, fmt="-ok",
-                     markerfacecolor="none", label="Exp.")
+                     markerfacecolor="none", label="Experiment")
     else:
-        plt.plot(Re_D, cd/cd[-4], 'ok', markerfacecolor="none", label="Exp.")
+        plt.plot(Re_D, cd/cd[-4], '-ok', markerfacecolor="none", label="Experiment")
     plt.xlabel(r"$Re_D$")
     plt.ylabel(r"$C_D/C_{D0}$")
     plt.hold(True)
     if cfd:
-        plot_cfd_perf("cd")
+        plot_cfd_perf("cd", normalize_by="CFD")
     plt.ylim((0.5,1.1))
     plt.grid()
-    plt.legend(loc=3)
+    plt.legend(loc=4)
     ax = plt.gca()
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     styleplot()
@@ -816,10 +835,14 @@ def plot_old_wake(quantity, y_R):
     plt.plot(y_R, q, 'xr', label=r"$Re_D=1.0 \times 10^6$", 
              markerfacecolor="none")
              
-def plot_cfd_perf(quantity="cp"):
-    Re_D = np.load(cfd_path + "Re_D.npy")
-    q = np.load(cfd_path + quantity+".npy")
-    plt.plot(Re_D, q/q[1], "--^k", label="Simulation")
+def plot_cfd_perf(quantity="cp", normalize_by="CFD"):
+    Re_D = np.load(cfd_path + "/processed/Re_D.npy")
+    q = np.load(cfd_path + "/processed/" + quantity + ".npy")
+    if normalize_by=="CFD":
+        normval = q[-3]
+    else:
+        normval = normalize_by
+    plt.plot(Re_D, q/normval, "--^k", label="Simulation")
     
 def plot_settling(U):
     """Plot data from the settling experiments."""
@@ -969,24 +992,37 @@ def plot_perf_curves():
 def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
     """Plots all wake profiles of interest."""
     legendlocs = {"meanu" : 4,
-                  "stdu" : 1}
-    for q in ["meanu", "stdu"]:
-        plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=True, marker="--vk")
-        plot_trans_wake_profile(q, U=0.6, z_H=z_H, newfig=False, marker="sk")
-        plot_trans_wake_profile(q, U=0.8, z_H=z_H, newfig=False, marker="<k")
-        plot_trans_wake_profile(q, U=1.0, z_H=z_H, newfig=False, marker="-ok")
-        plot_trans_wake_profile(q, U=1.2, z_H=z_H, newfig=False, marker="^k")
+                  "stdu" : 1,
+                  "meanuv" : 1}
+    for q in ["meanu", "stdu", "meanuv"]:
+        plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=True, marker="--vb",
+                                fill="blue")
+        plot_trans_wake_profile(q, U=0.6, z_H=z_H, newfig=False, marker="sk",
+                                fill="lightblue")
+        plot_trans_wake_profile(q, U=0.8, z_H=z_H, newfig=False, marker="<k",
+                                fill="gray")
+        plot_trans_wake_profile(q, U=1.0, z_H=z_H, newfig=False, marker="-ok",
+                                fill="orange")
+        plot_trans_wake_profile(q, U=1.2, z_H=z_H, newfig=False, marker="^k",
+                                fill="red")
         plt.legend(loc=legendlocs[q])
+        if q == "meanuv":
+            plt.ylim((-0.015, 0.025))
         if save:
             plt.savefig(savepath + "/" + q + savetype)
+    plt.show()
     
 def main():
     plt.close("all")
-    p = "C:/Users/Pete/Google Drive/Research/Papers/2014 METS/Figures"
+    p = "Google Drive/Research/Papers/2014 METS/Figures"
+    if "linux" in sys.platform:
+        p = "/home/pete/" + p
+    elif "win" in sys.platform:
+        p = "C:/Users/Pete/" + p
 
-    r = Run("Perf-1.2", 12)
-    r.calcperf()
-    r.calcwake()
+#    r = Run("Perf-0.4", 12)
+#    r.calcperf()
+#    r.calcwake()
 #    r.plotperf()
 #    r.plotwake()
 
@@ -999,14 +1035,13 @@ def main():
 #    batch_process_all()
     
 #    plot_perf_curves()
-#    plot_perf_re_dep(save=False, savepath=p)
+    plot_perf_re_dep(save=False, cfd=True, savepath=p)
     
-#    plot_wake_profiles(z_H=0.25, save=False, savepath=p)
+#    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 
 #    plot_settling(1.0)
         
 if __name__ == "__main__":
-    import sys
     if len(sys.argv) == 3:
         section = sys.argv[1]
         nrun = int(sys.argv[2])
