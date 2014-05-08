@@ -755,7 +755,7 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
 
     
 def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
-                     cfd=False):
+                     cfd=False, normalize_by="default"):
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
     std_cp = np.zeros(len(speeds))
@@ -788,37 +788,53 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
             delta_cp[n] = np.mean(dcp_s)
             delta_cd[n] = np.mean(dcd_s)
     plt.figure()
+    if normalize_by == "default":
+        norm_cp = cp[-4]
+        norm_cd = cd[-4]
+        norm_cfd = "CFD"
+    else:
+        norm_cp = normalize_by
+        norm_cd = normalize_by
+        norm_cfd = normalize_by
     if errorbars:    
-        plt.errorbar(Re_D, cp/cp[-4], yerr=delta_cp/2/cp[-4], fmt="-ok",
+        plt.errorbar(Re_D, cp/norm_cp, yerr=delta_cp/2/cp[-4], fmt="-ok",
                      markerfacecolor="none", label="Experiment")
     else:
-        plt.plot(Re_D, cp/cp[-4], '-ok', markerfacecolor="none", label="Experiment")
+        plt.plot(Re_D, cp/norm_cp, '-ok', markerfacecolor="none", label="Experiment")
     if cfd:
-        plot_cfd_perf("cp", normalize_by="CFD")
+        plot_cfd_perf("cp", normalize_by=norm_cfd)
     plt.xlabel(r"$Re_D$")
-    plt.ylabel(r"$C_P/C_{P0}$")
+    if normalize_by == "default":
+        plt.ylabel(r"$C_P/C_{P0}$")
+    else:
+        plt.ylabel(r"$C_P$")
 #    plt.ylim((0.4, 1.2))
     ax = plt.gca()
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.grid()
-    plt.legend(loc=4)
+    if cfd:
+        plt.legend(loc=4)
     styleplot()
     if save:
         plt.savefig(savepath + "/re_dep_cp" + savetype)
     plt.figure()
     if errorbars:
-        plt.errorbar(Re_D, cd/cd[-4], yerr=delta_cd/cd[-4]/2, fmt="-ok",
+        plt.errorbar(Re_D, cd/norm_cd, yerr=delta_cd/cd[-4]/2, fmt="-ok",
                      markerfacecolor="none", label="Experiment")
     else:
         plt.plot(Re_D, cd/cd[-4], '-ok', markerfacecolor="none", label="Experiment")
     plt.xlabel(r"$Re_D$")
-    plt.ylabel(r"$C_D/C_{D0}$")
+    if normalize_by == "default":
+        plt.ylabel(r"$C_D/C_{D0}$")
+    else:
+        plt.ylabel(r"$C_D$")
     plt.hold(True)
     if cfd:
-        plot_cfd_perf("cd", normalize_by="CFD")
-    plt.ylim((0.5,1.1))
+        plot_cfd_perf("cd", normalize_by=norm_cfd)
+#    plt.ylim((0.5,1.1))
     plt.grid()
-    plt.legend(loc=4)
+    if cfd:
+        plt.legend(loc=4)
     ax = plt.gca()
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     styleplot()
@@ -1035,7 +1051,8 @@ def main():
 #    batch_process_all()
     
 #    plot_perf_curves()
-    plot_perf_re_dep(save=False, cfd=True, savepath=p)
+    p = "C:/Users/Pete/Google Drive/temp"
+    plot_perf_re_dep(save=True, cfd=False, savepath=p, normalize_by=1.0)
     
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 
