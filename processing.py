@@ -243,8 +243,8 @@ class Run(object):
         self.calc_unc_perf()
         print("U_nom =", self.U_nom)
         if self.lin_enc:
-            self.meanu_enc, x = ts.calcstats(self.U_ni, self.t1, self.t2, self.sr_ni)
-            print("U_enc =", self.meanu_enc)
+            self.meanu_enc, self.stdu_enc = ts.calcstats(self.U_ni, self.t1, self.t2, self.sr_ni)
+            print("U_enc =", self.meanu_enc, "std =", self.stdu_enc)
         print("tsr =", self.meantsr)
         print("C_P =", self.meancp, "+/-", self.delta_cp/2)
         print("C_D =", self.meancd, "+/-", self.delta_cd/2)
@@ -755,7 +755,7 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
 
     
 def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
-                     cfd=False, normalize_by="default"):
+                     cfd=False, normalize_by="default", dual_xaxes=False):
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
     std_cp = np.zeros(len(speeds))
@@ -764,6 +764,7 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
     std_cd = np.zeros(len(speeds))
     delta_cd = np.zeros(len(speeds))
     Re_D = speeds*D/1e-6
+    Re_c = speeds*1.9*0.14/1e-6
     for n in range(len(speeds)):
         if speeds[n] in [0.3, 0.5, 0.7, 0.9, 1.1, 1.3]:
             section = "Perf-"+str(speeds[n])
@@ -810,10 +811,22 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
         plt.ylabel(r"$C_P$")
 #    plt.ylim((0.4, 1.2))
     ax = plt.gca()
-    ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.grid()
+    if dual_xaxes:
+        plt.text(1.27e6, 1.11, r"$\times 10^5$")
+        ax2 = ax.twiny()
+        ax.xaxis.get_majorticklocs()
+        ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
+        ticklabs = ticklabs/D*1.9*0.14/1e5
+        ticklabs = [str(np.round(ticklab, decimals=1)) for ticklab in ticklabs]
+        ax2.set_xticks(ax.xaxis.get_ticklocs())
+        ax2.set_xlim((0.2e6, 1.4e6))
+        ax2.set_xticklabels(ticklabs)
+#        ax2.xaxis.major.formatter.set_powerlimits((0,0)) 
+        ax2.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
     if cfd:
         plt.legend(loc=4)
+    ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     styleplot()
     if save:
         plt.savefig(savepath + "/re_dep_cp" + savetype)
@@ -1036,7 +1049,7 @@ def main():
     elif "win" in sys.platform:
         p = "C:/Users/Pete/" + p
 
-#    r = Run("Perf-0.4", 12)
+#    r = Run("Wake-1.0", 50)
 #    r.calcperf()
 #    r.calcwake()
 #    r.plotperf()
@@ -1052,7 +1065,8 @@ def main():
     
 #    plot_perf_curves()
     p = "C:/Users/Pete/Google Drive/temp"
-    plot_perf_re_dep(save=True, cfd=False, savepath=p, normalize_by=1.0)
+    plot_perf_re_dep(save=True, cfd=False, savepath=p, normalize_by="default",
+                     dual_xaxes=True)
     
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 
