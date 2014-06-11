@@ -16,11 +16,13 @@ import timeseries as ts
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from scipy import interpolate
-from styleplot import styleplot
+import styleplot
 import json
 import os
 import fdiff
 import sys
+
+styleplot.setpltparams()
 
 folders = {"Perf-0.3" : "Performance/U_0.3",
            "Perf-0.4" : "Performance/U_0.4",
@@ -377,7 +379,7 @@ class Run(object):
             quantity = self.torque
         plt.figure()
         plt.plot(self.t_ni, quantity, 'k')
-        styleplot()
+        plt.tight_layout()
         
     def plotwake(self):
         """Plot mean and standard deviation for each velocity component"""
@@ -405,7 +407,7 @@ class Run(object):
             self.load()
         plt.figure()
         plt.plot(self.t_ni, self.U_ni)
-        styleplot()
+        plt.tight_layout()
         plt.show()
 
 class PerfCurve(object):
@@ -488,7 +490,7 @@ class PerfCurve(object):
         plt.xlabel(r"$\lambda$")
         plt.ylabel(r"$C_P$")
         plt.grid(True)
-        styleplot()
+        plt.tight_layout()
         if show:
             plt.show()
         if save:
@@ -523,7 +525,7 @@ class PerfCurve(object):
         plt.ylabel(r"$C_D$")
         plt.ylim((0, 1.2))
         plt.grid(True)
-        styleplot()
+        plt.tight_layout()
         if show:
             plt.show()
         if save:
@@ -609,7 +611,7 @@ class WakeProfile(object):
         plt.plot(y_R, q, "-.^k", label=r"$Re_D=0.4 \times 10^6$")
 #        plot_old_wake(quantity, y_R)
         plt.legend(loc=loc)
-        styleplot()
+        plt.tight_layout()
         if show:
             plt.show()
         if save:
@@ -751,7 +753,7 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
     plt.xlabel(r"$y/R$")
     plt.ylabel(ylabels[quantity])
     plt.grid(True)
-    styleplot()
+    plt.tight_layout()
 
     
 def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
@@ -827,7 +829,7 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
     if cfd:
         plt.legend(loc=4)
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
-    styleplot()
+    plt.tight_layout()
     if save:
         plt.savefig(savepath + "/re_dep_cp" + savetype)
     plt.figure()
@@ -850,7 +852,7 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
         plt.legend(loc=4)
     ax = plt.gca()
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
-    styleplot()
+    plt.tight_layout()
     plt.show()
     if save:
         plt.savefig(savepath + "/re_dep_cd" + savetype)
@@ -890,12 +892,12 @@ def plot_settling(U):
     plt.plot(t-t[0], u, "k")
     plt.xlabel("t (s)")
     plt.ylabel("$u$ (m/s)")
-    styleplot()
+    plt.tight_layout()
     plt.figure()
     plt.plot(t_std, u_std)
     plt.xlabel("t (s)")
     plt.ylabel(r"$\sigma_u$")
-    styleplot()
+    plt.tight_layout()
     
 def process_tare_drag(nrun, plot=False):
     """Processes a single tare drag run."""
@@ -948,7 +950,7 @@ def batch_process_tare_drag(plot=False):
         plt.plot(speed, taredrag, "-ok", markerfacecolor="None")
         plt.xlabel("Tow speed (m/s)")
         plt.ylabel("Tare drag (N)")
-        styleplot()
+        plt.tight_layout()
     
 def process_tare_torque(nrun, plot=False):
     """Processes a single tare torque run."""
@@ -976,7 +978,7 @@ def process_tare_torque(nrun, plot=False):
     if plot:
         plt.figure()
         plt.plot(t_ni, torque)
-        styleplot()
+        plt.tight_layout()
     return meanrpm, -meantorque
     
 def batch_process_tare_torque(plot=False):
@@ -1003,9 +1005,9 @@ def batch_process_tare_torque(plot=False):
         plt.xlabel("RPM")
         plt.ylabel("Tare torque (Nm)")
         plt.ylim((0, 1))
-        styleplot()
+        plt.tight_layout()
         
-def plot_perf_curves():
+def plot_perf_curves(subplots=True):
     """Plots all performance curves."""
     PerfCurve(0.4).plotcp(newfig=True, marker=">")
     PerfCurve(0.6).plotcp(newfig=False, marker="s")
@@ -1043,7 +1045,7 @@ def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
     
 def main():
     plt.close("all")
-    p = "Google Drive/Research/Papers/2014 METS/Figures"
+    p = "Google Drive/Research/Papers/Re dependence CFT/figures"
     if "linux" in sys.platform:
         p = "/home/pete/" + p
     elif "win" in sys.platform:
@@ -1063,10 +1065,9 @@ def main():
     
 #    batch_process_all()
     
-#    plot_perf_curves()
-    p = "C:/Users/Pete/Google Drive/temp"
-    plot_perf_re_dep(save=True, cfd=False, savepath=p, normalize_by="default",
-                     dual_xaxes=True)
+    plot_perf_curves()
+#    plot_perf_re_dep(save=True, cfd=False, savepath=p, normalize_by="default",
+#                     dual_xaxes=False)
     
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 
