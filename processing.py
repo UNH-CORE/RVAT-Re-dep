@@ -952,6 +952,12 @@ def batch_process_tare_drag(plot=False):
         plt.xlabel("Tow speed (m/s)")
         plt.ylabel("Tare drag (N)")
         plt.tight_layout()
+        
+def plot_tare_drag():
+    speeds = np.load("Tare drag/Processed/U_nom.npy")
+    drag = np.load("Tare drag/Processed/taredrag.npy")
+    plt.figure()
+    plt.plot(speeds, drag, "-ok")
     
 def process_tare_torque(nrun, plot=False):
     """Processes a single tare torque run."""
@@ -1074,10 +1080,11 @@ def main():
 
 #    process_tare_drag(5, plot=True)
 #    batch_process_tare_drag(plot=True)
+    plot_tare_drag()
     
 #    batch_process_all()
     
-    plot_perf_curves()
+#    plot_perf_curves()
 #    plot_perf_re_dep(save=True, cfd=False, savepath=p, normalize_by="default",
 #                     dual_xaxes=False)
     
