@@ -617,6 +617,19 @@ class WakeProfile(object):
             plt.show()
         if save:
             plt.savefig(savepath+quantity+"_Re_dep_exp"+savetype)
+    
+class WakeMap(object):
+    def __init__(self):
+        pass
+    
+    def plot_meancomboquiv(self):
+        pass
+    
+    def plot_xvorticity(self):
+        pass
+        
+    def show(self):
+        plt.show()
             
 def batch_process_section(section, reprocess=True):
     """Processes all data in a section. Will skip already processed
@@ -1080,11 +1093,11 @@ def main():
 
 #    process_tare_drag(5, plot=True)
 #    batch_process_tare_drag(plot=True)
-    plot_tare_drag()
+#    plot_tare_drag()
     
 #    batch_process_all()
     
-#    plot_perf_curves()
+    plot_perf_curves(save=True, savepath=p)
 #    plot_perf_re_dep(save=True, cfd=False, savepath=p, normalize_by="default",
 #                     dual_xaxes=False)
     
