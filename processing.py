@@ -676,23 +676,23 @@ class WakeMap(object):
                            savetype=".pdf"):
         plt.figure(figsize=(10,6))
         # Add contours of mean velocity
-        cs = plt.contourf(self.y_R, self.z_H, self.meanu, 20, 
+        cs = plt.contourf(self.y_R, self.z_H, self.meanu/self.U_infty, 20, 
                           cmap=plt.cm.coolwarm)
         cb = plt.colorbar(cs, shrink=1, extend="both", 
                           orientation="horizontal", pad=0.2)
         cb.set_label(r"$U/U_{\infty}$")
         plt.hold(True)
         # Make quiver plot of v and w velocities
-        Q = plt.quiver(self.y_R, self.z_H, self.meanv, self.meanw, 
-                       angles="xy", width=0.0022)
+        Q = plt.quiver(self.y_R, self.z_H, self.meanv/self.U_infty, 
+                       self.meanw/self.U_infty, angles="xy", width=0.0022)
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
         plt.xlim(-3.2, 3.2)
-        plt.quiverkey(Q, 0.75, 0.3, 0.1, r"$0.1 U_\infty$",
-                   labelpos="E",
-                   coordinates="figure",
-                   fontproperties={"size": "small"})
+        plt.quiverkey(Q, 0.75, 0.3, 0.1/self.U_infty, r"$0.1 U_\infty$",
+                      labelpos="E",
+                      coordinates="figure",
+                      fontproperties={"size": "small"})
         plt.hlines(0.5, -1, 1, linestyles="solid", colors="gray",
                    linewidth=3)
         plt.vlines(-1, -0.2, 0.5, linestyles="solid", colors="gray",
@@ -1191,7 +1191,9 @@ def main():
 
 #    plot_settling(1.0)
 
-    wm = WakeMap(1.0)
+    wm = WakeMap(0.4)
+    wm.plot_meancomboquiv()
+    wm = WakeMap(1.2)
     wm.plot_meancomboquiv()
         
 if __name__ == "__main__":
