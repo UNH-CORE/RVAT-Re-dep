@@ -45,6 +45,14 @@ folders = {"Perf-0.3" : "Performance/U_0.3",
            "Shakedown" : "Shakedown",
            "Trash-Wake-0.4" : "Trash/Wake/U_0.4"}
            
+# Dict for runs corresponding to each height
+wakeruns = {0.0 : np.arange(0, 45),
+            0.125 : np.arange(45, 90),
+            0.25 : np.arange(90, 135),
+            0.375 : np.arange(135, 180),
+            0.5 : np.arange(180, 225),
+            0.625 : np.arange(225, 270)}
+           
 # Constants
 H = 1.0
 D = 1.0
@@ -538,11 +546,8 @@ class WakeProfile(object):
         self.z_H = z_H
         self.section = "Wake-" + str(U)
         self.folder = folders[self.section]
-        rundict = {0.0 : np.arange(0, 45),
-                   0.125 : np.arange(45, 90),
-                   0.25 : np.arange(90, 135),
-                   0.375 : np.arange(135, 180)}
-        self.runs = rundict[z_H]
+        self.runs = wakeruns[z_H]
+        self.load()
         
     def process(self):
         """Runs through data to calculate statistics"""
@@ -573,10 +578,15 @@ class WakeProfile(object):
         
     def load(self):
         """Loads the processed data"""
-        self.y_R = np.load(self.folder+"/Processed/y_R.npy")
-        self.meanu = np.load(self.folder+"/Processed/meanu.npy")
-        self.meanuv = np.load(self.folder+"/Processed/meanuv.npy")
-        self.stdu = np.load(self.folder+"/Processed/stdu.npy")
+        try:
+            self.y_R = np.load(self.folder+"/Processed/y_R.npy")[self.runs]
+            self.meanu = np.load(self.folder+"/Processed/meanu.npy")[self.runs]
+            self.meanv = np.load(self.folder+"/Processed/meanv.npy")[self.runs]
+            self.meanw = np.load(self.folder+"/Processed/meanw.npy")[self.runs]
+            self.meanuv = np.load(self.folder+"/Processed/meanuv.npy")[self.runs]
+            self.stdu = np.load(self.folder+"/Processed/stdu.npy")[self.runs]
+        except IOError:
+            print("Cannot load wake profile data")
         
     def plot(self, quantity, newfig=True, show=True, save=False, 
              savepath="", savetype=".pdf", linetype='--ok'):
@@ -619,10 +629,46 @@ class WakeProfile(object):
             plt.savefig(savepath+quantity+"_Re_dep_exp"+savetype)
     
 class WakeMap(object):
-    def __init__(self):
-        pass
+    def __init__(self, U_infty):
+        self.U_infty = U_infty
+        self.z_H = [0.0, 0.125, 0.25, 0.375, 0.5, 0.625]
+        self.loaded = False
+        self.load()
+        
+    def load(self):
+        self.y_R = WakeProfile(self.U_infty, 0).y_R
+        self.meanu = np.zeros((len(self.z_H), len(self.y_R)))
+        for z_H in self.z_H:
+            wp = WakeProfile(self.U_infty, z_H)
+            self.meanu[self.z_H.index(z_H)] = wp.meanu
+        self.loaded = True
+        
+    def turb_lines(self):
+        plt.hlines(0.5, -1, 1, linestyles="solid", linewidth=2)
+        plt.vlines(-1, 0, 0.5, linestyles="solid", linewidth=2)
+        plt.vlines(1, 0, 0.5, linestyles="solid", linewidth=2)
+        
+    def plot_meanu(self, save=False, show=False, savepath="", savetype=".pdf"):
+        # Plot contours of mean streamwise velocity
+        plt.figure(figsize=(10,5))
+        cs = plt.contourf(self.y_R, self.z_H, self.meanu, 20,
+                          cmap=plt.cm.coolwarm)
+        plt.xlabel(r"$y/R$")
+        plt.ylabel(r"$z/H$")
+        cb = plt.colorbar(cs, shrink=1, extend="both", 
+                          orientation="horizontal", pad=0.3)
+        cb.set_label(r"$U/U_{\infty}$")
+        self.turb_lines()
+        ax = plt.axes()
+        ax.set_aspect(2)
+        plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
+        plt.tight_layout()
+        if save:
+            plt.savefig(savepath+"/meanucont"+savetype)
+        if show:
+            self.show()
     
-    def plot_meancomboquiv(self):
+    def plot_meancomboquiv(self, show=False):
         pass
     
     def plot_xvorticity(self):
@@ -1082,12 +1128,14 @@ def main():
     elif "win" in sys.platform:
         p = "C:/Users/Pete/" + p
 
+    """Dealing with individual runs"""
 #    r = Run("Wake-1.0", 50)
 #    r.calcperf()
 #    r.calcwake()
 #    r.plotperf()
 #    r.plotwake()
 
+    """Tare drag and torque"""
 #    process_tare_torque(2, plot=True)
 #    batch_process_tare_torque(plot=True)
 
@@ -1095,15 +1143,19 @@ def main():
 #    batch_process_tare_drag(plot=True)
 #    plot_tare_drag()
     
+    """Batch processing"""
 #    batch_process_all()
     
-    plot_perf_curves(save=True, savepath=p)
+#    plot_perf_curves(save=True, savepath=p)
 #    plot_perf_re_dep(save=True, cfd=False, savepath=p, normalize_by="default",
 #                     dual_xaxes=False)
     
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 
 #    plot_settling(1.0)
+
+    wm = WakeMap(1.0)
+    wm.plot_meanu()
         
 if __name__ == "__main__":
     if len(sys.argv) == 3:
