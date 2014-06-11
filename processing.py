@@ -14,6 +14,7 @@ import uncertainties as unc
 from uncertainties import unumpy as unp
 import timeseries as ts
 import matplotlib.pyplot as plt
+import matplotlib
 from scipy.io import loadmat
 from scipy import interpolate
 import styleplot
@@ -1007,18 +1008,29 @@ def batch_process_tare_torque(plot=False):
         plt.ylim((0, 1))
         plt.tight_layout()
         
-def plot_perf_curves(subplots=True):
+def plot_perf_curves(subplots=True, save=False, savepath="", savetype=".pdf"):
     """Plots all performance curves."""
-    PerfCurve(0.4).plotcp(newfig=True, marker=">")
+    if subplots:
+        plt.figure(figsize=(12,5))
+        plt.subplot(121)
+    PerfCurve(0.4).plotcp(newfig=not subplots, marker=">")
     PerfCurve(0.6).plotcp(newfig=False, marker="s")
     PerfCurve(0.8).plotcp(newfig=False, marker="<")
     PerfCurve(1.0).plotcp(newfig=False, marker="o")
     PerfCurve(1.2).plotcp(newfig=False, marker="^")
-    PerfCurve(0.4).plotcd(newfig=True, marker=">")
+    if subplots:
+        plt.subplot(122)
+    PerfCurve(0.4).plotcd(newfig=not subplots, marker=">")
     PerfCurve(0.6).plotcd(newfig=False, marker="s")
     PerfCurve(0.8).plotcd(newfig=False, marker="<")
     PerfCurve(1.0).plotcd(newfig=False, marker="o")
     PerfCurve(1.2).plotcd(newfig=False, marker="^")
+    plt.legend(("0.4e6", "0.6e6", "0.8e6", "1.0e6", "1.2e6"), 
+               loc="lower right", ncol=2)
+    if save:
+        if savepath != "":
+            savepath += "/"
+        plt.savefig(savepath + "perf_curves" + savetype)
     
 def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
     """Plots all wake profiles of interest."""
