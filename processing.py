@@ -638,9 +638,13 @@ class WakeMap(object):
     def load(self):
         self.y_R = WakeProfile(self.U_infty, 0).y_R
         self.meanu = np.zeros((len(self.z_H), len(self.y_R)))
+        self.meanv = self.meanu*1
+        self.meanw = self.meanu*1
         for z_H in self.z_H:
             wp = WakeProfile(self.U_infty, z_H)
             self.meanu[self.z_H.index(z_H)] = wp.meanu
+            self.meanv[self.z_H.index(z_H)] = wp.meanv
+            self.meanw[self.z_H.index(z_H)] = wp.meanw
         self.loaded = True
         
     def turb_lines(self):
@@ -664,12 +668,45 @@ class WakeMap(object):
         plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
         plt.tight_layout()
         if save:
-            plt.savefig(savepath+"/meanucont"+savetype)
+            plt.savefig(savepath+"/Ucont"+savetype)
         if show:
             self.show()
     
-    def plot_meancomboquiv(self, show=False):
-        pass
+    def plot_meancomboquiv(self, save=False, show=False, savepath="",
+                           savetype=".pdf"):
+        plt.figure(figsize=(10,6))
+        # Add contours of mean velocity
+        cs = plt.contourf(self.y_R, self.z_H, self.meanu, 20, 
+                          cmap=plt.cm.coolwarm)
+        cb = plt.colorbar(cs, shrink=1, extend="both", 
+                          orientation="horizontal", pad=0.2)
+        cb.set_label(r"$U/U_{\infty}$")
+        plt.hold(True)
+        # Make quiver plot of v and w velocities
+        Q = plt.quiver(self.y_R, self.z_H, self.meanv, self.meanw, 
+                       angles="xy", width=0.0022)
+        plt.xlabel(r"$y/R$")
+        plt.ylabel(r"$z/H$")
+        plt.ylim(-0.2, 0.78)
+        plt.xlim(-3.2, 3.2)
+        plt.quiverkey(Q, 0.75, 0.3, 0.1, r"$0.1 U_\infty$",
+                   labelpos="E",
+                   coordinates="figure",
+                   fontproperties={"size": "small"})
+        plt.hlines(0.5, -1, 1, linestyles="solid", colors="gray",
+                   linewidth=3)
+        plt.vlines(-1, -0.2, 0.5, linestyles="solid", colors="gray",
+                   linewidth=3)
+        plt.vlines(1, -0.2, 0.5, linestyles="solid", colors="gray",
+                   linewidth=3)
+        ax = plt.axes()
+        ax.set_aspect(2)
+        plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
+        plt.tight_layout()
+        if show:
+            self.show()
+        if save:
+            plt.savefig(savepath+"/meancomboquiv"+savetype)
     
     def plot_xvorticity(self):
         pass
@@ -1155,7 +1192,7 @@ def main():
 #    plot_settling(1.0)
 
     wm = WakeMap(1.0)
-    wm.plot_meanu()
+    wm.plot_meancomboquiv()
         
 if __name__ == "__main__":
     if len(sys.argv) == 3:
