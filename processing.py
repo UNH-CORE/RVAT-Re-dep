@@ -541,7 +541,7 @@ class PerfCurve(object):
             plt.savefig(figname)
         
 class WakeProfile(object):
-    def __init__(self, U, z_H):
+    def __init__(self, U, z_H, orientation="horizontal"):
         self.U = U
         self.z_H = z_H
         self.section = "Wake-" + str(U)
@@ -647,10 +647,13 @@ class WakeMap(object):
             self.meanw[self.z_H.index(z_H)] = wp.meanw
         self.loaded = True
         
-    def turb_lines(self):
-        plt.hlines(0.5, -1, 1, linestyles="solid", linewidth=2)
-        plt.vlines(-1, 0, 0.5, linestyles="solid", linewidth=2)
-        plt.vlines(1, 0, 0.5, linestyles="solid", linewidth=2)
+    def turb_lines(self, linestyles="solid", linewidth=3, colors="gray"):
+        plt.hlines(0.5, -1, 1, linestyles=linestyles, colors="gray",
+                   linewidth=linewidth)
+        plt.vlines(-1, -0.2, 0.5, linestyles=linestyles, colors="gray",
+                   linewidth=linewidth)
+        plt.vlines(1, -0.2, 0.5, linestyles=linestyles, colors="gray",
+                   linewidth=linewidth)
         
     def plot_meanu(self, save=False, show=False, savepath="", savetype=".pdf"):
         # Plot contours of mean streamwise velocity
@@ -689,16 +692,11 @@ class WakeMap(object):
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
         plt.xlim(-3.2, 3.2)
-        plt.quiverkey(Q, 0.75, 0.3, 0.1/self.U_infty, r"$0.1 U_\infty$",
+        plt.quiverkey(Q, 0.75, 0.3, 0.1, r"$0.1 U_\infty$",
                       labelpos="E",
                       coordinates="figure",
                       fontproperties={"size": "small"})
-        plt.hlines(0.5, -1, 1, linestyles="solid", colors="gray",
-                   linewidth=3)
-        plt.vlines(-1, -0.2, 0.5, linestyles="solid", colors="gray",
-                   linewidth=3)
-        plt.vlines(1, -0.2, 0.5, linestyles="solid", colors="gray",
-                   linewidth=3)
+        self.turb_lines()
         ax = plt.axes()
         ax.set_aspect(2)
         plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
@@ -710,6 +708,40 @@ class WakeMap(object):
     
     def plot_xvorticity(self):
         pass
+    
+    def plot_meancomboquiv_diff(self, U_infty_diff, save=False, show=False):
+        wm_diff = WakeMap(U_infty_diff)
+        meanu_diff = (self.meanu/self.U_infty - \
+                wm_diff.meanu/wm_diff.U_infty)/self.meanu/self.U_infty*100
+        meanv_diff = (self.meanv/self.U_infty - \
+                wm_diff.meanv/wm_diff.U_infty)/self.meanv/self.U_infty*100
+        meanw_diff = (self.meanw/self.U_infty - \
+                wm_diff.meanw/wm_diff.U_infty)/self.meanw/self.U_infty*100
+        plt.figure(figsize=(10,6))
+        cs = plt.contourf(self.y_R, self.z_H, meanu_diff, 20,
+                          cmap=plt.cm.coolwarm)
+        cb = plt.colorbar(cs, shrink=1, extend="both",
+                          orientation="horizontal", pad=0.2)
+        cb.set_label(r"$\Delta U$ (\%)")
+        plt.hold(True)
+        # Make quiver plot of v and w velocities
+        Q = plt.quiver(self.y_R, self.z_H, meanv_diff, 
+                       meanw_diff, angles="xy", width=0.0022)
+        plt.xlabel(r"$y/R$")
+        plt.ylabel(r"$z/H$")
+        plt.ylim(-0.2, 0.78)
+        plt.xlim(-3.2, 3.2)
+        plt.quiverkey(Q, 0.75, 0.3, 1, r"100",
+                      labelpos="E",
+                      coordinates="figure",
+                      fontproperties={"size": "small"})
+        plt.axes().set_aspect(2)
+        plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
+        plt.tight_layout()
+        if show:
+            self.show()
+        if save:
+            plt.savefig(savepath+"/meancomboquiv_diff"+savetype)
         
     def show(self):
         plt.show()
@@ -1156,6 +1188,7 @@ def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
         if save:
             plt.savefig(savepath + "/" + q + savetype)
     plt.show()
+
     
 def main():
     plt.close("all")
@@ -1192,9 +1225,7 @@ def main():
 #    plot_settling(1.0)
 
     wm = WakeMap(0.4)
-    wm.plot_meancomboquiv()
-    wm = WakeMap(1.2)
-    wm.plot_meancomboquiv()
+    wm.plot_meancomboquiv_diff(1.2)
         
 if __name__ == "__main__":
     if len(sys.argv) == 3:
