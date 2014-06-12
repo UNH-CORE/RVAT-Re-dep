@@ -709,7 +709,30 @@ class WakeMap(object):
     def plot_xvorticity(self):
         pass
     
-    def plot_meancomboquiv_diff(self, U_infty_diff, save=False, show=False):
+    def plot_meanu_diff(self, U_infty_diff, save=False, show=False,
+                        savepath="", savetype=""):
+        wm_diff = WakeMap(U_infty_diff)
+        meanu_diff = (self.meanu/self.U_infty - \
+                wm_diff.meanu/wm_diff.U_infty)/self.meanu/self.U_infty*100
+        plt.figure(figsize=(12,3.75))
+        cs = plt.contourf(self.y_R, self.z_H, meanu_diff, 20,
+                          cmap=plt.cm.coolwarm)
+        cb = plt.colorbar(cs, shrink=1, fraction=0.15,
+                          orientation="vertical", pad=0.05)
+        cb.set_label(r"$\Delta U$ (\%)")
+        plt.xlabel(r"$y/R$")
+        plt.ylabel(r"$z/H$")
+        plt.axes().set_aspect(2)
+        plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
+        plt.tight_layout()
+        if show:
+            self.show()
+        if save:
+            if savepath: savepath += "/"
+            plt.savefig(savepath+"/meanu_diff"+savetype)
+    
+    def plot_meancomboquiv_diff(self, U_infty_diff, save=False, show=False,
+                                savepath="", savetype=""):
         wm_diff = WakeMap(U_infty_diff)
         meanu_diff = (self.meanu/self.U_infty - \
                 wm_diff.meanu/wm_diff.U_infty)/self.meanu/self.U_infty*100
@@ -717,11 +740,11 @@ class WakeMap(object):
                 wm_diff.meanv/wm_diff.U_infty)/self.meanv/self.U_infty*100
         meanw_diff = (self.meanw/self.U_infty - \
                 wm_diff.meanw/wm_diff.U_infty)/self.meanw/self.U_infty*100
-        plt.figure(figsize=(10,6))
+        plt.figure(figsize=(12,3.75))
         cs = plt.contourf(self.y_R, self.z_H, meanu_diff, 20,
                           cmap=plt.cm.coolwarm)
-        cb = plt.colorbar(cs, shrink=1, extend="both",
-                          orientation="horizontal", pad=0.2)
+        cb = plt.colorbar(cs, shrink=1, fraction=0.15,
+                          orientation="vertical", pad=0.05)
         cb.set_label(r"$\Delta U$ (\%)")
         plt.hold(True)
         # Make quiver plot of v and w velocities
@@ -731,7 +754,7 @@ class WakeMap(object):
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
         plt.xlim(-3.2, 3.2)
-        plt.quiverkey(Q, 0.75, 0.3, 1, r"100",
+        plt.quiverkey(Q, 0.75, 0.3, 100, r"100",
                       labelpos="E",
                       coordinates="figure",
                       fontproperties={"size": "small"})
@@ -741,6 +764,7 @@ class WakeMap(object):
         if show:
             self.show()
         if save:
+            if savepath: savepath += "/"
             plt.savefig(savepath+"/meancomboquiv_diff"+savetype)
         
     def show(self):
@@ -1224,8 +1248,9 @@ def main():
 
 #    plot_settling(1.0)
 
-    wm = WakeMap(0.4)
-    wm.plot_meancomboquiv_diff(1.2)
+    wm = WakeMap(0.8)
+    wm.plot_meancomboquiv_diff(1.0)
+    plt.show()
         
 if __name__ == "__main__":
     if len(sys.argv) == 3:
