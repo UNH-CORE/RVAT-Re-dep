@@ -768,11 +768,18 @@ class WakeMap(object):
             plt.savefig(savepath+"/meancomboquiv_diff"+savetype)
             
     def plot_meanu_diff_std(self):
-        meanu = []
-        for u in np.arange(0.4, 1.4, 0.2):
-            meanu.append(WakeMap(u).meanu)
-        meanu = np.asarray(meanu)
-        print(meanu.shape)
+        u_ref = 1.0
+        meanu_ref = WakeMap(u_ref).meanu/u_ref
+        std = []
+        u_array = np.arange(0.4, 1.4, 0.2)
+        for u in u_array:
+            wm = WakeMap(u)
+            meanu = wm.meanu/wm.U_infty
+            std.append(np.std((meanu - meanu_ref)/meanu_ref))
+        std = np.asarray(std)
+        plt.figure()
+        plt.plot(u_array, std)
+        plt.show()
         
     def show(self):
         plt.show()
