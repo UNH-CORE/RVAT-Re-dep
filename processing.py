@@ -786,7 +786,7 @@ class WakeMap(object):
             
 def batch_process_section(section, reprocess=True):
     """Processes all data in a section. Will skip already processed
-    runs if `reprocess = False`. Something is up with this algorith, as it
+    runs if `reprocess = False`. Something is up with this algorithm, as it
     sometimes will save the wrong y_R value."""
     folder = folders[section]
     if not reprocess:
