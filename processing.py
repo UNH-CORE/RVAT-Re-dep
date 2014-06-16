@@ -740,7 +740,7 @@ class WakeMap(object):
                 wm_diff.meanv/wm_diff.U_infty)/self.meanv/self.U_infty*100
         meanw_diff = (self.meanw/self.U_infty - \
                 wm_diff.meanw/wm_diff.U_infty)/self.meanw/self.U_infty*100
-        plt.figure(figsize=(12,3.75))
+        plt.figure(figsize=(12,4))
         cs = plt.contourf(self.y_R, self.z_H, meanu_diff, 20,
                           cmap=plt.cm.coolwarm)
         cb = plt.colorbar(cs, shrink=1, fraction=0.15,
@@ -766,6 +766,13 @@ class WakeMap(object):
         if save:
             if savepath: savepath += "/"
             plt.savefig(savepath+"/meancomboquiv_diff"+savetype)
+            
+    def plot_meanu_diff_std(self):
+        meanu = []
+        for u in np.arange(0.4, 1.4, 0.2):
+            meanu.append(WakeMap(u).meanu)
+        meanu = np.asarray(meanu)
+        print(meanu.shape)
         
     def show(self):
         plt.show()
@@ -1249,7 +1256,7 @@ def main():
 #    plot_settling(1.0)
 
     wm = WakeMap(0.8)
-    wm.plot_meancomboquiv_diff(1.0)
+    wm.plot_meanu_diff_std()
     plt.show()
         
 if __name__ == "__main__":
