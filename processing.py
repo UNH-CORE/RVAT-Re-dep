@@ -94,7 +94,10 @@ ylabels = {"meanu" : r"$U/U_\infty$",
            "stdu" : r"$\sigma_u/U_\infty$",
            "meanv" : r"$V/U_\infty$",
            "meanw" : r"$W/U_\infty$",
-           "meanuv" : r"$\overline{u'v'}/U_\infty^2$"}
+           "meanuv" : r"$\overline{u'v'}/U_\infty^2$",
+           "meanu_diff" : r"$\Delta U$ (\%)",
+           "meanv_diff" : r"$\Delta V$ (\%)",
+           "meanw_diff" : r"$\Delta W$ (\%)"}
 
 if "linux" in sys.platform:
     cfd_path = "/media/pete/BigPocket/OpenFOAM/pete-2.3.0/run/unh-rvat-2d_re-dep_2"
@@ -709,17 +712,25 @@ class WakeMap(object):
     def plot_xvorticity(self):
         pass
     
-    def plot_meanu_diff(self, U_infty_diff, save=False, show=False,
-                        savepath="", savetype=""):
+    def plot_diff(self, quantity="u", U_infty_diff=1.0, save=False, 
+                  show=False, savepath="", savetype=""):
         wm_diff = WakeMap(U_infty_diff)
-        meanu_diff = (self.meanu/self.U_infty - \
-                wm_diff.meanu/wm_diff.U_infty)/self.meanu/self.U_infty*100
+        q_ref, q_diff = None, None
+        if quantity in ["meanu", "meanv", "meanw"]:
+            exec("q_ref = self." + quantity)
+            exec("q_diff = wm_diff." + quantity)
+        else:
+            print("Not a valid quantity")
+            return None
+        a_diff = (q_ref/self.U_infty - \
+                  q_diff/wm_diff.U_infty)/q_ref/self.U_infty*100
+        a_diff = (q_diff/wm_diff.U_infty)/(q_ref/self.U_infty)
         plt.figure(figsize=(12,3.75))
-        cs = plt.contourf(self.y_R, self.z_H, meanu_diff, 20,
+        cs = plt.contourf(self.y_R, self.z_H, a_diff, 20,
                           cmap=plt.cm.coolwarm)
-        cb = plt.colorbar(cs, shrink=1, fraction=0.15,
+        cb = plt.colorbar(cs, shrink=.6, fraction=0.15,
                           orientation="vertical", pad=0.05)
-        cb.set_label(r"$\Delta U$ (\%)")
+        cb.set_label(ylabels[quantity+"_diff"])
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
         plt.axes().set_aspect(2)
@@ -729,7 +740,7 @@ class WakeMap(object):
             self.show()
         if save:
             if savepath: savepath += "/"
-            plt.savefig(savepath+"/meanu_diff"+savetype)
+            plt.savefig(savepath+"/"+quantity+"_diff"+savetype)
     
     def plot_meancomboquiv_diff(self, U_infty_diff, save=False, show=False,
                                 savepath="", savetype=""):
@@ -1262,8 +1273,8 @@ def main():
 
 #    plot_settling(1.0)
 
-    wm = WakeMap(0.8)
-    wm.plot_meanu_diff_std()
+    wm = WakeMap(1.0)
+    wm.plot_diff(quantity="meanu", U_infty_diff=0.4)
     plt.show()
         
 if __name__ == "__main__":
