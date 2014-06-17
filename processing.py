@@ -23,7 +23,7 @@ import os
 import fdiff
 import sys
 
-styleplot.setpltparams()
+styleplot.setpltparams(fontsize=22)
 
 folders = {"Perf-0.3" : "Performance/U_0.3",
            "Perf-0.4" : "Performance/U_0.4",
@@ -723,12 +723,11 @@ class WakeMap(object):
             print("Not a valid quantity")
             return None
         a_diff = (q_ref/self.U_infty - \
-                  q_diff/wm_diff.U_infty)/q_ref/self.U_infty*100
-        a_diff = (q_diff/wm_diff.U_infty)/(q_ref/self.U_infty)
+                  q_diff/wm_diff.U_infty)#/q_ref/self.U_infty*100
         plt.figure(figsize=(12,3.75))
         cs = plt.contourf(self.y_R, self.z_H, a_diff, 20,
                           cmap=plt.cm.coolwarm)
-        cb = plt.colorbar(cs, shrink=.6, fraction=0.15,
+        cb = plt.colorbar(cs, shrink=1, fraction=0.15,
                           orientation="vertical", pad=0.05)
         cb.set_label(ylabels[quantity+"_diff"])
         plt.xlabel(r"$y/R$")
@@ -743,14 +742,18 @@ class WakeMap(object):
             plt.savefig(savepath+"/"+quantity+"_diff"+savetype)
     
     def plot_meancomboquiv_diff(self, U_infty_diff, save=False, show=False,
-                                savepath="", savetype=""):
+                                savepath="", savetype="", percent=True):
         wm_diff = WakeMap(U_infty_diff)
         meanu_diff = (self.meanu/self.U_infty - \
-                wm_diff.meanu/wm_diff.U_infty)/self.meanu/self.U_infty*100
+                wm_diff.meanu/wm_diff.U_infty)
         meanv_diff = (self.meanv/self.U_infty - \
-                wm_diff.meanv/wm_diff.U_infty)/self.meanv/self.U_infty*100
+                wm_diff.meanv/wm_diff.U_infty)
         meanw_diff = (self.meanw/self.U_infty - \
-                wm_diff.meanw/wm_diff.U_infty)/self.meanw/self.U_infty*100
+                wm_diff.meanw/wm_diff.U_infty)
+        if percent:
+            meanu_diff = meanu_diff/self.meanu/self.U_infty*100
+            meanv_diff = meanv_diff/self.meanv/self.U_infty*100
+            meanw_diff = meanw_diff/self.meanw/self.U_infty*100
         plt.figure(figsize=(12,4))
         cs = plt.contourf(self.y_R, self.z_H, meanu_diff, 20,
                           cmap=plt.cm.coolwarm)
@@ -1273,8 +1276,9 @@ def main():
 
 #    plot_settling(1.0)
 
-    wm = WakeMap(1.0)
-    wm.plot_diff(quantity="meanu", U_infty_diff=0.4)
+    wm = WakeMap(0.4)
+    wm.plot_diff(quantity="meanw", U_infty_diff=0.6)
+    wm.plot_meancomboquiv_diff(0.6, percent=False)
     plt.show()
         
 if __name__ == "__main__":
