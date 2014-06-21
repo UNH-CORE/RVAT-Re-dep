@@ -690,7 +690,7 @@ class WakeMap(object):
         plt.hold(True)
         # Make quiver plot of v and w velocities
         Q = plt.quiver(self.y_R, self.z_H, self.meanv/self.U_infty, 
-                       self.meanw/self.U_infty, angles="xy", width=0.0022)
+                       self.meanw/self.U_infty, width=0.0022)
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
@@ -763,12 +763,16 @@ class WakeMap(object):
         plt.hold(True)
         # Make quiver plot of v and w velocities
         Q = plt.quiver(self.y_R, self.z_H, meanv_diff, 
-                       meanw_diff, angles="xy", width=0.0022)
+                       meanw_diff, width=0.0022)
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
         plt.xlim(-3.2, 3.2)
-        plt.quiverkey(Q, 0.75, 0.3, 100, r"100",
+        if percent:
+            keylen = 100
+        else:
+            keylen = 0.05
+        plt.quiverkey(Q, 0.75, 0.05, keylen, str(keylen),
                       labelpos="E",
                       coordinates="figure",
                       fontproperties={"size": "small"})
@@ -1277,8 +1281,11 @@ def main():
 #    plot_settling(1.0)
 
     wm = WakeMap(0.4)
-    wm.plot_diff(quantity="meanw", U_infty_diff=0.6)
-    wm.plot_meancomboquiv_diff(0.6, percent=False)
+    wm.plot_meancomboquiv()
+    wm2 = WakeMap(1.2)
+    wm2.plot_meancomboquiv()
+#    wm.plot_diff(quantity="meanw", U_infty_diff=0.6)
+#    wm.plot_meancomboquiv_diff(0.8, percent=False)
     plt.show()
         
 if __name__ == "__main__":
