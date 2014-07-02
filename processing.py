@@ -12,15 +12,14 @@ from __future__ import division, print_function
 import numpy as np
 import uncertainties as unc
 from uncertainties import unumpy as unp
-import timeseries as ts
+from pxl import timeseries as ts
 import matplotlib.pyplot as plt
 import matplotlib
 from scipy.io import loadmat
 from scipy import interpolate
-import styleplot
+from pxl import styleplot, fdiff
 import json
 import os
-import fdiff
 import sys
 
 styleplot.setpltparams(fontsize=22)
