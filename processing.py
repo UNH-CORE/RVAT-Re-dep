@@ -1136,10 +1136,12 @@ def batch_process_tare_drag(plot=False):
         plt.show()
         
 def plot_tare_drag():
-    speeds = np.load("Tare drag/Processed/U_nom.npy")
-    drag = np.load("Tare drag/Processed/taredrag.npy")
+    df = pd.read_csv("Processed/Tare drag.csv")
     plt.figure()
-    plt.plot(speeds, drag, "-ok")
+    plt.plot(df.tow_speed, df.tare_drag, "-ok")
+    plt.xlabel("Tow speed (m/s)")
+    plt.ylabel("Tare drag (N)")
+    plt.show()
     
 def process_tare_torque(nrun, plot=False):
     """Processes a single tare torque run."""
@@ -1264,8 +1266,8 @@ def main():
 #    batch_process_tare_torque(plot=True)
 
 #    process_tare_drag(5, plot=True)
-    batch_process_tare_drag(plot=True)
-#    plot_tare_drag()
+#    batch_process_tare_drag(plot=True)
+    plot_tare_drag()
     
     """Batch processing"""
 #    batch_process_all()
