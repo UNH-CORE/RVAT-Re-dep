@@ -1150,7 +1150,7 @@ def process_tare_torque(nrun, plot=False):
              1 : (12, 52),
              2 : (11, 32),
              3 : (7, 30)}
-    nidata = loadmat("Tare torque/" + str(nrun) + "/nidata.mat", 
+    nidata = loadmat("Raw/Tare torque/" + str(nrun) + "/nidata.mat", 
                      squeeze_me=True)
     # Compute RPM
     t_ni  = nidata["t"]
@@ -1169,7 +1169,10 @@ def process_tare_torque(nrun, plot=False):
     if plot:
         plt.figure()
         plt.plot(t_ni, torque)
+        plt.xlabel("Time (s)")
+        plt.ylabel("Torque (Nm)")
         plt.tight_layout()
+        plt.show()
     return meanrpm, -meantorque
     
 def batch_process_tare_torque(plot=False):
@@ -1262,12 +1265,12 @@ def main():
 #    r.plotwake()
 
     """Tare drag and torque"""
-#    process_tare_torque(2, plot=True)
+    process_tare_torque(2, plot=True)
 #    batch_process_tare_torque(plot=True)
 
 #    process_tare_drag(5, plot=True)
 #    batch_process_tare_drag(plot=True)
-    plot_tare_drag()
+#    plot_tare_drag()
     
     """Batch processing"""
 #    batch_process_all()
