@@ -115,7 +115,7 @@ class Run(object):
             self.nrun = sorted(runs)[nrun]
         else:
             self.nrun = nrun
-        self.folder = folders[section] + "/" + str(self.nrun)
+        self.folder = os.path.join("Raw", section, str(self.nrun))
         self.loaded = False
         self.t2found = False
         self.not_loadable = False
@@ -130,7 +130,7 @@ class Run(object):
         except IOError:
             if self.nrun < 0:
                 self.nrun -= 1
-                self.folder = folders[self.section] + "/" + str(self.nrun)
+                self.folder = os.path.join("Raw", section, str(self.nrun))
             else:
                 pass
         try:
@@ -1252,7 +1252,7 @@ def main():
         p = "C:/Users/Pete/" + p
 
     """Dealing with individual runs"""
-#    r = Run("Wake-1.0", 50)
+    r = Run("Wake-1.0", 50)
 #    r.calcperf()
 #    r.calcwake()
 #    r.plotperf()
@@ -1277,10 +1277,10 @@ def main():
 
 #    plot_settling(1.0)
 
-    wm = WakeMap(0.4)
-    wm.plot_meancomboquiv()
-    wm2 = WakeMap(1.2)
-    wm2.plot_meancomboquiv()
+#    wm = WakeMap(0.4)
+#    wm.plot_meancomboquiv()
+#    wm2 = WakeMap(1.2)
+#    wm2.plot_meancomboquiv()
 #    wm.plot_diff(quantity="meanw", U_infty_diff=0.6)
 #    wm.plot_meancomboquiv_diff(0.8, percent=False)
     plt.show()
