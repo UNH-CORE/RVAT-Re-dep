@@ -1177,19 +1177,17 @@ def process_tare_torque(nrun, plot=False):
     
 def batch_process_tare_torque(plot=False):
     """Processes all tare torque data."""
-    folder = "Tare torque"
-    runs = os.listdir(folder)
-    if "Processed" in runs: 
-        runs.remove("Processed")
-    else:
-        os.mkdir(folder+"/Processed")
+    runs = os.listdir("Raw/Tare torque")
     runs = sorted([int(run) for run in runs])
     rpm = np.zeros(len(runs))
     taretorque = np.zeros(len(runs))
     for n in range(len(runs)):
         rpm[n], taretorque[n] = process_tare_torque(runs[n])
-    np.save(folder + "/Processed/rpm.npy", rpm)
-    np.save(folder + "/Processed/taretorque.npy", taretorque)
+    df = pd.DataFrame()
+    df["run"] = runs
+    df["rpm"] = rpm
+    df["tare_torque"] = taretorque
+    df.to_csv("Processed/Tare torque.csv", index=False)
     m, b = np.polyfit(rpm, taretorque, 1)
     print("tare_torque = "+str(m)+"*rpm +", b)
     if plot:
@@ -1200,6 +1198,7 @@ def batch_process_tare_torque(plot=False):
         plt.ylabel("Tare torque (Nm)")
         plt.ylim((0, 1))
         plt.tight_layout()
+        plt.show()
         
 def plot_perf_curves(subplots=True, save=False, savepath="", savetype=".pdf"):
     """Plots all performance curves."""
@@ -1265,8 +1264,8 @@ def main():
 #    r.plotwake()
 
     """Tare drag and torque"""
-    process_tare_torque(2, plot=True)
-#    batch_process_tare_torque(plot=True)
+#    process_tare_torque(2, plot=True)
+    batch_process_tare_torque(plot=True)
 
 #    process_tare_drag(5, plot=True)
 #    batch_process_tare_drag(plot=True)
