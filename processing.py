@@ -177,12 +177,8 @@ class Run(object):
         self.drag = self.drag - np.mean(self.drag[0:self.sr_ni*t0])
         # Subtract tare drag
         # Tare drag in Newtons for each speed
-        tare_drag = {}
-        vals = np.load("Tare drag/Processed/taredrag.npy")
-        speeds = np.load("Tare drag/Processed/U_nom.npy")
-        for n in range(len(speeds)):
-            tare_drag[speeds[n]] = vals[n]
-        self.tare_drag = tare_drag[self.U_nom]
+        df = pd.read_csv("Processed/Tare drag.csv")
+        self.tare_drag = df.tare_drag[df.tow_speed==self.U_nom].values[0]
         self.drag = self.drag - self.tare_drag
         # Compute RPM and omega
         self.angle = nidata["turbine_angle"]
@@ -1257,15 +1253,15 @@ def main():
         p = "C:/Users/Pete/" + p
 
     """Dealing with individual runs"""
-#    r = Run("Wake-1.0", 50)
-#    r.calcperf()
-#    r.calcwake()
+    r = Run("Wake-1.0", 50)
+    r.calcperf()
+    r.calcwake()
 #    r.plotperf()
 #    r.plotwake()
 
     """Tare drag and torque"""
 #    process_tare_torque(2, plot=True)
-    batch_process_tare_torque(plot=True)
+#    batch_process_tare_torque(plot=True)
 
 #    process_tare_drag(5, plot=True)
 #    batch_process_tare_drag(plot=True)
