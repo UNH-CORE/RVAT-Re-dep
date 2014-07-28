@@ -21,7 +21,7 @@ import os
 import sys
 import pandas as pd
 
-styleplot.setpltparams(fontsize=22)
+styleplot.setpltparams(fontsize=20)
 
 folders = {"Perf-0.3" : "Performance/U_0.3",
            "Perf-0.4" : "Performance/U_0.4",
@@ -1122,8 +1122,11 @@ def batch_process_tare_drag(plot=False):
     taredrag = np.zeros(len(runs))
     for n in range(len(runs)):
         speed[n], taredrag[n] = process_tare_drag(runs[n])
-    data = {"tow_speed" : speed, "tare_drag": taredrag}
-    ts.savecsv("Processed/Tare drag.csv", data)
+    data = pd.DataFrame()
+    data["run"] = runs
+    data["tow_speed"] = speed
+    data["tare_drag"] = taredrag
+    data.to_csv("Processed/Tare drag.csv", index=False)
     if plot:
         plt.figure()
         plt.plot(speed, taredrag, "-ok", markerfacecolor="None")
@@ -1260,8 +1263,8 @@ def main():
 #    process_tare_torque(2, plot=True)
 #    batch_process_tare_torque(plot=True)
 
-    process_tare_drag(5, plot=True)
-#    batch_process_tare_drag(plot=True)
+#    process_tare_drag(5, plot=True)
+    batch_process_tare_drag(plot=True)
 #    plot_tare_drag()
     
     """Batch processing"""
