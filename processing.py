@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Sep 29 12:51:12 2013
+This code processes the data from the 2014 Spring RVAT Re dependence 
+experiment.
 
-This code processes the data from the 2013 Fall Re dependence experiment
+@author: Pete Bachant
 
-Tare drag and torque will have to be done after APS...
-
-@author: Pete
 """
 from __future__ import division, print_function
 import numpy as np
