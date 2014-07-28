@@ -19,6 +19,7 @@ from pxl import styleplot, fdiff
 import json
 import os
 import sys
+import pandas as pd
 
 styleplot.setpltparams(fontsize=22)
 
@@ -1096,10 +1097,10 @@ def process_tare_drag(nrun, plot=False):
              1.2 : (7, 21),
              1.3 : (7, 19),
              1.4 : (6, 18)}
-    with open("Tare drag/" + str(nrun)  + "/metadata.json") as f:
+    with open("Raw/Tare drag/" + str(nrun)  + "/metadata.json") as f:
         metadata = json.load(f)
     speed = float(metadata["Tow speed (m/s)"])
-    nidata = loadmat("Tare drag/" + str(nrun) + "/nidata.mat", 
+    nidata = loadmat("Raw/Tare drag/" + str(nrun) + "/nidata.mat", 
                      squeeze_me=True)
     t_ni  = nidata["t"]
     drag = nidata["drag_left"] + nidata["drag_right"]
@@ -1110,29 +1111,26 @@ def process_tare_drag(nrun, plot=False):
     if plot:
         plt.figure()
         plt.plot(t_ni, drag, 'k')
+        plt.show()
     return speed, meandrag
         
 def batch_process_tare_drag(plot=False):
     """Processes all tare drag data."""
-    folder = "Tare drag"
-    runs = os.listdir(folder)
-    if "Processed" in runs: 
-        runs.remove("Processed")
-    else:
-        os.mkdir(folder+"/Processed")
+    runs = os.listdir("Raw/Tare drag")
     runs = sorted([int(run) for run in runs])
     speed = np.zeros(len(runs))
     taredrag = np.zeros(len(runs))
     for n in range(len(runs)):
         speed[n], taredrag[n] = process_tare_drag(runs[n])
-    np.save(folder + "/Processed/U_nom.npy", speed)
-    np.save(folder + "/Processed/taredrag.npy", taredrag)
+    data = {"tow_speed" : speed, "tare_drag": taredrag}
+    ts.savecsv("Processed/Tare drag.csv", data)
     if plot:
         plt.figure()
         plt.plot(speed, taredrag, "-ok", markerfacecolor="None")
         plt.xlabel("Tow speed (m/s)")
         plt.ylabel("Tare drag (N)")
         plt.tight_layout()
+        plt.show()
         
 def plot_tare_drag():
     speeds = np.load("Tare drag/Processed/U_nom.npy")
@@ -1252,7 +1250,7 @@ def main():
         p = "C:/Users/Pete/" + p
 
     """Dealing with individual runs"""
-    r = Run("Wake-1.0", 50)
+#    r = Run("Wake-1.0", 50)
 #    r.calcperf()
 #    r.calcwake()
 #    r.plotperf()
@@ -1262,7 +1260,7 @@ def main():
 #    process_tare_torque(2, plot=True)
 #    batch_process_tare_torque(plot=True)
 
-#    process_tare_drag(5, plot=True)
+    process_tare_drag(5, plot=True)
 #    batch_process_tare_drag(plot=True)
 #    plot_tare_drag()
     
