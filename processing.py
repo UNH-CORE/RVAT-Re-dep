@@ -795,102 +795,62 @@ class WakeMap(object):
         
     def show(self):
         plt.show()
+        
+def load_test_plan_section(section):
+    df = pd.read_csv(os.path.join("Test plan", section+".csv"))
+    df = df.dropna(how="all", axis=1).dropna(how="all", axis=0)
+    if "Run" in df:
+        df["Run"] = df["Run"].astype(int)
+    return df
             
 def batch_process_section(section, reprocess=True):
     """Processes all data in a section. Will skip already processed
     runs if `reprocess = False`. Something is up with this algorithm, as it
     sometimes will save the wrong y_R value."""
-    folder = folders[section]
+    test_plan = load_test_plan_section(section)
     if not reprocess:
         try:
-            runs_old = np.load(folder+"/Processed/runs.npy")
-            y_R_old = np.load(folder+"/Processed/y_R.npy")
-            z_H_old = np.load(folder+"/Processed/z_H.npy")
-            tsr_old = np.load(folder+"/Processed/tsr.npy")
-            cp_old = np.load(folder+"/Processed/cp.npy")
-            cd_old = np.load(folder+"/Processed/cd.npy")
-            delta_cp_old = np.load(folder+"/Processed/delta_cp.npy")
-            delta_cd_old = np.load(folder+"/Processed/delta_cd.npy")
-            meanu_old = np.load(folder+"/Processed/meanu.npy")
-            meanv_old = np.load(folder+"/Processed/meanv.npy")
-            meanw_old = np.load(folder+"/Processed/meanw.npy")
-            stdu_old = np.load(folder+"/Processed/stdu.npy")
-            meanuv_old = np.load(folder+"/Processed/meanuv.npy")
-            k_old = np.load(folder+"/Processed/k.npy")
-        except IOError:
-            runs_old = []
-    runs = os.listdir(folder)
-    if "Processed" in runs: 
-        runs.remove("Processed")
+            data = pd.read_csv(os.path.join("Processed", section+".csv"))
+            runs = data.run
+        except:
+            reprocess = True
+            data = pd.DataFrame()
+            data["run"] = runs = test_plan["Run"]
     else:
-        os.mkdir(folder+"/Processed")
-    runs = sorted([int(run) for run in runs])
+        print("Reprocessing", section+"...")
+        data = pd.DataFrame()
+        data["run"] = runs = test_plan["Run"]
     # Create a empty arrays for all quantities
-    tsr = np.zeros(len(runs))
-    cp = np.zeros(len(runs))
-    cd = np.zeros(len(runs))
-    delta_cp = np.zeros(len(runs))
-    delta_cd = np.zeros(len(runs))
-    y_R = np.zeros(len(runs))
-    z_H = np.zeros(len(runs))
-    meanu = np.zeros(len(runs))
-    meanv = np.zeros(len(runs))
-    meanw = np.zeros(len(runs))
-    stdu = np.zeros(len(runs))
-    meanuv = np.zeros(len(runs))
-    k = np.zeros(len(runs))
-    for n in range(len(runs)):
-        nrun = runs[n]
-        if reprocess or nrun not in runs_old:
-            r = Run(section, nrun)
+    if reprocess:
+        for q in ["tsr", "cp", "cd", "delta_cp", "delta_cd", "y_R", "z_H",
+                  "mean_u", "mean_v", "mean_w", "std_u", "std_v", "std_w",
+                  "mean_up_vp", "k"]:
+            data[q] = np.zeros(len(data.run))*np.nan
+    for n in runs:
+        if reprocess or True in np.isnan(data.iloc[n,:]).values:
+            r = Run(section, n)
             if r.not_loadable:
-                runs[n] = np.nan
-                y_R[n] = np.nan
+                pass
             else:
-                print("Processing run " + str(runs[nrun]) + "...")
-                y_R[n] = r.y_R
-                z_H[n] = r.z_H
+                print("Processing run {}...".format(n))
+                data.y_R[n] = r.y_R
+                data.z_H[n] = r.z_H
                 r.calcperf()
                 r.calcwake()
-                tsr[n] = r.meantsr
-                cp[n] = r.meancp
-                cd[n] = r.meancd
-                delta_cp[n] = r.delta_cp
-                delta_cd[n] = r.delta_cd
-                meanu[n] = r.meanu
-                meanv[n] = r.meanv
-                meanw[n] = r.meanw
-                meanuv[n] = r.meanuv
-                stdu[n] = r.stdu
-                k[n] = r.k
-        else:
-            y_R[n] = y_R_old[np.where(runs_old==nrun)[0]]
-            z_H[n] = z_H_old[np.where(runs_old==nrun)[0]]
-            tsr[n] = tsr_old[np.where(runs_old==nrun)[0]]
-            cp[n] = cp_old[np.where(runs_old==nrun)[0]]
-            cd[n] = cd_old[np.where(runs_old==nrun)[0]]
-            delta_cp[n] = delta_cp_old[np.where(runs_old==nrun)[0]]
-            delta_cd[n] = delta_cd_old[np.where(runs_old==nrun)[0]]
-            meanu[n] = meanu_old[np.where(runs_old==nrun)[0]]
-            meanv[n] = meanv_old[np.where(runs_old==nrun)[0]]
-            meanw[n] = meanw_old[np.where(runs_old==nrun)[0]]
-            stdu[n] = stdu_old[np.where(runs_old==nrun)[0]]
-            meanuv[n] = meanuv_old[np.where(runs_old==nrun)[0]]
-            k[n] = k_old[np.where(runs_old==nrun)[0]]
-    np.save(folder+"/Processed/runs.npy", runs)
-    np.save(folder+"/Processed/y_R.npy", y_R)
-    np.save(folder+"/Processed/z_H.npy", z_H)
-    np.save(folder+"/Processed/tsr.npy", tsr)
-    np.save(folder+"/Processed/cp.npy", cp)
-    np.save(folder+"/Processed/cd.npy", cd)
-    np.save(folder+"/Processed/delta_cp.npy", delta_cp)
-    np.save(folder+"/Processed/delta_cd.npy", delta_cd)
-    np.save(folder+"/Processed/meanu.npy", meanu)
-    np.save(folder+"/Processed/meanv.npy", meanv)
-    np.save(folder+"/Processed/meanw.npy", meanw)
-    np.save(folder+"/Processed/stdu.npy", stdu)
-    np.save(folder+"/Processed/meanuv.npy", meanuv)
-    np.save(folder+"/Processed/k.npy", k)
+                data.tsr[n] = r.meantsr
+                data.cp[n] = r.meancp
+                data.cd[n] = r.meancd
+                data.delta_cp[n] = r.delta_cp
+                data.delta_cd[n] = r.delta_cd
+                data.mean_u[n] = r.meanu
+                data.mean_v[n] = r.meanv
+                data.mean_w[n] = r.meanw
+                data.mean_up_vp[n] = r.meanuv
+                data.std_u[n] = r.stdu
+                data.std_v[n] = r.stdv
+                data.std_w[n] = r.stdw
+                data.k[n] = r.k
+    data.to_csv(os.path.join("Processed", section+".csv"), index=False)
     
 def batch_process_all():
     """Batch processes all sections."""
@@ -1253,9 +1213,9 @@ def main():
         p = "C:/Users/Pete/" + p
 
     """Dealing with individual runs"""
-    r = Run("Wake-1.0", 50)
-    r.calcperf()
-    r.calcwake()
+#    r = Run("Wake-1.0", 50)
+#    r.calcperf()
+#    r.calcwake()
 #    r.plotperf()
 #    r.plotwake()
 
@@ -1268,6 +1228,7 @@ def main():
 #    plot_tare_drag()
     
     """Batch processing"""
+    batch_process_section("Perf-1.0", reprocess=True)
 #    batch_process_all()
     
 #    plot_perf_curves(save=True, savepath=p)
@@ -1284,7 +1245,7 @@ def main():
 #    wm2.plot_meancomboquiv()
 #    wm.plot_diff(quantity="meanw", U_infty_diff=0.6)
 #    wm.plot_meancomboquiv_diff(0.8, percent=False)
-    plt.show()
+#    plt.show()
         
 if __name__ == "__main__":
     if len(sys.argv) == 3:
