@@ -1,6 +1,8 @@
-*
-!processing.py
-!.gitignore
-!Test plan/
-!*.csv
+Data/Raw
 *.xlsx
+__pycache__
+.ipynb_checkpoints
+*.docx
+*.pdf
+*.pyc
+Trash
