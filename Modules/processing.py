@@ -106,9 +106,10 @@ class Run(object):
     """Object that represents a single turbine tow"""
     def __init__(self, section, nrun):
         self.section = section
+        section_dir = os.path.join("Data", "Raw", section)
         if nrun < 0:
             runs = []
-            for f in os.listdir(folders[section]):
+            for f in os.listdir(section_dir):
                 try: 
                     runs.append(int(f))
                 except ValueError:
@@ -116,7 +117,7 @@ class Run(object):
             self.nrun = sorted(runs)[nrun]
         else:
             self.nrun = nrun
-        self.folder = os.path.join("Raw", section, str(self.nrun))
+        self.folder = os.path.join(section_dir, str(self.nrun))
         self.loaded = False
         self.t2found = False
         self.not_loadable = False
@@ -131,11 +132,11 @@ class Run(object):
         except IOError:
             if self.nrun < 0:
                 self.nrun -= 1
-                self.folder = os.path.join("Raw", section, str(self.nrun))
+                self.folder = os.path.join("Data", "Raw", section, str(self.nrun))
             else:
                 pass
         try:
-            with open(self.folder + "/" + "metadata.json") as f:
+            with open(os.path.join(self.folder, "metadata.json")) as f:
                 self.metadata = json.load(f)
         except IOError:
             self.not_loadable = True
@@ -144,7 +145,7 @@ class Run(object):
         self.y_R = self.metadata["Vectrino y/R"]
         self.z_H = self.metadata["Vectrino z/H"]
         # Load NI data
-        nidata = loadmat(self.folder + "/" + "nidata.mat", squeeze_me=True)
+        nidata = loadmat(os.path.join(self.folder, "nidata.mat"), squeeze_me=True)
         self.t_ni = nidata["t"]
         if "carriage_pos" in nidata:
             self.lin_enc = True
@@ -177,7 +178,7 @@ class Run(object):
         self.drag = self.drag - np.mean(self.drag[0:self.sr_ni*t0])
         # Subtract tare drag
         # Tare drag in Newtons for each speed
-        df = pd.read_csv("Processed/Tare drag.csv")
+        df = pd.read_csv(os.path.join("Data", "Processed", "Tare drag.csv"))
         self.tare_drag = df.tare_drag[df.tow_speed==self.U_nom].values[0]
         self.drag = self.drag - self.tare_drag
         # Compute RPM and omega
@@ -421,7 +422,7 @@ class PerfCurve(object):
     def __init__(self, U):
         self.U = U
         self.Re_D = U*D/nu
-        self.folder = folders["Perf-" + str(U)]
+        self.folder = os.path.join("Data", "Raw", "Perf-{}".format(U))
         dirconts = os.listdir(self.folder)
         self.runs = []
         for item in dirconts:
@@ -1228,10 +1229,10 @@ def main():
 #    plot_tare_drag()
     
     """Batch processing"""
-    batch_process_section("Perf-1.0", reprocess=True)
+#    batch_process_section("Perf-1.0", reprocess=True)
 #    batch_process_all()
     
-#    plot_perf_curves(save=True, savepath=p)
+    plot_perf_curves(save=False, savepath=p)
 #    plot_perf_re_dep(save=True, cfd=False, savepath=p, normalize_by="default",
 #                     dual_xaxes=False)
     
@@ -1248,6 +1249,9 @@ def main():
 #    plt.show()
         
 if __name__ == "__main__":
+    if os.getcwd()[-7:] == "Modules":
+        print("Changing working directory to experiment root directory")
+        os.chdir("../")
     if len(sys.argv) == 3:
         section = sys.argv[1]
         nrun = int(sys.argv[2])
