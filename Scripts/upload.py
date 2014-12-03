@@ -74,7 +74,7 @@ def get_remote_urls(write=True):
     remote_urls = {f["name"] : f["download_url"] for f in files}
     if write:
         with open("Config/raw_data_urls.json", "w") as f:
-            json.dump(remote_urls, f)
+            json.dump(remote_urls, f, indent=4)
     return remote_urls
     
 def upload_file(local_path, remote_name, client=None, oauth=None, verbose=True):
@@ -96,10 +96,10 @@ def upload_all(overwrite=False):
     remote_files = get_uploaded_filenames()
     client = requests.session()
     oauth = authenticate()
-    for local_path in local_files:
+    for n, local_path in enumerate(local_files):
         remote_name = make_remote_name(local_path)
         if not remote_name in remote_files or overwrite:
-            print("Uploading {} as {}".format(local_path, remote_name))
+            print("[{}/{}] Uploading {}".format(n, len(local_files), local_path))
             upload_file(local_path, remote_name, client=client, oauth=oauth)
         else:
             print("{} already uploaded".format(local_path))
@@ -124,4 +124,4 @@ if __name__ == "__main__":
 #    test_remote_names()
 #    print(get_remote_urls(False))
     upload_all()
-    
+#    get_remote_urls()
