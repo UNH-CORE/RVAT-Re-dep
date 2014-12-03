@@ -47,4 +47,4 @@ if __name__ == "__main__":
 #                     dual_xaxes=True)
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 #    plot_settling(1.0)
-    plot_meancomboquiv(u_infty=0.4)
+    plot_meancomboquiv(U_infty=0.4)

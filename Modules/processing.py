@@ -12,17 +12,15 @@ import uncertainties as unc
 from uncertainties import unumpy as unp
 from pxl import timeseries as ts
 import matplotlib.pyplot as plt
-import matplotlib
 from scipy.io import loadmat
 from scipy import interpolate
-from pxl import styleplot, fdiff
+from pxl import fdiff
 import json
 import os
 import sys
 import pandas as pd
+import Modules.plotting
 from Modules.plotting import ylabels
-
-styleplot.setpltparams(fontsize=20)
 
 # Dict for runs corresponding to each height
 wakeruns = {0.0 : np.arange(0, 45),
@@ -639,6 +637,7 @@ class WakeMap(object):
         ax = plt.axes()
         ax.set_aspect(2)
         plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
+        plt.grid(True)
         plt.tight_layout()
         if show:
             self.show()
