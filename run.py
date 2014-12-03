@@ -11,7 +11,6 @@ from Modules import test
 def plot_meancomboquiv(U_infty=1.0):
     wm = WakeMap(U_infty)
     wm.plot_meancomboquiv()
-    plt.show()
 
 if __name__ == "__main__":
     """Choose functions to run here."""
@@ -48,3 +47,6 @@ if __name__ == "__main__":
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 #    plot_settling(1.0)
     plot_meancomboquiv(U_infty=0.4)
+    plot_meancomboquiv(U_infty=1.2)
+    plt.show()
+    
