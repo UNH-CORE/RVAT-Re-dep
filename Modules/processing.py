@@ -873,22 +873,22 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
     for n in range(len(speeds)):
         if speeds[n] in [0.3, 0.5, 0.7, 0.9, 1.1, 1.3]:
             section = "Perf-"+str(speeds[n])
-            folder = folders[section]
-            cp_s = np.load(folder+"/Processed/cp.npy")
-            dcp_s = np.load(folder+"/Processed/delta_cp.npy")
-            cd_s = np.load(folder+"/Processed/cd.npy")
-            dcd_s = np.load(folder+"/Processed/delta_cd.npy")
+            df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
+            cp_s = df.cp
+            dcp_s = df.delta_cp
+            cd_s = df.cd
+            dcd_s = df.delta_cd
             cp[n] = np.mean(cp_s)
             delta_cp[n] = np.mean(dcp_s)
             cd[n] = np.mean(cd_s)
             delta_cd[n] = np.mean(dcd_s)
         else:
             section = "Wake-"+str(speeds[n])
-            folder = folders[section]
-            cp_s = np.load(folder+"/Processed/cp.npy")
-            dcp_s = np.load(folder+"/Processed/delta_cp.npy")
-            cd_s = np.load(folder+"/Processed/cd.npy")
-            dcd_s = np.load(folder+"/Processed/delta_cd.npy")
+            df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
+            cp_s = df.cp
+            dcp_s = df.delta_cp
+            cd_s = df.cd
+            dcd_s = df.delta_cd
             cp[n], std_cp[n] = np.mean(cp_s), np.std(cp_s)
             cd[n], std_cd[n] = np.mean(cd_s), np.std(cd_s)
             delta_cp[n] = np.mean(dcp_s)
@@ -1196,9 +1196,9 @@ def main():
 #    batch_process_section("Perf-1.0", reprocess=True)
 #    batch_process_all()
     
-    plot_perf_curves(save=False, savepath=p)
-#    plot_perf_re_dep(save=True, cfd=False, savepath=p, normalize_by="default",
-#                     dual_xaxes=False)
+#    plot_perf_curves(save=False, savepath=p)
+    plot_perf_re_dep(save=False, cfd=False, savepath=p, normalize_by="default",
+                     dual_xaxes=True)
     
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 
