@@ -927,7 +927,7 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
         plt.ylabel(r"$C_P$")
 #    plt.ylim((0.4, 1.2))
     ax = plt.gca()
-    plt.grid()
+    plt.grid(True)
     if dual_xaxes:
         plt.text(1.27e6, 1.11, r"$\times 10^5$")
         ax2 = ax.twiny()
@@ -961,7 +961,7 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
     if cfd:
         plot_cfd_perf("cd", normalize_by=norm_cfd)
 #    plt.ylim((0.5,1.1))
-    plt.grid()
+    plt.grid(True)
     if cfd:
         plt.legend(loc=4)
     ax = plt.gca()
