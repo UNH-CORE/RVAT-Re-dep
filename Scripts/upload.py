@@ -99,7 +99,7 @@ def upload_all(overwrite=False):
     for n, local_path in enumerate(local_files):
         remote_name = make_remote_name(local_path)
         if not remote_name in remote_files or overwrite:
-            print("[{}/{}] Uploading {}".format(n, len(local_files), local_path))
+            print("[{}/{}] Uploading {}".format(n+1, len(local_files), local_path))
             upload_file(local_path, remote_name, client=client, oauth=oauth)
         else:
             print("{} already uploaded".format(local_path))
