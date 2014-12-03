@@ -299,8 +299,9 @@ class Run(object):
         self.nbadw = len(np.where(np.isnan(self.w_f)==True)[0])
         self.nbad = self.nbadu + self.nbadv + self.nbadw
         
-    def calc_wake(self):
-        print("Calculating wake stats for", self.section, "run "+str(self.nrun)+"...")
+    def calc_wake(self, verbose=True):
+        if verbose:
+            print("Calculating wake statistics for", self.section, "run "+str(self.nrun))
         if self.not_loadable:
             self.mean_u = np.nan
             self.mean_v = np.nan
@@ -317,13 +318,14 @@ class Run(object):
         self.k = 0.5*(self.stdu**2 + self.stdv**2 + self.stdw**2)
         ntotal = int((self.t2 - self.t1)*self.sr_vec*3)
         self.calc_unc_wake()
-        print("y/R =", self.y_R)
-        print("z/H =", self.z_H)
-        print("U_vec/U_nom =", self.mean_u/self.U_nom, "+/-", 
-              self.delta_mean_u/2/self.U_nom)
-        print("std_u/U_nom =", self.stdu/self.U_nom, "+/-",
-              self.delta_stdu/2/self.U_nom)
-        print(str(self.nbad)+"/"+str(ntotal), "data points omitted")
+        if verbose:
+            print("y/R =", self.y_R)
+            print("z/H =", self.z_H)
+            print("U_vec/U_nom =", self.mean_u/self.U_nom, "+/-", 
+                  self.delta_mean_u/2/self.U_nom)
+            print("std_u/U_nom =", self.stdu/self.U_nom, "+/-",
+                  self.delta_stdu/2/self.U_nom)
+            print(str(self.nbad)+"/"+str(ntotal), "data points omitted")
         
     def calc_unc_wake(self):
         """Computes delta values for wake measurements from Vectrino accuracy
@@ -380,7 +382,7 @@ class Run(object):
     @property
     def cp_conf_interval(self, alpha=0.95):
         self.calc_cp_per_rev()
-        t_val = scipy.stats.t.interval(alpha=alpha, df=self.nrevs)[1]
+        t_val = scipy.stats.t.interval(alpha=alpha, df=self.nrevs-1)[1]
         std = self.std_cp_per_rev
         return t_val*std/np.sqrt(self.nrevs)
         
@@ -1188,4 +1190,4 @@ if __name__ == "__main__":
         run.calc_perf()
         run.calc_wake()
     else:
-        pass
+        print("Do not run this module directly")
