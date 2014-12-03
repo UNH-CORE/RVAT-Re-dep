@@ -4,6 +4,9 @@ This repository contains the processing and plotting code, as well as the
 derived dataset from the UNH-RVAT Reynolds number dependence experiment
 performed in Spring 2014.
 
+**Note:** This repository is still in active development and is not ready
+for use. 
+
 Download/usage
 --------------
 
