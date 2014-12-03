@@ -20,6 +20,7 @@ import json
 import os
 import sys
 import pandas as pd
+from Modules.plotting import ylabels
 
 styleplot.setpltparams(fontsize=20)
 
@@ -45,6 +46,10 @@ d_theta = 6.28e-5
 d_speed = 1e-5
 d_force = 0.556
 
+# Directory constants
+raw_data_dir = os.path.join("Data", "Raw")
+processed_data_dir = os.path.join("Data", "Processed")
+
 def calc_d_vel(vel):
     """Calculates the experimental error of a Vectrino measurement (in m/s)
     from their published specs. Returns the full delta, i.e. error is +/- 
@@ -67,15 +72,6 @@ times = {0.3 : (20.0, 80.0),
          1.2 : (14.0, 25.0),
          1.3 : (13.0, 23.0),
          1.4 : (12.0, 20.0)}
-         
-ylabels = {"meanu" : r"$U/U_\infty$",
-           "stdu" : r"$\sigma_u/U_\infty$",
-           "meanv" : r"$V/U_\infty$",
-           "meanw" : r"$W/U_\infty$",
-           "meanuv" : r"$\overline{u'v'}/U_\infty^2$",
-           "meanu_diff" : r"$\Delta U$ (\%)",
-           "meanv_diff" : r"$\Delta V$ (\%)",
-           "meanw_diff" : r"$\Delta W$ (\%)"}
 
 if "linux" in sys.platform:
     cfd_path = "/media/pete/BigPocket/OpenFOAM/pete-2.3.0/run/unh-rvat-2d_re-dep_2"
@@ -502,79 +498,48 @@ class PerfCurve(object):
             plt.savefig(figname)
         
 class WakeProfile(object):
-    def __init__(self, U, z_H, orientation="horizontal"):
+    def __init__(self, U, z_H, quantity, orientation="horizontal"):
         self.U = U
         self.z_H = z_H
         self.section = "Wake-" + str(U)
-        self.folder = folders[self.section]
-        self.runs = wakeruns[z_H]
+        self.testplan = pd.read_csv(os.path.join("Config", "Test plan", 
+                                                 self.section+".csv"))
+        self.runs = self.testplan.Run[self.testplan["z/H"]==z_H]
+        self.quantity = quantity
         self.load()
-        
-    def process(self):
-        """Runs through data to calculate statistics"""
-        meanu = np.zeros(len(self.runs))
-        meanv = np.zeros(len(self.runs))
-        meanw = np.zeros(len(self.runs))
-        stdu = np.zeros(len(self.runs))
-        meanuv = np.zeros(len(self.runs))
-        y_R = np.zeros(len(self.runs))
-        for n in self.runs:
-            run = Run(self.section, n)
-            run.calcwake()
-            meanu[n] = run.meanu
-            meanv[n] = run.meanv
-            meanw[n] = run.meanw
-            stdu[n] = run.stdu
-            meanuv[n] = run.meanuv
-            y_R[n] = run.y_R
-        # Save processed data
-        if not os.path.isdir(self.folder+"/Processed"):
-            os.mkdir(self.folder+"/Processed")
-        np.save(self.folder+"/Processed/meanu.npy", meanu)
-        np.save(self.folder+"/Processed/meanv.npy", meanv)
-        np.save(self.folder+"/Processed/meanw.npy", meanw)
-        np.save(self.folder+"/Processed/stdu.npy", stdu)
-        np.save(self.folder+"/Processed/meanuv.npy", meanuv)
-        np.save(self.folder+"/Processed/y_R.npy", y_R)
         
     def load(self):
         """Loads the processed data"""
-        try:
-            self.y_R = np.load(self.folder+"/Processed/y_R.npy")[self.runs]
-            self.meanu = np.load(self.folder+"/Processed/meanu.npy")[self.runs]
-            self.meanv = np.load(self.folder+"/Processed/meanv.npy")[self.runs]
-            self.meanw = np.load(self.folder+"/Processed/meanw.npy")[self.runs]
-            self.meanuv = np.load(self.folder+"/Processed/meanuv.npy")[self.runs]
-            self.stdu = np.load(self.folder+"/Processed/stdu.npy")[self.runs]
-        except IOError:
-            print("Cannot load wake profile data")
+        self.df = pd.read_csv(os.path.join(processed_data_dir, 
+                                           self.section+".csv"))
+        self.df = self.df[self.df.z_H==self.z_H]
         
     def plot(self, quantity, newfig=True, show=True, save=False, 
              savepath="", savetype=".pdf", linetype='--ok'):
         """Plots some quantity"""
-        y_R = np.load(self.folder+"/Processed/y_R.npy")
-        q = np.load(self.folder+"/Processed/"+quantity+".npy")
+        y_R = self.df["y_R"]
+        q = self.df[quantity]
         loc = 1
-        if quantity == "meanu":
+        if quantity == "mean_u":
             q = q/self.U
             ylab = r"$U/U_\infty$"
             loc = 3
-        if quantity == "meanw":
+        if quantity == "mean_w":
             q = q/self.U
             ylab = r"$U/U_\infty$"
             loc = 4
-        if quantity == "meanv":
+        if quantity == "mean_v":
             q = q/self.U
             ylab = r"$V/U_\infty$"
             loc=4
-        if quantity == "stdu":
+        if quantity == "std_u":
             q = q/self.U
             ylab = r"$\sigma_u/U_\infty$"
-        if quantity is "meanuv":
+        if quantity is "mean_up_vp":
             q = q/(self.U**2)
             ylab = r"$\overline{u'v'}/U_\infty^2$" 
         if newfig:
-            if quantity == "meanu":
+            if quantity == "mean_u":
                 plt.figure(figsize=(10,5))
             else: plt.figure()
             plt.ylabel(ylab)
@@ -839,11 +804,10 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
     Re_D = U*D/nu
     label = str((Re_D/1e6)) + "e6"
     section = "Wake-" + str(U)
-    folder = folders[section] + "/Processed/"
-    z_H_arr = np.load(folder + "z_H.npy")
-    i = np.where(z_H_arr==z_H)
-    q = np.load(folder + quantity + ".npy")[i]
-    y_R = np.load(folder + "y_R.npy")[i]
+    df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
+    df = df[df.z_H==z_H]
+    q = df[quantity]
+    y_R = df.y_R
     if newfig:
         plt.figure(figsize=figsize)
     if oldwake:
@@ -857,7 +821,6 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
     plt.ylabel(ylabels[quantity])
     plt.grid(True)
     plt.tight_layout()
-
     
 def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
                      cfd=False, normalize_by="default", dual_xaxes=False):
@@ -869,7 +832,6 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
     std_cd = np.zeros(len(speeds))
     delta_cd = np.zeros(len(speeds))
     Re_D = speeds*D/1e-6
-    Re_c = speeds*1.9*0.14/1e-6
     for n in range(len(speeds)):
         if speeds[n] in [0.3, 0.5, 0.7, 0.9, 1.1, 1.3]:
             section = "Perf-"+str(speeds[n])
@@ -1017,11 +979,11 @@ def process_tare_drag(nrun, plot=False):
              1.2 : (7, 21),
              1.3 : (7, 19),
              1.4 : (6, 18)}
-    with open("Raw/Tare drag/" + str(nrun)  + "/metadata.json") as f:
+    rdpath = os.path.join(raw_data_dir, "Tare drag", str(nrun))
+    with open(os.path.join(rdpath, "metadata.json")) as f:
         metadata = json.load(f)
     speed = float(metadata["Tow speed (m/s)"])
-    nidata = loadmat("Raw/Tare drag/" + str(nrun) + "/nidata.mat", 
-                     squeeze_me=True)
+    nidata = loadmat(os.path.join(rdpath, "nidata.mat"), squeeze_me=True)
     t_ni  = nidata["t"]
     drag = nidata["drag_left"] + nidata["drag_right"]
     drag = drag - np.mean(drag[:2000])
@@ -1147,10 +1109,10 @@ def plot_perf_curves(subplots=True, save=False, savepath="", savetype=".pdf"):
     
 def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
     """Plots all wake profiles of interest."""
-    legendlocs = {"meanu" : 4,
-                  "stdu" : 1,
-                  "meanuv" : 1}
-    for q in ["meanu", "stdu", "meanuv"]:
+    legendlocs = {"mean_u" : 4,
+                  "std_u" : 1,
+                  "mean_up_vp" : 1}
+    for q in ["mean_u", "std_u", "mean_up_vp"]:
         plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=True, marker="--vb",
                                 fill="blue")
         plot_trans_wake_profile(q, U=0.6, z_H=z_H, newfig=False, marker="sk",
@@ -1162,10 +1124,10 @@ def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
         plot_trans_wake_profile(q, U=1.2, z_H=z_H, newfig=False, marker="^k",
                                 fill="red")
         plt.legend(loc=legendlocs[q])
-        if q == "meanuv":
+        if q == "mean_up_vp":
             plt.ylim((-0.015, 0.025))
         if save:
-            plt.savefig(savepath + "/" + q + savetype)
+            plt.savefig(os.path.join(savepath, q+savetype))
     plt.show()
 
     
@@ -1197,8 +1159,8 @@ def main():
 #    batch_process_all()
     
 #    plot_perf_curves(save=False, savepath=p)
-    plot_perf_re_dep(save=False, cfd=False, savepath=p, normalize_by="default",
-                     dual_xaxes=True)
+#    plot_perf_re_dep(save=False, cfd=False, savepath=p, normalize_by="default",
+#                     dual_xaxes=True)
     
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 
