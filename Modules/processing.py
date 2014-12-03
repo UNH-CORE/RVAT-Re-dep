@@ -23,26 +23,6 @@ import pandas as pd
 
 styleplot.setpltparams(fontsize=20)
 
-folders = {"Perf-0.3" : "Performance/U_0.3",
-           "Perf-0.4" : "Performance/U_0.4",
-           "Perf-0.5" : "Performance/U_0.5",
-           "Perf-0.6" : "Performance/U_0.6",
-           "Perf-0.7" : "Performance/U_0.7",
-           "Perf-0.8" : "Performance/U_0.8",
-           "Perf-0.9" : "Performance/U_0.9",
-           "Perf-1.0" : "Performance/U_1.0",
-           "Perf-1.1" : "Performance/U_1.1",
-           "Perf-1.2" : "Performance/U_1.2",
-           "Perf-1.3" : "Performance/U_1.3",
-           "Perf-1.4" : "Performance/U_1.4",
-           "Wake-0.4" : "Wake/U_0.4",
-           "Wake-0.6" : "Wake/U_0.6",
-           "Wake-0.8" : "Wake/U_0.8",
-           "Wake-1.0" : "Wake/U_1.0",
-           "Wake-1.2" : "Wake/U_1.2",
-           "Shakedown" : "Shakedown",
-           "Trash-Wake-0.4" : "Trash/Wake/U_0.4"}
-           
 # Dict for runs corresponding to each height
 wakeruns = {0.0 : np.arange(0, 45),
             0.125 : np.arange(45, 90),
@@ -422,21 +402,16 @@ class PerfCurve(object):
     def __init__(self, U):
         self.U = U
         self.Re_D = U*D/nu
-        self.folder = os.path.join("Data", "Raw", "Perf-{}".format(U))
-        dirconts = os.listdir(self.folder)
-        self.runs = []
-        for item in dirconts:
-            try:
-                self.runs.append(int(item))
-            except ValueError:
-                pass
-        self.runs.sort()
+        self.section = "Perf-{}".format(U)
+        self.raw_data_dir = os.path.join("Data", "Raw", self.section)
+        self.df = pd.read_csv(os.path.join("Data", "Processed", self.section+".csv"))
+        self.testplan = pd.read_csv(os.path.join("Config", "Test plan", self.section+".csv")) 
         
     def process(self, reprocess=True):
         """Calculates power and drag coefficients for each run"""
-        print("Processing Perf-" + str(self.U) + "...")
+        print("Processing", self.section)
         if not reprocess:
-            print("Leaving processed runs as they are...")
+            print("Leaving processed runs as they are")
             try:
                 runsdone = np.load(self.folder+"/Processed/runs.npy")
                 tsr_old = np.load(self.folder+"/Processed/tsr.npy")
@@ -461,24 +436,15 @@ class PerfCurve(object):
                 tsr[n] = tsr_old[np.where(runsdone==nrun)[0]]
                 cp[n] = cp_old[np.where(runsdone==nrun)[0]]
                 cd[n] = cd_old[np.where(runsdone==nrun)[0]]
-        # Save processed data in the folder
-        if not os.path.isdir(self.folder+"/Processed"):
-            os.mkdir(self.folder+"/Processed")
-        np.save(self.folder+"/Processed/runs.npy", self.runs)
-        np.save(self.folder+"/Processed/tsr.npy", tsr)
-        np.save(self.folder+"/Processed/cp.npy", cp)
-        np.save(self.folder+"/Processed/cd.npy", cd)
+        # Save updated DataFrame
         
     def plotcp(self, newfig=True, show=True, save=False, figname="test.pdf",
                splinefit=False, marker="o"):
         """Generates power coefficient curve plot."""
         # Check to see if processed data exists and if not, process it
         label = "$Re_D = {:0.1e}$".format(self.Re_D)
-        try:
-            self.tsr = np.load(self.folder+"/Processed/tsr.npy")
-            self.cp = np.load(self.folder+"/Processed/cp.npy")
-        except IOError:
-            self.process()
+        self.tsr = self.df.tsr
+        self.cp = self.df.cp
         if newfig:
             plt.figure()
         if splinefit and not True in np.isnan(self.tsr):
@@ -508,11 +474,8 @@ class PerfCurve(object):
         """Generates power coefficient curve plot."""
         # Check to see if processed data exists and if not, process it
         label = "$Re_D = {:0.1e}$".format(self.Re_D)
-        try:
-            self.tsr = np.load(self.folder+"/Processed/tsr.npy")
-            self.cd = np.load(self.folder+"/Processed/cd.npy")
-        except IOError:
-            self.process()
+        self.tsr = self.df.tsr
+        self.cd = self.df.cd
         if newfig:
             plt.figure()
         if splinefit and not True in np.isnan(self.tsr):
@@ -811,7 +774,7 @@ def batch_process_section(section, reprocess=True):
     test_plan = load_test_plan_section(section)
     if not reprocess:
         try:
-            data = pd.read_csv(os.path.join("Processed", section+".csv"))
+            data = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
             runs = data.run
         except:
             reprocess = True
