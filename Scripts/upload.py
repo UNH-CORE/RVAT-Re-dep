@@ -124,4 +124,4 @@ if __name__ == "__main__":
 #    test_remote_names()
 #    print(get_remote_urls(False))
     upload_all()
-#    get_remote_urls()
+    get_remote_urls()
