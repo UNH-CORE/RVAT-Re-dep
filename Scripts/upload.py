@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
-This script uploads raw data to figshare.
+This script uploads raw data to figshare. It should be run on Windows with
+a `.figsharerc` file in the user's home directory.
 """
 from __future__ import division, print_function
 import requests
@@ -37,6 +38,10 @@ def get_article_details():
 def get_uploaded_files():
     return get_article_details()["items"][0]["files"]
     
+def get_uploaded_filenames():
+    flist = get_uploaded_files()
+    return [f["name"] for f in flist]
+    
 def make_local_file_list():
     file_list = []
     raw_dir = os.path.join("Data", "Raw")
@@ -51,21 +56,71 @@ def make_local_file_list():
                 fpath = os.path.join(run_dir, f)
                 file_list.append(fpath)
     return file_list
-
-def test_upload_file():
-    fpath = make_local_file_list()[1]
-    fname = "_".join(fpath.split("\\")[-3:])
-    client = requests.session()
-    files = {"filedata" : (fpath, open(fpath, "rb"))}
+    
+def make_remote_name(local_path):
+    return "_".join(local_path.split("\\")[-3:])
+    
+def make_remote_names_dict(local_files=[]):
+    remote_names = {}
+    if not local_files:
+        local_files = make_local_file_list()
+    for local_path in local_files:
+        fname = "_".join(local_path.split("\\")[-3:])
+        remote_names[local_path] = fname
+    return remote_names
+    
+def get_remote_urls(write=True):
+    files = get_uploaded_files()
+    remote_urls = {f["name"] : f["download_url"] for f in files}
+    if write:
+        with open("Config/raw_data_urls.json", "w") as f:
+            json.dump(remote_urls, f)
+    return remote_urls
+    
+def upload_file(local_path, remote_name, client=None, oauth=None, verbose=True):
+    if not client:
+        client = requests.session()
+    if not oauth:
+        oauth = authenticate()
+    files = {"filedata" : (remote_name, open(local_path, "rb"))}
     url = "http://api.figshare.com/v1/my_data/articles/{}/files".format(article)
-    oauth = authenticate()
     response = client.put(url, auth=oauth, files=files)
     results = json.loads(response.content.decode())
-    print(results)
+    if verbose:
+        for k, v in results.items():
+            print("Upload successful")
+            print(k, ":", v)
+    
+def upload_all(overwrite=False):
+    local_files = make_local_file_list()
+    remote_files = get_uploaded_filenames()
+    client = requests.session()
+    oauth = authenticate()
+    for local_path in local_files:
+        remote_name = make_remote_name(local_path)
+        if not remote_name in remote_files or overwrite:
+            print("Uploading {} as {}".format(local_path, remote_name))
+            upload_file(local_path, remote_name, client=client, oauth=oauth)
+        else:
+            print("{} already uploaded".format(local_path))
+
+def test_upload_file(n=1):
+    local_path = make_local_file_list()[n]
+    remote_name = make_remote_name(local_path)
+    upload_file(local_path, remote_name)
+    
+def test_remote_names():
+    with open("Config/remote_filenames.json", "w") as f:
+        json.dump(make_remote_names_dict(), f, indent=4)
 
 if __name__ == "__main__":
     if os.getcwd()[-7:] == "Scripts":
         print("Changing working directory to experiment root directory")
         os.chdir("../")
 
-    test_upload_file()
+#    print(get_uploaded_files())
+#    test_upload_file(6)
+#    test_remote_names()
+#    print(get_remote_urls(False))
+    upload_all()
+    
