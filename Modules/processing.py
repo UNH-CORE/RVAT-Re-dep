@@ -14,6 +14,7 @@ from pxl import timeseries as ts
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from scipy import interpolate
+import scipy.stats
 from pxl import fdiff
 import json
 import os
@@ -202,14 +203,14 @@ class Run(object):
         angle1 = self.angle[sr*self.t1]
         angle2 = self.angle[sr*self.t2]
         n3rdrevs = np.floor((angle2-angle1)/120.0)
-        self.nrevs = np.floor((angle2-angle1)/360.0)
+        self.nrevs = int(np.floor((angle2-angle1)/360.0))
         angle2 = angle1 + n3rdrevs*120
         t2i = np.where(np.round(self.angle)==np.round(angle2))[0][0]
         t2 = self.t_ni[t2i]
         self.t2 = np.round(t2, decimals=2)
         self.t2found = True
         
-    def calcperf(self):
+    def calc_perf(self):
         """Calculates mean performance based on data between t0 and t1"""
         print("Calculating performance for", self.section, "run "+str(self.nrun)+"...")
         if not self.loaded:
@@ -294,7 +295,7 @@ class Run(object):
         self.nbadw = len(np.where(np.isnan(self.w_f)==True)[0])
         self.nbad = self.nbadu + self.nbadv + self.nbadw
         
-    def calcwake(self):
+    def calc_wake(self):
         print("Calculating wake stats for", self.section, "run "+str(self.nrun)+"...")
         if self.not_loadable:
             self.mean_u = np.nan
@@ -349,6 +350,35 @@ class Run(object):
         if not self.t2found:
             self.find_t2()
         return self.t_ni[self.t1*self.sr_ni:self.t2*self.sr_ni]
+
+    @property
+    def angle_trimmed(self):
+        """Returns segment of turbine angle."""
+        if not self.t2found:
+            self.find_t2()
+        return self.angle[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        
+    def calc_cp_per_rev(self):
+        """Computes mean power coefficient over each revolution."""
+        angle = self.angle_trimmed
+        angle -= angle[0]
+        cp = np.zeros(self.nrevs)
+        start_angle = 0.0
+        for n in range(self.nrevs):
+            end_angle = start_angle + 360
+            ind = np.logical_and(end_angle > angle, angle >= start_angle)
+            cp[n] = self.cp_trimmed[ind].mean()
+            start_angle += 360
+        self.cp_per_rev = cp
+        self.std_cp_per_rev = cp.std()
+        return self.cp_per_rev, self.std_cp_per_rev
+        
+    @property
+    def cp_conf_interval(self, alpha=0.95):
+        self.calc_cp_per_rev()
+        t_val = scipy.stats.t.interval(alpha=alpha, df=self.nrevs)[1]
+        std = self.std_cp_per_rev
+        return t_val*std/np.sqrt(self.nrevs)
         
     def detect_badvec(self):
         """Detects if Vectrino data is bad by looking at first 2 seconds of
@@ -434,7 +464,7 @@ class PerfCurve(object):
             if reprocess or nrun not in runsdone or np.isnan(tsr_old[n]):
                 print("Processing run " + str(self.runs[nrun]) + "...")
                 run = Run("Perf-{:0.1f}".format(self.U), nrun)
-                run.calcperf()
+                run.calc_perf()
                 tsr[n] = run.meantsr
                 cp[n] = run.meancp
                 cd[n] = run.meancd
@@ -777,8 +807,8 @@ def batch_process_section(section, reprocess=True):
                 print("Processing run {}...".format(n))
                 data.y_R[n] = r.y_R
                 data.z_H[n] = r.z_H
-                r.calcperf()
-                r.calcwake()
+                r.calc_perf()
+                r.calc_wake()
                 data.tsr[n] = r.meantsr
                 data.cp[n] = r.meancp
                 data.cd[n] = r.meancd
@@ -1151,7 +1181,7 @@ if __name__ == "__main__":
         section = sys.argv[1]
         nrun = int(sys.argv[2])
         run = Run(section, nrun)
-        run.calcperf()
-        run.calcwake()
+        run.calc_perf()
+        run.calc_wake()
     else:
         pass

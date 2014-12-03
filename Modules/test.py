@@ -12,9 +12,13 @@ from Modules.processing import *
 
 def test_run():
     print("Testing Run class")
-    run = Run("Perf-0.4", 20)
-    run.calcperf()
-    run.calcwake()
+    run = Run("Wake-1.2", 25)
+    run.calc_perf()
+    run.calc_wake()
+    run.calc_cp_per_rev()
+    print(run.cp_per_rev)
+    print(run.std_cp_per_rev)
+    print(run.cp_conf_interval)
     print("PASS")
     
 def test_perf_curve():
@@ -66,6 +70,7 @@ def test_all():
     print("All tests passed")
     
 if __name__ == "__main__":
-    test_all()
+    test_run()
+#    test_all()
 #    test_wake_profile()
 #    test_wake_map()

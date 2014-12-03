@@ -7,7 +7,7 @@ Created on Wed Dec  3 09:15:20 2014
 
 import matplotlib
 
-matplotlib.style.use("Config/plotstyle.mplstyle")
+matplotlib.style.use("Config/ggplot-mod.mplstyle")
 
 ylabels = {"mean_u" : r"$U/U_\infty$",
            "std_u" : r"$\sigma_u/U_\infty$",
