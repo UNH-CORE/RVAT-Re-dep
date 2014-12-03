@@ -228,8 +228,8 @@ class Run(object):
         self.calc_unc_perf()
         print("U_nom =", self.U_nom)
         if self.lin_enc:
-            self.meanu_enc, self.stdu_enc = ts.calcstats(self.U_ni, self.t1, self.t2, self.sr_ni)
-            print("U_enc =", self.meanu_enc, "std =", self.stdu_enc)
+            self.mean_u_enc, self.stdu_enc = ts.calcstats(self.U_ni, self.t1, self.t2, self.sr_ni)
+            print("U_enc =", self.mean_u_enc, "std =", self.stdu_enc)
         print("tsr =", self.meantsr)
         print("C_P =", self.meancp, "+/-", self.delta_cp/2)
         print("C_D =", self.meancd, "+/-", self.delta_cd/2)
@@ -256,9 +256,9 @@ class Run(object):
         passes = 1
         fthresh = 0.9
         # Calculate means
-        meanu, x = ts.calcstats(self.u, self.t1, self.t2, self.sr_vec)
-        meanv, x = ts.calcstats(self.v, self.t1, self.t2, self.sr_vec)
-        meanw, x = ts.calcstats(self.w, self.t1, self.t2, self.sr_vec)
+        mean_u, x = ts.calcstats(self.u, self.t1, self.t2, self.sr_vec)
+        mean_v, x = ts.calcstats(self.v, self.t1, self.t2, self.sr_vec)
+        mean_w, x = ts.calcstats(self.w, self.t1, self.t2, self.sr_vec)
         # Create new filtered arrays
         self.u_f = self.u*1
         self.v_f = self.v*1
@@ -273,20 +273,20 @@ class Run(object):
                 ts.sigmafilter(self.w[200*self.t1:200*self.t2], std, passes)
         if threshfilt:
             # Do threshold filter on u
-            ibad = np.where(self.u > meanu + fthresh)[0]
-            ibad = np.append(ibad, np.where(self.u < meanu - fthresh)[0])
+            ibad = np.where(self.u > mean_u + fthresh)[0]
+            ibad = np.append(ibad, np.where(self.u < mean_u - fthresh)[0])
             i = np.where(np.logical_and(ibad > self.t1*200, 
                                         ibad < self.t2*200))[0]
             self.u_f[ibad[i]] = np.nan
             # Do threshold filter on v
-            ibad = np.where(self.v > meanv + fthresh)[0]
-            ibad = np.append(ibad, np.where(self.v < meanv - fthresh)[0])
+            ibad = np.where(self.v > mean_v + fthresh)[0]
+            ibad = np.append(ibad, np.where(self.v < mean_v - fthresh)[0])
             i = np.where(np.logical_and(ibad > self.t1*200, 
                                         ibad < self.t2*200))[0]
             self.v_f[ibad[i]] = np.nan
             # Do threshold filter on w
-            ibad = np.where(self.w > meanw + fthresh)[0]
-            ibad = np.append(ibad, np.where(self.w < meanw - fthresh)[0])
+            ibad = np.where(self.w > mean_w + fthresh)[0]
+            ibad = np.append(ibad, np.where(self.w < mean_w - fthresh)[0])
             i = np.where(np.logical_and(ibad > self.t1*200, 
                                         ibad < self.t2*200))[0]
             self.w_f[ibad[i]] = np.nan
@@ -299,25 +299,25 @@ class Run(object):
     def calcwake(self):
         print("Calculating wake stats for", self.section, "run "+str(self.nrun)+"...")
         if self.not_loadable:
-            self.meanu = np.nan
-            self.meanv = np.nan
-            self.meanw = np.nan
+            self.mean_u = np.nan
+            self.mean_v = np.nan
+            self.mean_w = np.nan
             return None
         if not self.t2found:
             self.find_t2()
         self.filter_wake()
-        self.meanu, self.stdu = ts.calcstats(self.u_f, self.t1, self.t2, self.sr_vec)
-        self.meanv, self.stdv = ts.calcstats(self.v_f, self.t1, self.t2, self.sr_vec)
-        self.meanw, self.stdw = ts.calcstats(self.w_f, self.t1, self.t2, self.sr_vec)
-        uv = (self.u_f - self.meanu)*(self.v_f - self.meanv)
-        self.meanuv, self.stduv = ts.calcstats(uv, self.t1, self.t2, self.sr_vec)
+        self.mean_u, self.stdu = ts.calcstats(self.u_f, self.t1, self.t2, self.sr_vec)
+        self.mean_v, self.stdv = ts.calcstats(self.v_f, self.t1, self.t2, self.sr_vec)
+        self.mean_w, self.stdw = ts.calcstats(self.w_f, self.t1, self.t2, self.sr_vec)
+        uv = (self.u_f - self.mean_u)*(self.v_f - self.mean_v)
+        self.mean_uv, self.stduv = ts.calcstats(uv, self.t1, self.t2, self.sr_vec)
         self.k = 0.5*(self.stdu**2 + self.stdv**2 + self.stdw**2)
         ntotal = int((self.t2 - self.t1)*self.sr_vec*3)
         self.calc_unc_wake()
         print("y/R =", self.y_R)
         print("z/H =", self.z_H)
-        print("U_vec/U_nom =", self.meanu/self.U_nom, "+/-", 
-              self.delta_meanu/2/self.U_nom)
+        print("U_vec/U_nom =", self.mean_u/self.U_nom, "+/-", 
+              self.delta_mean_u/2/self.U_nom)
         print("std_u/U_nom =", self.stdu/self.U_nom, "+/-",
               self.delta_stdu/2/self.U_nom)
         print(str(self.nbad)+"/"+str(ntotal), "data points omitted")
@@ -329,15 +329,15 @@ class Run(object):
 #        u_seg = u_seg[~np.isnan(u_seg)]
 #        d_u = calc_d_vel(u_seg)
 #        u_seg = np.array(unp.uarray(u_seg, d_u/2))
-#        meanu = u_seg.sum()/len(u_seg)
-#        self.delta_meanu = meanu.std_dev*2
-#        upup = (u_seg - self.meanu)**2
+#        mean_u = u_seg.sum()/len(u_seg)
+#        self.delta_mean_u = mean_u.std_dev*2
+#        upup = (u_seg - self.mean_u)**2
 #        stdu = upup.sum()**0.5/len(u_seg)**0.5
 #        self.delta_stdu = stdu.std_dev*2
-#        print(meanu/self.U_nom)
+#        print(mean_u/self.U_nom)
 #        print(stdu/self.U_nom)
-#        self.delta_meanu = np.sqrt(np.sum(d_u**2))/len(u_seg)
-        self.delta_meanu = 0
+#        self.delta_mean_u = np.sqrt(np.sum(d_u**2))/len(u_seg)
+        self.delta_mean_u = 0
         self.delta_stdu = 0
         
     def detect_badvec(self):
@@ -513,6 +513,7 @@ class WakeProfile(object):
         self.df = pd.read_csv(os.path.join(processed_data_dir, 
                                            self.section+".csv"))
         self.df = self.df[self.df.z_H==self.z_H]
+        self.y_R = self.df["y_R"]
         
     def plot(self, quantity, newfig=True, show=True, save=False, 
              savepath="", savetype=".pdf", linetype='--ok'):
@@ -562,15 +563,15 @@ class WakeMap(object):
         self.load()
         
     def load(self):
-        self.y_R = WakeProfile(self.U_infty, 0).y_R
-        self.meanu = np.zeros((len(self.z_H), len(self.y_R)))
-        self.meanv = self.meanu*1
-        self.meanw = self.meanu*1
+        self.y_R = WakeProfile(self.U_infty, 0, "mean_u").y_R
+        self.mean_u = np.zeros((len(self.z_H), len(self.y_R)))
+        self.mean_v = self.mean_u*1
+        self.mean_w = self.mean_u*1
         for z_H in self.z_H:
-            wp = WakeProfile(self.U_infty, z_H)
-            self.meanu[self.z_H.index(z_H)] = wp.meanu
-            self.meanv[self.z_H.index(z_H)] = wp.meanv
-            self.meanw[self.z_H.index(z_H)] = wp.meanw
+            wp = WakeProfile(self.U_infty, z_H, "mean_u")
+            self.mean_u[self.z_H.index(z_H)] = wp.df.mean_u
+            self.mean_v[self.z_H.index(z_H)] = wp.df.mean_v
+            self.mean_w[self.z_H.index(z_H)] = wp.df.mean_w
         self.loaded = True
         
     def turb_lines(self, linestyles="solid", linewidth=3, colors="gray"):
@@ -581,10 +582,10 @@ class WakeMap(object):
         plt.vlines(1, -0.2, 0.5, linestyles=linestyles, colors="gray",
                    linewidth=linewidth)
         
-    def plot_meanu(self, save=False, show=False, savepath="", savetype=".pdf"):
+    def plot_mean_u(self, save=False, show=False, savepath="", savetype=".pdf"):
         # Plot contours of mean streamwise velocity
         plt.figure(figsize=(10,5))
-        cs = plt.contourf(self.y_R, self.z_H, self.meanu, 20,
+        cs = plt.contourf(self.y_R, self.z_H, self.mean_u, 20,
                           cmap=plt.cm.coolwarm)
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
@@ -605,15 +606,15 @@ class WakeMap(object):
                            savetype=".pdf"):
         plt.figure(figsize=(10,6))
         # Add contours of mean velocity
-        cs = plt.contourf(self.y_R, self.z_H, self.meanu/self.U_infty, 20, 
+        cs = plt.contourf(self.y_R, self.z_H, self.mean_u/self.U_infty, 20, 
                           cmap=plt.cm.coolwarm)
         cb = plt.colorbar(cs, shrink=1, extend="both", 
                           orientation="horizontal", pad=0.2)
         cb.set_label(r"$U/U_{\infty}$")
         plt.hold(True)
         # Make quiver plot of v and w velocities
-        Q = plt.quiver(self.y_R, self.z_H, self.meanv/self.U_infty, 
-                       self.meanw/self.U_infty, width=0.0022)
+        Q = plt.quiver(self.y_R, self.z_H, self.mean_v/self.U_infty, 
+                       self.mean_w/self.U_infty, width=0.0022)
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
@@ -635,13 +636,14 @@ class WakeMap(object):
     def plot_xvorticity(self):
         pass
     
-    def plot_diff(self, quantity="u", U_infty_diff=1.0, save=False, 
+    def plot_diff(self, quantity="mean_u", U_infty_diff=1.0, save=False, 
                   show=False, savepath="", savetype=""):
         wm_diff = WakeMap(U_infty_diff)
         q_ref, q_diff = None, None
-        if quantity in ["meanu", "meanv", "meanw"]:
+        if quantity in ["mean_u", "mean_v", "mean_w"]:
             exec("q_ref = self." + quantity)
             exec("q_diff = wm_diff." + quantity)
+            print(q_ref)
         else:
             print("Not a valid quantity")
             return None
@@ -667,26 +669,26 @@ class WakeMap(object):
     def plot_meancomboquiv_diff(self, U_infty_diff, save=False, show=False,
                                 savepath="", savetype="", percent=True):
         wm_diff = WakeMap(U_infty_diff)
-        meanu_diff = (self.meanu/self.U_infty - \
-                wm_diff.meanu/wm_diff.U_infty)
-        meanv_diff = (self.meanv/self.U_infty - \
-                wm_diff.meanv/wm_diff.U_infty)
-        meanw_diff = (self.meanw/self.U_infty - \
-                wm_diff.meanw/wm_diff.U_infty)
+        mean_u_diff = (self.mean_u/self.U_infty - \
+                wm_diff.mean_u/wm_diff.U_infty)
+        mean_v_diff = (self.mean_v/self.U_infty - \
+                wm_diff.mean_v/wm_diff.U_infty)
+        mean_w_diff = (self.mean_w/self.U_infty - \
+                wm_diff.mean_w/wm_diff.U_infty)
         if percent:
-            meanu_diff = meanu_diff/self.meanu/self.U_infty*100
-            meanv_diff = meanv_diff/self.meanv/self.U_infty*100
-            meanw_diff = meanw_diff/self.meanw/self.U_infty*100
+            mean_u_diff = mean_u_diff/self.mean_u/self.U_infty*100
+            mean_v_diff = mean_v_diff/self.mean_v/self.U_infty*100
+            mean_w_diff = mean_w_diff/self.mean_w/self.U_infty*100
         plt.figure(figsize=(12,4))
-        cs = plt.contourf(self.y_R, self.z_H, meanu_diff, 20,
+        cs = plt.contourf(self.y_R, self.z_H, mean_u_diff, 20,
                           cmap=plt.cm.coolwarm)
         cb = plt.colorbar(cs, shrink=1, fraction=0.15,
                           orientation="vertical", pad=0.05)
         cb.set_label(r"$\Delta U$ (\%)")
         plt.hold(True)
         # Make quiver plot of v and w velocities
-        Q = plt.quiver(self.y_R, self.z_H, meanv_diff, 
-                       meanw_diff, width=0.0022)
+        Q = plt.quiver(self.y_R, self.z_H, mean_v_diff, 
+                       mean_w_diff, width=0.0022)
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
@@ -708,15 +710,15 @@ class WakeMap(object):
             if savepath: savepath += "/"
             plt.savefig(savepath+"/meancomboquiv_diff"+savetype)
             
-    def plot_meanu_diff_std(self):
+    def plot_mean_u_diff_std(self):
         u_ref = 1.0
-        meanu_ref = WakeMap(u_ref).meanu/u_ref
+        mean_u_ref = WakeMap(u_ref).mean_u/u_ref
         std = []
         u_array = np.arange(0.4, 1.4, 0.2)
         for u in u_array:
             wm = WakeMap(u)
-            meanu = wm.meanu/wm.U_infty
-            std.append(np.std((meanu - meanu_ref)/meanu_ref))
+            mean_u = wm.mean_u/wm.U_infty
+            std.append(np.std((mean_u - mean_u_ref)/mean_u_ref))
         std = np.asarray(std)
         plt.figure()
         plt.plot(u_array, std)
@@ -771,10 +773,10 @@ def batch_process_section(section, reprocess=True):
                 data.cd[n] = r.meancd
                 data.delta_cp[n] = r.delta_cp
                 data.delta_cd[n] = r.delta_cd
-                data.mean_u[n] = r.meanu
-                data.mean_v[n] = r.meanv
-                data.mean_w[n] = r.meanw
-                data.mean_up_vp[n] = r.meanuv
+                data.mean_u[n] = r.mean_u
+                data.mean_v[n] = r.mean_v
+                data.mean_w[n] = r.mean_w
+                data.mean_up_vp[n] = r.mean_uv
                 data.std_u[n] = r.stdu
                 data.std_v[n] = r.stdv
                 data.std_w[n] = r.stdw
@@ -796,9 +798,9 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
                             savetype=".pdf", newfig=True, marker="-ok",
                             fill="none", oldwake=False, figsize=(10, 5)):
     """Plots the transverse wake profile of some quantity. These can be
-      * meanu
-      * meanv
-      * meanw
+      * mean_u
+      * mean_v
+      * mean_w
       * stdu
     """
     Re_D = U*D/nu
@@ -812,7 +814,7 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
         plt.figure(figsize=figsize)
     if oldwake:
         plot_old_wake(quantity, y_R)
-    if quantity in ["meanuv"]:
+    if quantity in ["mean_uv"]:
         unorm = U**2
     else:
         unorm = U
@@ -1129,50 +1131,6 @@ def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
         if save:
             plt.savefig(os.path.join(savepath, q+savetype))
     plt.show()
-
-    
-def main():
-    plt.close("all")
-    p = "Google Drive/Research/Papers/Re dependence CFT/figures"
-    if "linux" in sys.platform:
-        p = "/home/pete/" + p
-    elif "win" in sys.platform:
-        p = "C:/Users/Pete/" + p
-
-    """Dealing with individual runs"""
-#    r = Run("Wake-1.0", 50)
-#    r.calcperf()
-#    r.calcwake()
-#    r.plotperf()
-#    r.plotwake()
-
-    """Tare drag and torque"""
-#    process_tare_torque(2, plot=True)
-#    batch_process_tare_torque(plot=True)
-
-#    process_tare_drag(5, plot=True)
-#    batch_process_tare_drag(plot=True)
-#    plot_tare_drag()
-    
-    """Batch processing"""
-#    batch_process_section("Perf-1.0", reprocess=True)
-#    batch_process_all()
-    
-#    plot_perf_curves(save=False, savepath=p)
-#    plot_perf_re_dep(save=False, cfd=False, savepath=p, normalize_by="default",
-#                     dual_xaxes=True)
-    
-#    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
-
-#    plot_settling(1.0)
-
-#    wm = WakeMap(0.4)
-#    wm.plot_meancomboquiv()
-#    wm2 = WakeMap(1.2)
-#    wm2.plot_meancomboquiv()
-#    wm.plot_diff(quantity="meanw", U_infty_diff=0.6)
-#    wm.plot_meancomboquiv_diff(0.8, percent=False)
-#    plt.show()
         
 if __name__ == "__main__":
     if os.getcwd()[-7:] == "Modules":
@@ -1185,4 +1143,4 @@ if __name__ == "__main__":
         run.calcperf()
         run.calcwake()
     else:
-        main()
+        pass

@@ -29,6 +29,16 @@ def test_wake_profile():
     wp.plot("mean_u")
     print("PASS")
     
+def test_wake_map():
+    print("Testing WakeMap class")
+    wm = WakeMap(0.4)
+    wm.plot_meancomboquiv()
+    wm2 = WakeMap(1.2)
+    wm2.plot_meancomboquiv()
+    wm.plot_diff(quantity="mean_w", U_infty_diff=0.6)
+    wm.plot_meancomboquiv_diff(0.8, percent=False)
+    print("PASS")
+    
 def test_all():
     test_run()
     test_perf_curve()
@@ -52,8 +62,10 @@ def test_all():
     print("Testing process_tare_drag")
     process_tare_drag(5, plot=False)
     print("PASS")
+    test_wake_map()
     print("All tests passed")
     
 if __name__ == "__main__":
     test_all()
 #    test_wake_profile()
+#    test_wake_map()
