@@ -210,7 +210,7 @@ class Run(object):
         self.t2 = np.round(t2, decimals=2)
         self.t2found = True
         
-    def calc_perf(self):
+    def calc_perf(self, verbose=True):
         """Calculates mean performance based on data between t0 and t1"""
         print("Calculating performance for", self.section, "run "+str(self.nrun)+"...")
         if not self.loaded:
@@ -225,13 +225,15 @@ class Run(object):
         self.meancd, x = ts.calcstats(self.cd, self.t1, self.t2, self.sr_ni)
         self.meancp, x = ts.calcstats(self.cp, self.t1, self.t2, self.sr_ni)
         self.calc_unc_perf()
-        print("U_nom =", self.U_nom)
         if self.lin_enc:
             self.mean_u_enc, self.stdu_enc = ts.calcstats(self.U_ni, self.t1, self.t2, self.sr_ni)
-            print("U_enc =", self.mean_u_enc, "std =", self.stdu_enc)
-        print("tsr =", self.meantsr)
-        print("C_P =", self.meancp, "+/-", self.delta_cp/2)
-        print("C_D =", self.meancd, "+/-", self.delta_cd/2)
+            if verbose:            
+                print("U_enc =", self.mean_u_enc, "std =", self.stdu_enc)
+        if verbose:
+            print("U_nom =", self.U_nom)
+            print("tsr =", self.meantsr)
+            print("C_P =", self.meancp, "+/-", self.delta_cp/2)
+            print("C_D =", self.meancd, "+/-", self.delta_cd/2)
         
     def calc_unc_perf(self):
         torque, x = ts.calcstats(self.torque, self.t1, self.t2, self.sr_ni)

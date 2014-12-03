@@ -14,6 +14,7 @@ def test_run():
     print("Testing Run class")
     run = Run("Wake-1.2", 25)
     run.calc_perf()
+    run.calc_perf(verbose=False)
     run.calc_wake()
     run.calc_cp_per_rev()
     print(run.cp_per_rev)
