@@ -212,7 +212,9 @@ class Run(object):
         
     def calc_perf(self, verbose=True):
         """Calculates mean performance based on data between t0 and t1"""
-        print("Calculating performance for", self.section, "run "+str(self.nrun)+"...")
+        if verbose:
+            print("Calculating performance for {} run {}".format(self.section,
+                  str(self.nrun)))
         if not self.loaded:
             self.load()
         if self.not_loadable:
