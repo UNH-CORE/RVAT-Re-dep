@@ -339,6 +339,18 @@ class Run(object):
 #        self.delta_mean_u = np.sqrt(np.sum(d_u**2))/len(u_seg)
         self.delta_mean_u = 0
         self.delta_stdu = 0
+    
+    @property
+    def cp_trimmed(self):
+        if not self.t2found:
+            self.find_t2()
+        return self.cp[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        
+    @property
+    def t_ni_trimmed(self):
+        if not self.t2found:
+            self.find_t2()
+        return self.t_ni[self.t1*self.sr_ni:self.t2*self.sr_ni]
         
     def detect_badvec(self):
         """Detects if Vectrino data is bad by looking at first 2 seconds of
