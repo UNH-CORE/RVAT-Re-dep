@@ -71,7 +71,8 @@ def test_all():
     print("All tests passed")
     
 if __name__ == "__main__":
-    test_run()
+#    test_run()
 #    test_all()
 #    test_wake_profile()
 #    test_wake_map()
+    plot_perf_curves()
