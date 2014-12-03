@@ -1046,7 +1046,7 @@ def batch_process_tare_drag(plot=False):
     data["run"] = runs
     data["tow_speed"] = speed
     data["tare_drag"] = taredrag
-    data.to_csv("Processed/Tare drag.csv", index=False)
+    data.to_csv("Data/Processed/Tare drag.csv", index=False)
     if plot:
         plt.figure()
         plt.plot(speed, taredrag, "-ok", markerfacecolor="None")
@@ -1056,7 +1056,7 @@ def batch_process_tare_drag(plot=False):
         plt.show()
         
 def plot_tare_drag():
-    df = pd.read_csv("Processed/Tare drag.csv")
+    df = pd.read_csv("Data/Processed/Tare drag.csv")
     plt.figure()
     plt.plot(df.tow_speed, df.tare_drag, "-ok")
     plt.xlabel("Tow speed (m/s)")
@@ -1070,7 +1070,7 @@ def process_tare_torque(nrun, plot=False):
              1 : (12, 52),
              2 : (11, 32),
              3 : (7, 30)}
-    nidata = loadmat("Raw/Tare torque/" + str(nrun) + "/nidata.mat", 
+    nidata = loadmat("Data/Raw/Tare torque/" + str(nrun) + "/nidata.mat", 
                      squeeze_me=True)
     # Compute RPM
     t_ni  = nidata["t"]
@@ -1097,7 +1097,7 @@ def process_tare_torque(nrun, plot=False):
     
 def batch_process_tare_torque(plot=False):
     """Processes all tare torque data."""
-    runs = os.listdir("Raw/Tare torque")
+    runs = os.listdir("Data/Raw/Tare torque")
     runs = sorted([int(run) for run in runs])
     rpm = np.zeros(len(runs))
     taretorque = np.zeros(len(runs))
@@ -1107,7 +1107,7 @@ def batch_process_tare_torque(plot=False):
     df["run"] = runs
     df["rpm"] = rpm
     df["tare_torque"] = taretorque
-    df.to_csv("Processed/Tare torque.csv", index=False)
+    df.to_csv("Data/Processed/Tare torque.csv", index=False)
     m, b = np.polyfit(rpm, taretorque, 1)
     print("tare_torque = "+str(m)+"*rpm +", b)
     if plot:
