@@ -1139,6 +1139,7 @@ def plot_perf_curves(subplots=True, save=False, savepath="", savetype=".pdf"):
     PerfCurve(1.2).plotcd(newfig=False, marker="^")
     plt.legend(("0.4e6", "0.6e6", "0.8e6", "1.0e6", "1.2e6"), 
                loc="lower right", ncol=2)
+    plt.show()
     if save:
         if savepath != "":
             savepath += "/"
