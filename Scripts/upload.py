@@ -87,8 +87,8 @@ def upload_file(local_path, remote_name, client=None, oauth=None, verbose=True):
     response = client.put(url, auth=oauth, files=files)
     results = json.loads(response.content.decode())
     if verbose:
+        print("Upload successful")
         for k, v in results.items():
-            print("Upload successful")
             print(k, ":", v)
     
 def upload_all(overwrite=False):
@@ -103,6 +103,7 @@ def upload_all(overwrite=False):
             upload_file(local_path, remote_name, client=client, oauth=oauth)
         else:
             print("{} already uploaded".format(local_path))
+    print("All files uploaded")
 
 def test_upload_file(n=1):
     local_path = make_local_file_list()[n]
