@@ -41,12 +41,10 @@ if __name__ == "__main__":
 #    batch_process_all()
     
     """Plotting"""
-#    plot_perf_curves(save=False, savepath=p)
+    plot_perf_curves(save=False, savepath=p)
 #    plot_perf_re_dep(save=False, cfd=False, savepath=p, normalize_by="default",
 #                     dual_xaxes=True)
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 #    plot_settling(1.0)
-    plot_meancomboquiv(U_infty=0.4)
-    plot_meancomboquiv(U_infty=1.2)
-    plt.show()
-    
+#    plot_meancomboquiv(U_infty=0.4)
+#    plot_meancomboquiv(U_infty=1.2)
