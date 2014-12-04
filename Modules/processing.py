@@ -20,8 +20,12 @@ import json
 import os
 import sys
 import pandas as pd
-import Modules.plotting
-from Modules.plotting import ylabels
+try:
+    import Modules.plotting
+    from Modules.plotting import ylabels
+except ImportError:
+    import plotting
+    from plotting import ylabels
 
 # Dict for runs corresponding to each height
 wakeruns = {0.0 : np.arange(0, 45),
@@ -872,7 +876,7 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
     plt.tight_layout()
     
 def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
-                     cfd=False, normalize_by="default", dual_xaxes=False):
+                     cfd=False, normalize_by="default", dual_xaxes=False, show=True):
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
     std_cp = np.zeros(len(speeds))
@@ -929,7 +933,7 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
-        plt.text(1.27e6, 1.11, r"$\times 10^5$")
+        plt.text(1.27e6, 1.11, r"$\times 10^5$", color=r"#555555")
         ax2 = ax.twiny()
         ax.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
@@ -967,7 +971,8 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
     ax = plt.gca()
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.tight_layout()
-    plt.show()
+    if show:
+        plt.show()
     if save:
         plt.savefig(savepath + "/re_dep_cd" + savetype)
     
@@ -1178,6 +1183,9 @@ def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
         if save:
             plt.savefig(os.path.join(savepath, q+savetype))
     plt.show()
+    
+def main():
+    plot_perf_re_dep(dual_xaxes=True)
         
 if __name__ == "__main__":
     if os.getcwd()[-7:] == "Modules":
@@ -1190,4 +1198,4 @@ if __name__ == "__main__":
         run.calc_perf()
         run.calc_wake()
     else:
-        print("Do not run this module directly")
+        main()
