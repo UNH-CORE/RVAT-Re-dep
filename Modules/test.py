@@ -22,6 +22,11 @@ def test_run():
     print(run.cp_conf_interval)
     print("PASS")
     
+def test_section():
+    print("Testing Section class")
+    section = Section("Wake-1.0")
+    print("PASS")
+    
 def test_perf_curve():
     print("Testing PerfCurve class")
     pc = PerfCurve(0.6)
@@ -46,6 +51,7 @@ def test_wake_map():
     
 def test_all():
     test_run()
+    test_section()
     test_perf_curve()
     print("Testing plot_perf_re_dep")
     plot_perf_re_dep()
@@ -75,4 +81,5 @@ if __name__ == "__main__":
 #    test_all()
 #    test_wake_profile()
 #    test_wake_map()
-    plot_perf_curves()
+#    plot_perf_curves()
+    test_section()

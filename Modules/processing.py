@@ -478,8 +478,8 @@ class Run(object):
 class Section(object):
     def __init__(self, name):
         self.name = name
-        self.processed_path = os.path.join(processed_data_dir, section+".csv")
-        self.test_plan_path = os.path.joint("Config", "Test plan", section+".csv")
+        self.processed_path = os.path.join(processed_data_dir, name+".csv")
+        self.test_plan_path = os.path.join("Config", "Test plan", name+".csv")
         self.load()    
     def load(self):
         self.data = pd.read_csv(self.processed_path)
