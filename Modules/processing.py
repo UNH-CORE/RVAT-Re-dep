@@ -100,6 +100,7 @@ class Run(object):
         self.loaded = False
         self.t2found = False
         self.not_loadable = False
+        self.wake_calculated = False
         self.load()
         
     def load(self):
@@ -325,6 +326,7 @@ class Run(object):
         self.k = 0.5*(self.std_u**2 + self.std_v**2 + self.std_w**2)
         ntotal = int((self.t2 - self.t1)*self.sr_vec*3)
         self.calc_unc_wake()
+        self.wake_calculated = True
         if verbose:
             print("y/R =", self.y_R)
             print("z/H =", self.z_H)
@@ -370,6 +372,19 @@ class Run(object):
         if not self.t2found:
             self.find_t2()
         return self.angle[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        
+    @property
+    def u_trimmed(self):
+        """Returns segment of filtered streamwise velocity."""
+        if not self.wake_calculated:
+            self.calc_wake(verbose=False)
+        return self.u_f[self.t1*self.sr_vec:self.t2*self.sr_vec]
+        
+    @property
+    def t_vec_trimmed(self):
+        if not self.t2found:
+            self.find_t2()
+        return self.t_vec[self.t1*self.sr_vec:self.t2*self.sr_vec]
         
     def calc_cp_per_rev(self):
         """Computes mean power coefficient over each revolution."""
@@ -458,6 +473,24 @@ class Run(object):
         plt.plot(self.t_ni, self.U_ni)
         plt.tight_layout()
         plt.show()
+
+        
+class Section(object):
+    def __init__(self, name):
+        self.name = name
+        self.processed_path = os.path.join(processed_data_dir, section+".csv")
+        self.test_plan_path = os.path.joint("Config", "Test plan", section+".csv")
+        self.load()    
+    def load(self):
+        self.data = pd.read_csv(self.processed_path)
+        self.test_plan = pd.read_csv(self.test_plan_path)
+    @property
+    def cp(self):
+        return self.data.cp
+    def process(self):
+        """To-do: Process an entire section of data."""
+        pass        
+
 
 class PerfCurve(object):
     """Object that represents a performance curve."""
