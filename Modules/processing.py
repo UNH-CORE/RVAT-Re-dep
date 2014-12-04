@@ -232,9 +232,9 @@ class Run(object):
         self.meancp, x = ts.calcstats(self.cp, self.t1, self.t2, self.sr_ni)
         self.calc_unc_perf()
         if self.lin_enc:
-            self.mean_u_enc, self.stdu_enc = ts.calcstats(self.U_ni, self.t1, self.t2, self.sr_ni)
+            self.mean_u_enc, self.std_u_enc = ts.calcstats(self.U_ni, self.t1, self.t2, self.sr_ni)
             if verbose:            
-                print("U_enc =", self.mean_u_enc, "std =", self.stdu_enc)
+                print("U_enc =", self.mean_u_enc, "std =", self.std_u_enc)
         if verbose:
             print("U_nom =", self.U_nom)
             print("tsr =", self.meantsr)
@@ -314,12 +314,12 @@ class Run(object):
         if not self.t2found:
             self.find_t2()
         self.filter_wake()
-        self.mean_u, self.stdu = ts.calcstats(self.u_f, self.t1, self.t2, self.sr_vec)
-        self.mean_v, self.stdv = ts.calcstats(self.v_f, self.t1, self.t2, self.sr_vec)
-        self.mean_w, self.stdw = ts.calcstats(self.w_f, self.t1, self.t2, self.sr_vec)
+        self.mean_u, self.std_u = ts.calcstats(self.u_f, self.t1, self.t2, self.sr_vec)
+        self.mean_v, self.std_v = ts.calcstats(self.v_f, self.t1, self.t2, self.sr_vec)
+        self.mean_w, self.std_w = ts.calcstats(self.w_f, self.t1, self.t2, self.sr_vec)
         uv = (self.u_f - self.mean_u)*(self.v_f - self.mean_v)
-        self.mean_uv, self.stduv = ts.calcstats(uv, self.t1, self.t2, self.sr_vec)
-        self.k = 0.5*(self.stdu**2 + self.stdv**2 + self.stdw**2)
+        self.mean_upvp, self.std_uv = ts.calcstats(uv, self.t1, self.t2, self.sr_vec)
+        self.k = 0.5*(self.std_u**2 + self.std_v**2 + self.std_w**2)
         ntotal = int((self.t2 - self.t1)*self.sr_vec*3)
         self.calc_unc_wake()
         if verbose:
@@ -327,8 +327,8 @@ class Run(object):
             print("z/H =", self.z_H)
             print("U_vec/U_nom =", self.mean_u/self.U_nom, "+/-", 
                   self.delta_mean_u/2/self.U_nom)
-            print("std_u/U_nom =", self.stdu/self.U_nom, "+/-",
-                  self.delta_stdu/2/self.U_nom)
+            print("std_u/U_nom =", self.std_u/self.U_nom, "+/-",
+                  self.delta_std_u/2/self.U_nom)
             print(str(self.nbad)+"/"+str(ntotal), "data points omitted")
         
     def calc_unc_wake(self):
@@ -341,13 +341,13 @@ class Run(object):
 #        mean_u = u_seg.sum()/len(u_seg)
 #        self.delta_mean_u = mean_u.std_dev*2
 #        upup = (u_seg - self.mean_u)**2
-#        stdu = upup.sum()**0.5/len(u_seg)**0.5
-#        self.delta_stdu = stdu.std_dev*2
+#        std_u = upup.sum()**0.5/len(u_seg)**0.5
+#        self.delta_std_u = std_u.std_dev*2
 #        print(mean_u/self.U_nom)
-#        print(stdu/self.U_nom)
+#        print(std_u/self.U_nom)
 #        self.delta_mean_u = np.sqrt(np.sum(d_u**2))/len(u_seg)
-        self.delta_mean_u = 0
-        self.delta_stdu = 0
+        self.delta_mean_u = np.nan
+        self.delta_std_u = np.nan
     
     @property
     def cp_trimmed(self):
@@ -586,7 +586,7 @@ class WakeProfile(object):
         if quantity == "std_u":
             q = q/self.U
             ylab = r"$\sigma_u/U_\infty$"
-        if quantity is "mean_up_vp":
+        if quantity is "mean_upvp":
             q = q/(self.U**2)
             ylab = r"$\overline{u'v'}/U_\infty^2$" 
         if newfig:
@@ -779,7 +779,7 @@ class WakeMap(object):
         plt.show()
         
 def load_test_plan_section(section):
-    df = pd.read_csv(os.path.join("Test plan", section+".csv"))
+    df = pd.read_csv(os.path.join("Config", "Test plan", section+".csv"))
     df = df.dropna(how="all", axis=1).dropna(how="all", axis=0)
     if "Run" in df:
         df["Run"] = df["Run"].astype(int)
@@ -799,14 +799,14 @@ def batch_process_section(section, reprocess=True):
             data = pd.DataFrame()
             data["run"] = runs = test_plan["Run"]
     else:
-        print("Reprocessing", section+"...")
+        print("Reprocessing", section)
         data = pd.DataFrame()
         data["run"] = runs = test_plan["Run"]
     # Create a empty arrays for all quantities
     if reprocess:
         for q in ["tsr", "cp", "cd", "delta_cp", "delta_cd", "y_R", "z_H",
                   "mean_u", "mean_v", "mean_w", "std_u", "std_v", "std_w",
-                  "mean_up_vp", "k"]:
+                  "mean_upvp", "k"]:
             data[q] = np.zeros(len(data.run))*np.nan
     for n in runs:
         if reprocess or True in np.isnan(data.iloc[n,:]).values:
@@ -814,25 +814,24 @@ def batch_process_section(section, reprocess=True):
             if r.not_loadable:
                 pass
             else:
-                print("Processing run {}...".format(n))
-                data.y_R[n] = r.y_R
-                data.z_H[n] = r.z_H
+                data.y_R.iloc[n] = r.y_R
+                data.z_H.iloc[n] = r.z_H
                 r.calc_perf()
                 r.calc_wake()
-                data.tsr[n] = r.meantsr
-                data.cp[n] = r.meancp
-                data.cd[n] = r.meancd
-                data.delta_cp[n] = r.delta_cp
-                data.delta_cd[n] = r.delta_cd
-                data.mean_u[n] = r.mean_u
-                data.mean_v[n] = r.mean_v
-                data.mean_w[n] = r.mean_w
-                data.mean_up_vp[n] = r.mean_uv
-                data.std_u[n] = r.stdu
-                data.std_v[n] = r.stdv
-                data.std_w[n] = r.stdw
-                data.k[n] = r.k
-    data.to_csv(os.path.join("Processed", section+".csv"), index=False)
+                data.tsr.iloc[n] = r.meantsr
+                data.cp.iloc[n] = r.meancp
+                data.cd.iloc[n] = r.meancd
+                data.delta_cp.iloc[n] = r.delta_cp
+                data.delta_cd.iloc[n] = r.delta_cd
+                data.mean_u.iloc[n] = r.mean_u
+                data.mean_v.iloc[n] = r.mean_v
+                data.mean_w.iloc[n] = r.mean_w
+                data.mean_upvp.iloc[n] = r.mean_upvp
+                data.std_u.iloc[n] = r.std_u
+                data.std_v.iloc[n] = r.std_v
+                data.std_w.iloc[n] = r.std_w
+                data.k.iloc[n] = r.k
+    data.to_csv(os.path.join(processed_data_dir, section+".csv"), index=False)
     
 def batch_process_all():
     """Batch processes all sections."""
@@ -852,7 +851,7 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
       * mean_u
       * mean_v
       * mean_w
-      * stdu
+      * std_u
     """
     Re_D = U*D/nu
     label = str((Re_D/1e6)) + "e6"
@@ -865,7 +864,7 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
         plt.figure(figsize=figsize)
     if oldwake:
         plot_old_wake(quantity, y_R)
-    if quantity in ["mean_uv"]:
+    if quantity in ["mean_upvp"]:
         unorm = U**2
     else:
         unorm = U
@@ -1165,8 +1164,8 @@ def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
     """Plots all wake profiles of interest."""
     legendlocs = {"mean_u" : 4,
                   "std_u" : 1,
-                  "mean_up_vp" : 1}
-    for q in ["mean_u", "std_u", "mean_up_vp"]:
+                  "mean_upvp" : 1}
+    for q in ["mean_u", "std_u", "mean_upvp"]:
         plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=True, marker="--vb",
                                 fill="blue")
         plot_trans_wake_profile(q, U=0.6, z_H=z_H, newfig=False, marker="sk",
@@ -1178,7 +1177,7 @@ def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
         plot_trans_wake_profile(q, U=1.2, z_H=z_H, newfig=False, marker="^k",
                                 fill="red")
         plt.legend(loc=legendlocs[q])
-        if q == "mean_up_vp":
+        if q == "mean_upvp":
             plt.ylim((-0.015, 0.025))
         if save:
             plt.savefig(os.path.join(savepath, q+savetype))
