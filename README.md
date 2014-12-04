@@ -5,7 +5,12 @@ derived dataset from the UNH-RVAT Reynolds number dependence experiment
 performed in Spring 2014.
 
 **Note:** This repository is still in active development and is not ready
-for use. 
+for use.
+
+Documents
+---------
+
+  * [Uncertainty calculations](http://nbviewer.ipython.org/github/UNH-CORE/RVAT-Re-dep/blob/master/Documents/IPython%20notebooks/uncertainty.ipynb)
 
 Download/usage
 --------------
