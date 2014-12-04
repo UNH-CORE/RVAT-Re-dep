@@ -22,11 +22,11 @@ if __name__ == "__main__":
 #    test.test_all()
 
     """Dealing with individual runs"""
-#    r = Run("Wake-1.0", 50)
-#    r.calcperf()
-#    r.calcwake()
-#    r.plotperf()
-#    r.plotwake()
+    r = Run("Wake-0.4", 20)
+#    r.calc_perf()
+#    r.calc_wake()
+    r.plot_perf("cp")
+    r.plot_wake()
 
     """Tare drag and torque"""
 #    process_tare_torque(2, plot=True)
@@ -47,4 +47,4 @@ if __name__ == "__main__":
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 #    plot_settling(1.0)
 #    plot_meancomboquiv(U_infty=0.4)
-    plot_meancomboquiv(U_infty=1.2)
+#    plot_meancomboquiv(U_infty=1.2)

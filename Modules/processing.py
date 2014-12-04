@@ -181,6 +181,9 @@ class Run(object):
         # Compute power and drag coefficients
         self.cp = self.power/(0.5*rho*A*self.U_ref**3)
         self.cd = self.drag/(0.5*rho*A*self.U_ref**2)
+        # Remove datapoints for coefficients where tow speed is small
+        self.cp[np.abs(self.U_ref < 0.01)] = np.nan
+        self.cd[np.abs(self.U_ref < 0.01)] = np.nan
         # Load Vectrino data
         try:
             vecdata = loadmat(self.folder + "/" + "vecdata.mat", 
@@ -402,25 +405,38 @@ class Run(object):
             self.badvec = False
             print("Vectrino data okay")
         
-    def plotperf(self, quantity="torque"):
+    def plot_perf(self, quantity="power coefficient"):
         """Plots the run's data"""
         if not self.loaded:
             self.load()
         if quantity == "drag":
             quantity = self.drag
+            ylabel = "Drag (N)"
+            ylim = None
         elif quantity == "torque":
             quantity = self.torque
+            ylabel = "Torque (Nm)"
+            ylim = None
+        elif quantity.lower == "power coefficient" or "cp" or "c_p":
+            quantity = self.cp
+            ylabel = "$C_P$"
+            ylim = (-1, 1)
         plt.figure()
         plt.plot(self.t_ni, quantity, 'k')
+        plt.xlabel("Time (s)")
+        plt.ylabel(ylabel)
+        plt.ylim(ylim)
         plt.tight_layout()
         
-    def plotwake(self):
-        """Plot mean and standard deviation for each velocity component"""
+    def plot_wake(self):
+        """Plot streamwise velocity over experiment."""
         if not self.loaded:
             self.load()
         plt.figure()
         self.filter_wake()
         plt.plot(self.t_vec, self.u_f, 'k')
+        plt.xlabel("Time (s)")
+        plt.ylabel("$u$ (m/s)")
         
     def plotacs(self):
         if not self.loaded:
