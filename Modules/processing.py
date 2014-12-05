@@ -533,8 +533,8 @@ class PerfCurve(object):
                 cd[n] = cd_old[np.where(runsdone==nrun)[0]]
         # Save updated DataFrame
         
-    def plotcp(self, newfig=True, show=True, save=False, figname="test.pdf",
-               splinefit=False, marker="o"):
+    def plotcp(self, newfig=True, show=True, save=False, savepath="",
+               savetype=".pdf", splinefit=False, marker="o"):
         """Generates power coefficient curve plot."""
         # Check to see if processed data exists and if not, process it
         label = "$Re_D = {:0.1e}$".format(self.Re_D)
@@ -559,13 +559,13 @@ class PerfCurve(object):
         plt.ylabel(r"$C_P$")
         plt.grid(True)
         plt.tight_layout()
+        if save:
+            plt.savefig(os.path.join(savepath, "cp_vs_tsr" + savetype))
         if show:
             plt.show()
-        if save:
-            plt.savefig(figname)
             
-    def plotcd(self, newfig=True, show=True, save=False, figname="test.pdf",
-               splinefit=False, marker="o"):
+    def plotcd(self, newfig=True, show=True, save=False, savepath="",
+               savetype=".pdf", splinefit=False, marker="o"):
         """Generates power coefficient curve plot."""
         # Check to see if processed data exists and if not, process it
         label = "$Re_D = {:0.1e}$".format(self.Re_D)
@@ -591,10 +591,10 @@ class PerfCurve(object):
         plt.ylim((0, 1.2))
         plt.grid(True)
         plt.tight_layout()
+        if save:
+            plt.savefig(os.path.join(savepath, "cd_vs_tsr" + savetype))
         if show:
             plt.show()
-        if save:
-            plt.savefig(figname)
         
 class WakeProfile(object):
     def __init__(self, U, z_H, quantity, orientation="horizontal"):
@@ -1019,10 +1019,10 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
     ax = plt.gca()
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.tight_layout()
-    if show:
-        plt.show()
     if save:
         plt.savefig(savepath + "/re_dep_cd" + savetype)
+    if show:
+        plt.show()
     
 def plot_old_wake(quantity, y_R):
     plt.hold(True)
