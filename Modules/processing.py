@@ -281,7 +281,8 @@ class Run(object):
         angle1 = self.angle[sr*self.t1]
         angle2 = self.angle[sr*self.t2]
         n3rdrevs = np.floor((angle2-angle1)/120.0)
-        self.nrevs = int(np.floor((angle2-angle1)/360.0))
+        self.n_revs = int(np.floor((angle2-angle1)/360.0))
+        self.n_blade_pass = int(n3rdrevs)
         angle2 = angle1 + n3rdrevs*120
         t2i = np.where(np.round(self.angle)==np.round(angle2))[0][0]
         t2 = self.time_ni[t2i]
@@ -469,14 +470,14 @@ class Run(object):
         """Computes mean power coefficient over each revolution."""
         angle = self.angle
         angle -= angle[0]
-        cp = np.zeros(self.nrevs)
-        cd = np.zeros(self.nrevs)
-        tsr = np.zeros(self.nrevs)
-        torque = np.zeros(self.nrevs)
-        omega = np.zeros(self.nrevs)
-        u_infty3 = np.zeros(self.nrevs)
+        cp = np.zeros(self.n_revs)
+        cd = np.zeros(self.n_revs)
+        tsr = np.zeros(self.n_revs)
+        torque = np.zeros(self.n_revs)
+        omega = np.zeros(self.n_revs)
+        u_infty3 = np.zeros(self.n_revs)
         start_angle = 0.0
-        for n in range(self.nrevs):
+        for n in range(self.n_revs):
             end_angle = start_angle + 360
             ind = np.logical_and(angle >= start_angle, end_angle > angle)
             cp[n] = self.cp[ind].mean()
@@ -502,9 +503,9 @@ class Run(object):
     @property
     def cp_conf_interval(self, alpha=0.95):
         self.calc_perf_per_rev()
-        t_val = scipy.stats.t.interval(alpha=alpha, df=self.nrevs-1)[1]
+        t_val = scipy.stats.t.interval(alpha=alpha, df=self.n_revs-1)[1]
         std = self.std_cp_per_rev
-        return t_val*std/np.sqrt(self.nrevs)
+        return t_val*std/np.sqrt(self.n_revs)
         
     def detect_badvec(self):
         """Detects if Vectrino data is bad by looking at first 2 seconds of
