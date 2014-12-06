@@ -44,12 +44,6 @@ R = D/2
 rho = 1000.0
 nu = 1e-6
 
-# Experimental error from instruments (+/- half this value)
-d_torque = 1.0
-d_theta = 6.28e-5
-d_speed = 1e-5
-d_force = 0.556
-
 # Directory constants
 raw_data_dir = os.path.join("Data", "Raw")
 processed_data_dir = os.path.join("Data", "Processed")
@@ -58,6 +52,9 @@ def calc_b_vec(vel):
     """Calculates the systematic error of a Vectrino measurement (in m/s)
     from their published specs. Returns half the +/- value as b."""
     return 0.5*(0.005*np.abs(vel) + 0.001)
+    
+def calc_uncertainty(quantity, b):
+    return np.sqrt(nanstd(quantity)**2 + b**2)
              
 def calc_tare_torque(rpm):
     """Returns tare torque array given RPM array."""
@@ -112,6 +109,7 @@ class Run(object):
         self.calc_perf_per_rev()
         self.calc_perf_stats()
         self.calc_wake_stats()
+        self.calc_perf_uncertainty()
         
     def load(self):
         """Loads the data from the run into memory"""
@@ -307,20 +305,19 @@ class Run(object):
         print("C_P =", self.meancp, "+/-", self.delta_cp/2)
         print("C_D =", self.meancd, "+/-", self.delta_cd/2)
         
-    def calc_unc_perf(self):
-        torque, x = ts.calcstats(self.torque, self.t1, self.t2, self.sr_ni)
-        omega, x = ts.calcstats(self.omega_ni, self.t1, self.t2, self.sr_ni)
-        drag, x = ts.calcstats(self.drag, self.t1, self.t2, self.sr_ni)
-        taretorque, x = ts.calcstats(self.tare_torque, self.t1, self.t2, 
-                                     self.sr_ni)
-        torque = unc.ufloat(torque, d_torque/2)
-        taretorque = unc.ufloat(taretorque, d_torque/2)
-        drag = unc.ufloat(drag, np.sqrt(2*(d_force/2)**2))
-        taredrag = unc.ufloat(self.tare_drag, np.sqrt(2*(d_force/2)**2))
-        cp = (torque + taretorque)*omega/(0.5*rho*A*self.tow_speed_nom**3)
-        cd = (drag - taredrag)/(0.5*rho*A*self.tow_speed_nom**2)
-        self.delta_cp = cp.std_dev*2
-        self.delta_cd = cd.std_dev*2
+    def calc_perf_uncertainty(self):
+        b_torque = 0.5/2
+        b_angle = 3.14e-5/2
+        b_car_pos = 0.5e-5/2
+        b_force = 0.28/2
+        omega = self.omega.mean()
+        torque = self.torque.mean()
+        u_infty = np.mean(self.tow_speed)
+        const = 0.5*rho*A
+        b_cp = np.sqrt((omega/(const*u_infty**3))**2*b_torque**2 + \
+                       (torque/(const*u_infty**3))**2*b_angle**2 + \
+                       (-3*torque*omega/(const*u_infty**4))**2*b_car_pos**2)
+        self.unc_cp = calc_uncertainty(self.cp_per_rev, b_cp)
         
     def calc_wake_instantaneous(self):
         """Creates fluctuating and Reynolds stress time series. Note that

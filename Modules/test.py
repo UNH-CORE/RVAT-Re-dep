@@ -17,6 +17,7 @@ def test_run():
     print(run.std_cp_per_rev)
     print(run.cp_conf_interval)
     print(run.mean_cp)
+    print(run.unc_cp)
     print("PASS")
     
 def test_section():
