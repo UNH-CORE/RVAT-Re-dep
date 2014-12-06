@@ -434,6 +434,7 @@ class Run(object):
         angle = self.angle
         angle -= angle[0]
         cp = np.zeros(self.nrevs)
+        cd = np.zeros(self.nrevs)
         torque = np.zeros(self.nrevs)
         omega = np.zeros(self.nrevs)
         u_infty3 = np.zeros(self.nrevs)
@@ -442,12 +443,15 @@ class Run(object):
             end_angle = start_angle + 360
             ind = np.logical_and(angle >= start_angle, end_angle > angle)
             cp[n] = self.cp[ind].mean()
+            cd[n] = self.cd[ind].mean()
             torque[n] = self.torque[ind].mean()
             omega[n] = self.omega[ind].mean()
             u_infty3[n] = (self.tow_speed_ni**3)[ind].mean()
             start_angle += 360
         self.cp_per_rev = cp
         self.std_cp_per_rev = cp.std()
+        self.cd_per_rev = cd
+        self.std_cd_per_rev = cd.std()
         self.torque_per_rev = torque
         self.std_torque_per_rev = torque.std()
         self.u_infty3_per_rev = u_infty3
