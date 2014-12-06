@@ -138,6 +138,7 @@ class Run(object):
             self.U_ref = self.U_nom
         self.sr_ni = (1.0/(self.t_ni[1] - self.t_ni[0]))
         self.torque = nidata["torque_trans"]
+        self.torque_arm = nidata["torque_arm"]
         self.drag = nidata["drag_left"] + nidata["drag_right"]
         # Load ACS data
         acsdata = loadmat(self.folder + "/" + "acsdata.mat", squeeze_me=True)
@@ -353,6 +354,18 @@ class Run(object):
 #        self.delta_mean_u = np.sqrt(np.sum(d_u**2))/len(u_seg)
         self.delta_mean_u = np.nan
         self.delta_std_u = np.nan
+        
+    @property
+    def torque_trimmed(self):
+        if not self.t2found:
+            self.find_t2()
+        return self.torque[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        
+    @property
+    def torque_arm_trimmed(self):
+        if not self.t2found:
+            self.find_t2()
+        return self.torque_arm[self.t1*self.sr_ni:self.t2*self.sr_ni]
     
     @property
     def cp_trimmed(self):
@@ -374,6 +387,20 @@ class Run(object):
         return self.angle[self.t1*self.sr_ni:self.t2*self.sr_ni]
         
     @property
+    def omega_trimmed(self):
+        """Returns segment of turbine omega."""
+        if not self.t2found:
+            self.find_t2()
+        return self.omega_ni[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        
+    @property
+    def u_infty_trimmed(self):
+        """Returns segment of carriage speed."""
+        if not self.t2found:
+            self.find_t2()
+        return self.U_ni[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        
+    @property
     def u_trimmed(self):
         """Returns segment of filtered streamwise velocity."""
         if not self.wake_calculated:
@@ -386,24 +413,32 @@ class Run(object):
             self.find_t2()
         return self.t_vec[self.t1*self.sr_vec:self.t2*self.sr_vec]
         
-    def calc_cp_per_rev(self):
+    def calc_perf_per_rev(self):
         """Computes mean power coefficient over each revolution."""
         angle = self.angle_trimmed
         angle -= angle[0]
         cp = np.zeros(self.nrevs)
+        torque = np.zeros(self.nrevs)
+        omega = np.zeros(self.nrevs)
+        u_infty3 = np.zeros(self.nrevs)
         start_angle = 0.0
         for n in range(self.nrevs):
             end_angle = start_angle + 360
             ind = np.logical_and(end_angle > angle, angle >= start_angle)
             cp[n] = self.cp_trimmed[ind].mean()
+            torque[n] = self.torque_trimmed[ind].mean()
+            omega[n] = self.omega_trimmed[ind].mean()
+            u_infty3[n] = (self.U_ni[self.t1*self.sr_ni:self.t2*self.sr_ni]**3)[ind].mean()
             start_angle += 360
         self.cp_per_rev = cp
         self.std_cp_per_rev = cp.std()
-        return self.cp_per_rev, self.std_cp_per_rev
+        self.torque_per_rev = torque
+        self.std_torque_per_rev = torque.std()
+        self.u_infty3_per_rev = u_infty3
         
     @property
     def cp_conf_interval(self, alpha=0.95):
-        self.calc_cp_per_rev()
+        self.calc_perf_per_rev()
         t_val = scipy.stats.t.interval(alpha=alpha, df=self.nrevs-1)[1]
         std = self.std_cp_per_rev
         return t_val*std/np.sqrt(self.nrevs)

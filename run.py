@@ -15,18 +15,23 @@ def plot_meancomboquiv(U_infty=1.0):
 if __name__ == "__main__":
     """Choose functions to run here."""
     plt.close("all")
-    p = "Google Drive/Research/Papers/CFT Re dependence/figures"
+#    p = "Google Drive/Research/Papers/CFT Re dependence/figures"
+    p = "Google Drive/Research/Experiments/RM2 tow tank/Documents/Test plan/Figures"
     p = os.path.join(os.path.expanduser("~"), p)
 
     """Tests"""
 #    test.test_all()
 
     """Dealing with individual runs"""
-    r = Run("Wake-0.4", 20)
+#    r = Run("Wake-0.4", 20)
 #    r.calc_perf()
 #    r.calc_wake()
-    r.plot_perf("cp")
-    r.plot_wake()
+#    r.plot_perf("cp")
+#    r.plot_wake()
+    
+    """Performance curves"""
+#    pc = PerfCurve(1.0)
+#    pc.plotcp(save=True, savepath=p)
 
     """Tare drag and torque"""
 #    process_tare_torque(2, plot=True)
@@ -42,8 +47,8 @@ if __name__ == "__main__":
     
     """Plotting"""
 #    plot_perf_curves(save=False, savepath=p)
-#    plot_perf_re_dep(save=False, cfd=False, savepath=p, normalize_by="default",
-#                     dual_xaxes=True)
+    plot_perf_re_dep(save=True, cfd=False, savepath=p, normalize_by="default",
+                     dual_xaxes=True)
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 #    plot_settling(1.0)
 #    plot_meancomboquiv(U_infty=0.4)

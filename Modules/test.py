@@ -16,7 +16,7 @@ def test_run():
     run.calc_perf()
     run.calc_perf(verbose=False)
     run.calc_wake()
-    run.calc_cp_per_rev()
+    run.calc_perf_per_rev()
     print(run.cp_per_rev)
     print(run.std_cp_per_rev)
     print(run.cp_conf_interval)
@@ -45,8 +45,8 @@ def test_wake_map():
     wm.plot_meancomboquiv()
     wm2 = WakeMap(1.2)
     wm2.plot_meancomboquiv()
-    wm.plot_diff(quantity="mean_w", U_infty_diff=0.6)
-    wm.plot_meancomboquiv_diff(0.8, percent=False)
+#    wm.plot_diff(quantity="mean_w", U_infty_diff=0.6)
+#    wm.plot_meancomboquiv_diff(0.8, percent=False)
     print("PASS")
     
 def test_all():
@@ -74,12 +74,13 @@ def test_all():
     process_tare_drag(5, plot=False)
     print("PASS")
     test_wake_map()
+    plt.show()
     print("All tests passed")
     
 if __name__ == "__main__":
 #    test_run()
-#    test_all()
+    test_all()
 #    test_wake_profile()
 #    test_wake_map()
 #    plot_perf_curves()
-    test_section()
+#    test_section()
