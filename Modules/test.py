@@ -32,6 +32,9 @@ def test_batch_process_section():
     batch_process_section("Perf-1.0")
     df = pd.read_csv("Data/Processed/Perf-1.0.csv")
     print(df)
+    plt.figure()
+    plt.plot(df.tsr, df.cp)
+    plt.show()
     
 def test_perf_curve():
     print("Testing PerfCurve class")
@@ -84,9 +87,10 @@ def test_all():
     print("All tests passed")
     
 if __name__ == "__main__":
-    test_run()
-#    test_all()
+#    test_run()
+    test_all()
 #    test_wake_profile()
 #    test_wake_map()
 #    plot_perf_curves()
 #    test_section()
+#    test_batch_process_section()

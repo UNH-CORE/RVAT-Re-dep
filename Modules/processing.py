@@ -484,7 +484,10 @@ class Run(object):
             tsr[n] = self.tsr[ind].mean()
             torque[n] = self.torque[ind].mean()
             omega[n] = self.omega[ind].mean()
-            u_infty3[n] = (self.tow_speed_ni**3)[ind].mean()
+            try:
+                u_infty3[n] = (self.tow_speed_ni**3)[ind].mean()
+            except AttributeError:
+                u_infty3[n] = self.tow_speed_nom**3
             start_angle += 360
         self.cp_per_rev = cp
         self.std_cp_per_rev = cp.std()
@@ -717,22 +720,22 @@ class WakeProfile(object):
         loc = 1
         if quantity == "mean_u":
             q = q/self.tow_speed
-            ylab = r"$tow_speed/tow_speed_\infty$"
+            ylab = r"$U/U_\infty$"
             loc = 3
         if quantity == "mean_w":
             q = q/self.tow_speed
-            ylab = r"$tow_speed/tow_speed_\infty$"
+            ylab = r"$U/U_\infty$"
             loc = 4
         if quantity == "mean_v":
             q = q/self.tow_speed
-            ylab = r"$V/tow_speed_\infty$"
+            ylab = r"$V/U_\infty$"
             loc=4
         if quantity == "std_u":
             q = q/self.tow_speed
-            ylab = r"$\sigma_u/tow_speed_\infty$"
+            ylab = r"$\sigma_u/U_\infty$"
         if quantity is "mean_upvp":
             q = q/(self.tow_speed**2)
-            ylab = r"$\overline{u'v'}/tow_speed_\infty^2$" 
+            ylab = r"$\overline{u'v'}/U_\infty^2$" 
         if newfig:
             if quantity == "mean_u":
                 plt.figure(figsize=(10,5))
@@ -750,19 +753,19 @@ class WakeProfile(object):
             plt.savefig(savepath+quantity+"_Re_dep_exp"+savetype)
     
 class WakeMap(object):
-    def __init__(self, tow_speed_infty):
-        self.tow_speed_infty = tow_speed_infty
+    def __init__(self, U_infty):
+        self.U_infty = U_infty
         self.z_H = [0.0, 0.125, 0.25, 0.375, 0.5, 0.625]
         self.loaded = False
         self.load()
         
     def load(self):
-        self.y_R = WakeProfile(self.tow_speed_infty, 0, "mean_u").y_R
+        self.y_R = WakeProfile(self.U_infty, 0, "mean_u").y_R
         self.mean_u = np.zeros((len(self.z_H), len(self.y_R)))
         self.mean_v = self.mean_u*1
         self.mean_w = self.mean_u*1
         for z_H in self.z_H:
-            wp = WakeProfile(self.tow_speed_infty, z_H, "mean_u")
+            wp = WakeProfile(self.U_infty, z_H, "mean_u")
             self.mean_u[self.z_H.index(z_H)] = wp.df.mean_u
             self.mean_v[self.z_H.index(z_H)] = wp.df.mean_v
             self.mean_w[self.z_H.index(z_H)] = wp.df.mean_w
@@ -785,14 +788,14 @@ class WakeMap(object):
         plt.ylabel(r"$z/H$")
         cb = plt.colorbar(cs, shrink=1, extend="both", 
                           orientation="horizontal", pad=0.3)
-        cb.set_label(r"$tow_speed/tow_speed_{\infty}$")
+        cb.set_label(r"$U/U_{\infty}$")
         self.turb_lines()
         ax = plt.axes()
         ax.set_aspect(2)
         plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
         plt.tight_layout()
         if save:
-            plt.savefig(savepath+"/tow_speedcont"+savetype)
+            plt.savefig(savepath+"/mean_u_cont"+savetype)
         if show:
             self.show()
     
@@ -800,20 +803,20 @@ class WakeMap(object):
                            savetype=".pdf"):
         plt.figure(figsize=(10,6))
         # Add contours of mean velocity
-        cs = plt.contourf(self.y_R, self.z_H, self.mean_u/self.tow_speed_infty, 20, 
+        cs = plt.contourf(self.y_R, self.z_H, self.mean_u/self.U_infty, 20, 
                           cmap=plt.cm.coolwarm)
         cb = plt.colorbar(cs, shrink=1, extend="both", 
                           orientation="horizontal", pad=0.2)
-        cb.set_label(r"$tow_speed/tow_speed_{\infty}$")
+        cb.set_label(r"$U/U_{\infty}$")
         plt.hold(True)
         # Make quiver plot of v and w velocities
-        Q = plt.quiver(self.y_R, self.z_H, self.mean_v/self.tow_speed_infty, 
-                       self.mean_w/self.tow_speed_infty, width=0.0022)
+        Q = plt.quiver(self.y_R, self.z_H, self.mean_v/self.U_infty, 
+                       self.mean_w/self.U_infty, width=0.0022)
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
         plt.xlim(-3.2, 3.2)
-        plt.quiverkey(Q, 0.75, 0.3, 0.1, r"$0.1 tow_speed_\infty$",
+        plt.quiverkey(Q, 0.75, 0.3, 0.1, r"$0.1 U_\infty$",
                       labelpos="E",
                       coordinates="figure",
                       fontproperties={"size": "small"})
@@ -831,9 +834,9 @@ class WakeMap(object):
     def plot_xvorticity(self):
         pass
     
-    def plot_diff(self, quantity="mean_u", tow_speed_infty_diff=1.0, save=False, 
+    def plot_diff(self, quantity="mean_u", U_infty_diff=1.0, save=False, 
                   show=False, savepath="", savetype=""):
-        wm_diff = WakeMap(tow_speed_infty_diff)
+        wm_diff = WakeMap(U_infty_diff)
         q_ref, q_diff = None, None
         if quantity in ["mean_u", "mean_v", "mean_w"]:
             exec("q_ref = self." + quantity)
@@ -842,8 +845,8 @@ class WakeMap(object):
         else:
             print("Not a valid quantity")
             return None
-        a_diff = (q_ref/self.tow_speed_infty - \
-                  q_diff/wm_diff.tow_speed_infty)#/q_ref/self.tow_speed_infty*100
+        a_diff = (q_ref/self.U_infty - \
+                  q_diff/wm_diff.U_infty)#/q_ref/self.U_infty*100
         plt.figure(figsize=(12,3.75))
         cs = plt.contourf(self.y_R, self.z_H, a_diff, 20,
                           cmap=plt.cm.coolwarm)
@@ -861,25 +864,25 @@ class WakeMap(object):
             if savepath: savepath += "/"
             plt.savefig(savepath+"/"+quantity+"_diff"+savetype)
     
-    def plot_meancomboquiv_diff(self, tow_speed_infty_diff, save=False, show=False,
+    def plot_meancomboquiv_diff(self, U_infty_diff, save=False, show=False,
                                 savepath="", savetype="", percent=True):
-        wm_diff = WakeMap(tow_speed_infty_diff)
-        mean_u_diff = (self.mean_u/self.tow_speed_infty - \
-                wm_diff.mean_u/wm_diff.tow_speed_infty)
-        mean_v_diff = (self.mean_v/self.tow_speed_infty - \
-                wm_diff.mean_v/wm_diff.tow_speed_infty)
-        mean_w_diff = (self.mean_w/self.tow_speed_infty - \
-                wm_diff.mean_w/wm_diff.tow_speed_infty)
+        wm_diff = WakeMap(U_infty_diff)
+        mean_u_diff = (self.mean_u/self.U_infty - \
+                wm_diff.mean_u/wm_diff.U_infty)
+        mean_v_diff = (self.mean_v/self.U_infty - \
+                wm_diff.mean_v/wm_diff.U_infty)
+        mean_w_diff = (self.mean_w/self.U_infty - \
+                wm_diff.mean_w/wm_diff.U_infty)
         if percent:
-            mean_u_diff = mean_u_diff/self.mean_u/self.tow_speed_infty*100
-            mean_v_diff = mean_v_diff/self.mean_v/self.tow_speed_infty*100
-            mean_w_diff = mean_w_diff/self.mean_w/self.tow_speed_infty*100
+            mean_u_diff = mean_u_diff/self.mean_u/self.U_infty*100
+            mean_v_diff = mean_v_diff/self.mean_v/self.U_infty*100
+            mean_w_diff = mean_w_diff/self.mean_w/self.U_infty*100
         plt.figure(figsize=(12,4))
         cs = plt.contourf(self.y_R, self.z_H, mean_u_diff, 20,
                           cmap=plt.cm.coolwarm)
         cb = plt.colorbar(cs, shrink=1, fraction=0.15,
                           orientation="vertical", pad=0.05)
-        cb.set_label(r"$\Delta tow_speed$ (\%)")
+        cb.set_label(r"$\Delta U$ (\%)")
         plt.hold(True)
         # Make quiver plot of v and w velocities
         Q = plt.quiver(self.y_R, self.z_H, mean_v_diff, 
@@ -912,7 +915,7 @@ class WakeMap(object):
         u_array = np.arange(0.4, 1.4, 0.2)
         for u in u_array:
             wm = WakeMap(u)
-            mean_u = wm.mean_u/wm.tow_speed_infty
+            mean_u = wm.mean_u/wm.U_infty
             std.append(np.std((mean_u - mean_u_ref)/mean_u_ref))
         std = np.asarray(std)
         plt.figure()
@@ -948,9 +951,10 @@ def batch_process_section(section, reprocess=True):
         data["run"] = runs = test_plan["Run"]
     # Create a empty arrays for all quantities
     if reprocess:
-        for q in ["tsr", "cp", "cd", "delta_cp", "delta_cd", "y_R", "z_H",
-                  "mean_u", "mean_v", "mean_w", "std_u", "std_v", "std_w",
-                  "mean_upvp", "k"]:
+        for q in ["tsr", "cp", "cd", "exp_unc_tsr", "exp_unc_cp", "exp_unc_cd", 
+                  "dof_tsr", "dof_cp", "dof_cd", "y_R", "z_H", "mean_u", 
+                  "mean_v", "mean_w", "std_u", "std_v", "std_w", "mean_upvp", 
+                  "mean_upwp", "mean_vpwp", "k"]:
             data[q] = np.zeros(len(data.run))*np.nan
     for n in runs:
         if reprocess or True in np.isnan(data.iloc[n,:]).values:
@@ -958,24 +962,30 @@ def batch_process_section(section, reprocess=True):
             if r.not_loadable:
                 pass
             else:
+                print("Processing data from {} run {}".format(section, n))
                 data.y_R.iloc[n] = r.y_R
                 data.z_H.iloc[n] = r.z_H
-                r.calc_perf()
-                r.calc_wake()
-                data.tsr.iloc[n] = r.meantsr
-                data.cp.iloc[n] = r.meancp
-                data.cd.iloc[n] = r.meancd
-                data.delta_cp.iloc[n] = r.delta_cp
-                data.delta_cd.iloc[n] = r.delta_cd
+                data.tsr.iloc[n] = r.mean_tsr
+                data.cp.iloc[n] = r.mean_cp
+                data.cd.iloc[n] = r.mean_cd
+                data.exp_unc_tsr.iloc[n] = r.exp_unc_tsr
+                data.exp_unc_cp.iloc[n] = r.exp_unc_cp
+                data.exp_unc_cd.iloc[n] = r.exp_unc_cd
+                data.dof_tsr.iloc[n] = r.dof_tsr
+                data.dof_cp.iloc[n] = r.dof_cp
+                data.dof_cd.iloc[n] = r.dof_cd
                 data.mean_u.iloc[n] = r.mean_u
                 data.mean_v.iloc[n] = r.mean_v
                 data.mean_w.iloc[n] = r.mean_w
                 data.mean_upvp.iloc[n] = r.mean_upvp
+                data.mean_upwp.iloc[n] = r.mean_upwp
+                data.mean_vpwp.iloc[n] = r.mean_vpwp
                 data.std_u.iloc[n] = r.std_u
                 data.std_v.iloc[n] = r.std_v
                 data.std_w.iloc[n] = r.std_w
                 data.k.iloc[n] = r.k
-    data.to_csv(os.path.join(processed_data_dir, section+".csv"), index=False)
+    data.to_csv(os.path.join(processed_data_dir, section+".csv"), index=False,
+                na_rep="NaN")
     
 def batch_process_all():
     """Batch processes all sections."""
@@ -988,7 +998,7 @@ def batch_process_all():
     for section in sections:
         batch_process_section(section)
     
-def plot_trans_wake_profile(quantity, tow_speed=0.4, z_H=0.0, save=False, savepath="", 
+def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savepath="", 
                             savetype=".pdf", newfig=True, marker="-ok",
                             fill="none", oldwake=False, figsize=(10, 5)):
     """Plots the transverse wake profile of some quantity. These can be
@@ -997,9 +1007,9 @@ def plot_trans_wake_profile(quantity, tow_speed=0.4, z_H=0.0, save=False, savepa
       * mean_w
       * std_u
     """
-    Re_D = tow_speed*D/nu
+    Re_D = U_infty*D/nu
     label = str((Re_D/1e6)) + "e6"
-    section = "Wake-" + str(tow_speed)
+    section = "Wake-" + str(U_infty)
     df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
     df = df[df.z_H==z_H]
     q = df[quantity]
@@ -1009,9 +1019,9 @@ def plot_trans_wake_profile(quantity, tow_speed=0.4, z_H=0.0, save=False, savepa
     if oldwake:
         plot_old_wake(quantity, y_R)
     if quantity in ["mean_upvp"]:
-        unorm = tow_speed**2
+        unorm = U_infty**2
     else:
-        unorm = tow_speed
+        unorm = U_infty
     plt.plot(y_R, q/unorm, marker, markerfacecolor=fill, label=label)
     plt.xlabel(r"$y/R$")
     plt.ylabel(ylabels[quantity])
@@ -1023,34 +1033,34 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
     std_cp = np.zeros(len(speeds))
-    delta_cp = np.zeros(len(speeds))
+    exp_unc_cp = np.zeros(len(speeds))
     cd = np.zeros(len(speeds))
     std_cd = np.zeros(len(speeds))
-    delta_cd = np.zeros(len(speeds))
+    exp_unc_cd = np.zeros(len(speeds))
     Re_D = speeds*D/1e-6
     for n in range(len(speeds)):
         if speeds[n] in [0.3, 0.5, 0.7, 0.9, 1.1, 1.3]:
             section = "Perf-"+str(speeds[n])
             df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
             cp_s = df.cp
-            dcp_s = df.delta_cp
+            dcp_s = df.exp_unc_cp
             cd_s = df.cd
-            dcd_s = df.delta_cd
+            dcd_s = df.exp_unc_cd
             cp[n] = np.mean(cp_s)
-            delta_cp[n] = np.mean(dcp_s)
+            exp_unc_cp[n] = np.mean(dcp_s)
             cd[n] = np.mean(cd_s)
-            delta_cd[n] = np.mean(dcd_s)
+            exp_unc_cd[n] = np.mean(dcd_s)
         else:
             section = "Wake-"+str(speeds[n])
             df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
             cp_s = df.cp
-            dcp_s = df.delta_cp
+            dcp_s = df.exp_unc_cp
             cd_s = df.cd
-            dcd_s = df.delta_cd
+            dcd_s = df.exp_unc_cd
             cp[n], std_cp[n] = np.mean(cp_s), np.std(cp_s)
             cd[n], std_cd[n] = np.mean(cd_s), np.std(cd_s)
-            delta_cp[n] = np.mean(dcp_s)
-            delta_cd[n] = np.mean(dcd_s)
+            exp_unc_cp[n] = np.mean(dcp_s)
+            exp_unc_cd[n] = np.mean(dcd_s)
     plt.figure()
     if normalize_by == "default":
         norm_cp = cp[-4]
@@ -1061,7 +1071,7 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
         norm_cd = normalize_by
         norm_cfd = normalize_by
     if errorbars:    
-        plt.errorbar(Re_D, cp/norm_cp, yerr=delta_cp/2/cp[-4], fmt="-ok",
+        plt.errorbar(Re_D, cp/norm_cp, yerr=exp_unc_cp/2/cp[-4], fmt="-ok",
                      markerfacecolor="none", label="Experiment")
     else:
         plt.plot(Re_D, cp/norm_cp, '-ok', markerfacecolor="none", label="Experiment")
@@ -1095,7 +1105,7 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
         plt.savefig(savepath + "/re_dep_cp" + savetype)
     plt.figure()
     if errorbars:
-        plt.errorbar(Re_D, cd/norm_cd, yerr=delta_cd/cd[-4]/2, fmt="-ok",
+        plt.errorbar(Re_D, cd/norm_cd, yerr=exp_unc_cd/cd[-4]/2, fmt="-ok",
                      markerfacecolor="none", label="Experiment")
     else:
         plt.plot(Re_D, cd/cd[-4], '-ok', markerfacecolor="none", label="Experiment")
@@ -1310,15 +1320,15 @@ def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
                   "std_u" : 1,
                   "mean_upvp" : 1}
     for q in ["mean_u", "std_u", "mean_upvp"]:
-        plot_trans_wake_profile(q, tow_speed=0.4, z_H=z_H, newfig=True, marker="--vb",
+        plot_trans_wake_profile(q, U_infty=0.4, z_H=z_H, newfig=True, marker="--vb",
                                 fill="blue")
-        plot_trans_wake_profile(q, tow_speed=0.6, z_H=z_H, newfig=False, marker="sk",
+        plot_trans_wake_profile(q, U_infty=0.6, z_H=z_H, newfig=False, marker="sk",
                                 fill="lightblue")
-        plot_trans_wake_profile(q, tow_speed=0.8, z_H=z_H, newfig=False, marker="<k",
+        plot_trans_wake_profile(q, U_infty=0.8, z_H=z_H, newfig=False, marker="<k",
                                 fill="gray")
-        plot_trans_wake_profile(q, tow_speed=1.0, z_H=z_H, newfig=False, marker="-ok",
+        plot_trans_wake_profile(q, U_infty=1.0, z_H=z_H, newfig=False, marker="-ok",
                                 fill="orange")
-        plot_trans_wake_profile(q, tow_speed=1.2, z_H=z_H, newfig=False, marker="^k",
+        plot_trans_wake_profile(q, U_infty=1.2, z_H=z_H, newfig=False, marker="^k",
                                 fill="red")
         plt.legend(loc=legendlocs[q])
         if q == "mean_upvp":
