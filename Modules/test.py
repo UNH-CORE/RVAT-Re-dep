@@ -19,12 +19,19 @@ def test_run():
     print(run.mean_cp)
     print(run.unc_cp)
     print(run.exp_unc_cp)
+    run.print_perf_stats()
     print("PASS")
     
 def test_section():
     print("Testing Section class")
     section = Section("Wake-1.0")
     print("PASS")
+    
+def test_batch_process_section():
+    print("Testing batch_process_section")
+    batch_process_section("Perf-1.0")
+    df = pd.read_csv("Data/Processed/Perf-1.0.csv")
+    print(df)
     
 def test_perf_curve():
     print("Testing PerfCurve class")

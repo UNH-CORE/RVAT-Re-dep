@@ -302,15 +302,18 @@ class Run(object):
         print("tow_speed_nom =", self.tow_speed_nom)
         if self.lin_enc:
             print("tow_speed_enc =", self.mean_u_enc, "std =", self.std_u_enc)
-        print("tsr =", self.meantsr)
-        print("C_P =", self.meancp, "+/-", self.delta_cp/2)
-        print("C_D =", self.meancd, "+/-", self.delta_cd/2)
+        print("TSR = {:.2f} +/- {:.2f}".format(self.mean_tsr, self.exp_unc_tsr))
+        print("C_P = {:.2f} +/- {:.2f}".format(self.mean_cp, self.exp_unc_cp))
+        print("C_D = {:.2f} +/- {:.2f}".format(self.mean_cd, self.exp_unc_cd))
         
     def calc_perf_uncertainty(self):
+        """See uncertainty IPython notebook for equations."""
+        # Systematic uncertainty estimates
         b_torque = 0.5/2
         b_angle = 3.14e-5/2
         b_car_pos = 0.5e-5/2
         b_force = 0.28/2
+        # Uncertainty of C_P
         omega = self.omega.mean()
         torque = self.torque.mean()
         u_infty = np.mean(self.tow_speed)
@@ -320,9 +323,22 @@ class Run(object):
                        (-3*torque*omega/(const*u_infty**4))**2*b_car_pos**2)
         self.b_cp = b_cp
         self.unc_cp = calc_uncertainty(self.cp_per_rev, b_cp)
+        # Drag coefficient
+        drag = self.drag.mean()
+        b_cd = np.sqrt((1/(const*u_infty**2))**2*b_force**2 + \
+                       (1/(const*u_infty**2))**2*b_force**2 +
+                       (-2*drag/(const*u_infty**3))**2*b_car_pos**2)
+        self.unc_cd = calc_uncertainty(self.cd_per_rev, b_cd)
+        self.b_cd = b_cd
+        # Tip speed ratio
+        b_tsr = np.sqrt((R/(u_infty))**2*b_angle**2 + \
+                        (-omega*R/(u_infty**2))**2*b_car_pos**2)
+        self.unc_tsr = calc_uncertainty(self.tsr_per_rev, b_tsr)
+        self.b_tsr = b_tsr
         
     def calc_perf_exp_uncertainty(self):
-        """See uncertainty IPython notebook for equation."""
+        """See uncertainty IPython notebook for equations."""
+        # Power coefficient
         s_cp = self.std_cp_per_rev
         nu_s_cp = len(self.cp_per_rev) - 1
         b_cp = self.b_cp
@@ -332,6 +348,26 @@ class Run(object):
         t = scipy.stats.t.interval(alpha=0.95, df=nu_cp)[-1]
         self.exp_unc_cp = t*self.unc_cp
         self.dof_cp = nu_cp
+        # Drag coefficient
+        s_cd = self.std_cd_per_rev
+        nu_s_cd = len(self.cd_per_rev) - 1
+        b_cd = self.b_cd
+        b_cd_rel_unc = 0.25 # A guess
+        nu_b_cd = 0.5*b_cd_rel_unc**(-2)
+        nu_cd = ((s_cd**2 + b_cd**2)**2)/(s_cd**4/nu_s_cd + b_cd**4/nu_b_cd)
+        t = scipy.stats.t.interval(alpha=0.95, df=nu_cd)[-1]
+        self.exp_unc_cd = t*self.unc_cd
+        self.dof_cd = nu_cd
+        # Tip speed ratio
+        s_tsr = self.std_tsr_per_rev
+        nu_s_tsr = len(self.tsr_per_rev) - 1
+        b_tsr = self.b_tsr
+        b_tsr_rel_unc = 0.25 # A guess
+        nu_b_tsr = 0.5*b_tsr_rel_unc**(-2)
+        nu_tsr = ((s_tsr**2 + b_tsr**2)**2)/(s_tsr**4/nu_s_tsr + b_tsr**4/nu_b_tsr)
+        t = scipy.stats.t.interval(alpha=0.95, df=nu_tsr)[-1]
+        self.exp_unc_tsr = t*self.unc_tsr
+        self.dof_tsr = nu_tsr
         
     def calc_wake_instantaneous(self):
         """Creates fluctuating and Reynolds stress time series. Note that
@@ -423,11 +459,11 @@ class Run(object):
               self.delta_std_u/2/self.tow_speed_nom)
         print(str(self.nbad)+"/"+str(ntotal), "data points omitted")
         
-    def calc_unc_wake(self):
+    def calc_wake_uncertainty(self):
         """Computes delta values for wake measurements from Vectrino accuracy
         specs, not statistical uncertainties."""
-        self.delta_mean_u = np.nan
-        self.delta_std_u = np.nan
+        self.unc_mean_u = np.nan
+        self.unc_std_u = np.nan
         
     def calc_perf_per_rev(self):
         """Computes mean power coefficient over each revolution."""
@@ -435,6 +471,7 @@ class Run(object):
         angle -= angle[0]
         cp = np.zeros(self.nrevs)
         cd = np.zeros(self.nrevs)
+        tsr = np.zeros(self.nrevs)
         torque = np.zeros(self.nrevs)
         omega = np.zeros(self.nrevs)
         u_infty3 = np.zeros(self.nrevs)
@@ -444,6 +481,7 @@ class Run(object):
             ind = np.logical_and(angle >= start_angle, end_angle > angle)
             cp[n] = self.cp[ind].mean()
             cd[n] = self.cd[ind].mean()
+            tsr[n] = self.tsr[ind].mean()
             torque[n] = self.torque[ind].mean()
             omega[n] = self.omega[ind].mean()
             u_infty3[n] = (self.tow_speed_ni**3)[ind].mean()
@@ -452,6 +490,8 @@ class Run(object):
         self.std_cp_per_rev = cp.std()
         self.cd_per_rev = cd
         self.std_cd_per_rev = cd.std()
+        self.tsr_per_rev = tsr
+        self.std_tsr_per_rev = tsr.std()
         self.torque_per_rev = torque
         self.std_torque_per_rev = torque.std()
         self.u_infty3_per_rev = u_infty3
