@@ -13,13 +13,10 @@ from Modules.processing import *
 def test_run():
     print("Testing Run class")
     run = Run("Wake-1.0", 25)
-    run.calc_perf()
-    run.calc_perf(verbose=False)
-    run.calc_wake()
-    run.calc_perf_per_rev()
-    print(run.cp_per_rev)
-    print(run.std_cp_per_rev)
-    print(run.cp_conf_interval)
+#    print(run.cp_per_rev)
+#    print(run.std_cp_per_rev)
+#    print(run.cp_conf_interval)
+    print(run.mean_cp)
     print("PASS")
     
 def test_section():
@@ -78,8 +75,8 @@ def test_all():
     print("All tests passed")
     
 if __name__ == "__main__":
-#    test_run()
-    test_all()
+    test_run()
+#    test_all()
 #    test_wake_profile()
 #    test_wake_map()
 #    plot_perf_curves()

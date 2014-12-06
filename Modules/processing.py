@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from scipy import interpolate
 import scipy.stats
+from scipy.stats import nanmean, nanstd
 from pxl import fdiff
 import json
 import os
@@ -53,11 +54,10 @@ d_force = 0.556
 raw_data_dir = os.path.join("Data", "Raw")
 processed_data_dir = os.path.join("Data", "Processed")
 
-def calc_d_vel(vel):
-    """Calculates the experimental error of a Vectrino measurement (in m/s)
-    from their published specs. Returns the full delta, i.e. error is +/- 
-    half the returned value."""
-    return 0.01*np.abs(vel) + 0.002
+def calc_b_vec(vel):
+    """Calculates the systematic error of a Vectrino measurement (in m/s)
+    from their published specs. Returns half the +/- value as b."""
+    return 0.5*(0.005*np.abs(vel) + 0.001)
              
 def calc_tare_torque(rpm):
     """Returns tare torque array given RPM array."""
@@ -85,10 +85,10 @@ class Run(object):
     """Object that represents a single turbine tow"""
     def __init__(self, section, nrun):
         self.section = section
-        section_dir = os.path.join("Data", "Raw", section)
+        section_raw_dir = os.path.join("Data", "Raw", section)
         if nrun < 0:
             runs = []
-            for f in os.listdir(section_dir):
+            for f in os.listdir(section_raw_dir):
                 try: 
                     runs.append(int(f))
                 except ValueError:
@@ -96,116 +96,184 @@ class Run(object):
             self.nrun = sorted(runs)[nrun]
         else:
             self.nrun = nrun
-        self.folder = os.path.join(section_dir, str(self.nrun))
+        self.raw_dir = os.path.join(section_raw_dir, str(self.nrun))
         self.loaded = False
         self.t2found = False
         self.not_loadable = False
         self.wake_calculated = False
+        # Do all processing
         self.load()
+        self.subtract_tare_drag()
+        self.add_tare_torque()
+        self.calc_perf_instantaneous()
+        self.make_trimmed()
+        self.filter_wake()
+        self.calc_wake_instantaneous()
+#        self.make_ts_per_rev()
+        self.calc_perf_stats()
+        self.calc_wake_stats()
         
     def load(self):
         """Loads the data from the run into memory"""
-        # Load metadata
+        self.load_metadata()
+        self.load_nidata()
+        self.load_acsdata()
+        self.load_vecdata()
+        self.loaded = True
+        
+    def load_metadata(self):
+        """Loads run metadata."""
         try: 
-            with open(self.folder + "/" + "metadata.json") as f:
+            with open(os.path.join(self.raw_dir, "metadata.json")) as f:
                 self.metadata = json.load(f)
         except IOError:
             if self.nrun < 0:
                 self.nrun -= 1
-                self.folder = os.path.join("Data", "Raw", section, str(self.nrun))
+                self.raw_dir = os.path.join("Data", "Raw", section, str(self.nrun))
             else:
                 pass
         try:
-            with open(os.path.join(self.folder, "metadata.json")) as f:
+            with open(os.path.join(self.raw_dir, "metadata.json")) as f:
                 self.metadata = json.load(f)
         except IOError:
             self.not_loadable = True
             return None
-        self.U_nom = np.round(self.metadata["Tow speed (m/s)"], decimals=1)
+        self.tow_speed_nom = np.round(self.metadata["Tow speed (m/s)"], decimals=1)
         self.y_R = self.metadata["Vectrino y/R"]
         self.z_H = self.metadata["Vectrino z/H"]
-        # Load NI data
-        nidata = loadmat(os.path.join(self.folder, "nidata.mat"), squeeze_me=True)
-        self.t_ni = nidata["t"]
+        
+    def load_nidata(self):
+        nidata = loadmat(os.path.join(self.raw_dir, "nidata.mat"), squeeze_me=True)
+        self.time_ni = nidata["t"]
+        self.sr_ni = (1.0/(self.time_ni[1] - self.time_ni[0]))
         if "carriage_pos" in nidata:
             self.lin_enc = True
             self.carriage_pos = nidata["carriage_pos"]
-            self.U_ni = fdiff.second_order_diff(self.carriage_pos, self.t_ni)
-            self.U_ni = ts.smooth(self.U_ni, 8)
-            self.U_ref = self.U_ni
+            self.tow_speed_ni = fdiff.second_order_diff(self.carriage_pos, self.time_ni)
+            self.tow_speed_ni = ts.smooth(self.tow_speed_ni, 8)
+            self.tow_speed_ref = self.tow_speed_ni
         else:
             self.lin_enc = False
-            self.U_ref = self.U_nom
-        self.sr_ni = (1.0/(self.t_ni[1] - self.t_ni[0]))
+            self.tow_speed_ref = self.tow_speed_nom
         self.torque = nidata["torque_trans"]
         self.torque_arm = nidata["torque_arm"]
         self.drag = nidata["drag_left"] + nidata["drag_right"]
-        # Load ACS data
-        acsdata = loadmat(self.folder + "/" + "acsdata.mat", squeeze_me=True)
-        self.U_acs = acsdata["carriage_vel"]
+        # Remove offsets from drag, not torque
+        t0 = 2
+        self.drag = self.drag - np.mean(self.drag[0:self.sr_ni*t0])
+        # Compute RPM and omega
+        self.angle = nidata["turbine_angle"]
+        self.rpm_ni = fdiff.second_order_diff(self.angle, self.time_ni)/6.0
+        self.rpm_ni = ts.smooth(self.rpm_ni, 8)
+        self.omega_ni = self.rpm_ni*2*np.pi/60.0
+        self.omega = self.omega_ni
+        self.tow_speed = self.tow_speed_ref
+        
+    def load_acsdata(self):
+        fpath = os.path.join(self.raw_dir, "acsdata.mat")
+        acsdata = loadmat(fpath, squeeze_me=True)
+        self.tow_speed_acs = acsdata["carriage_vel"]
         self.rpm_acs = acsdata["turbine_rpm"]
         self.rpm_acs = ts.sigmafilter(self.rpm_acs, 3, 3)
         self.omega_acs = self.rpm_acs*2*np.pi/60.0
-        self.t_acs = acsdata["t"]
-        if len(self.t_acs) != len(self.omega_acs):
-            newlen = np.min((len(self.t_acs), len(self.omega_acs)))
-            self.t_acs = self.t_acs[:newlen]
+        self.time_acs = acsdata["t"]
+        if len(self.time_acs) != len(self.omega_acs):
+            newlen = np.min((len(self.time_acs), len(self.omega_acs)))
+            self.time_acs = self.time_acs[:newlen]
             self.omega_acs = self.omega_acs[:newlen]
-        self.omega_acs_interp = np.interp(self.t_ni, self.t_acs, self.omega_acs)
+        self.omega_acs_interp = np.interp(self.time_ni, self.time_acs, self.omega_acs)
         self.rpm_acs_interp = self.omega_acs_interp*60.0/(2*np.pi)
-        # Remove offsets from drag, not torque
-        t0 = 2
-#        self.torque = self.torque - np.mean(self.torque[:self.sr_ni*t0])
-        self.drag = self.drag - np.mean(self.drag[0:self.sr_ni*t0])
-        # Subtract tare drag
-        # Tare drag in Newtons for each speed
-        df = pd.read_csv(os.path.join("Data", "Processed", "Tare drag.csv"))
-        self.tare_drag = df.tare_drag[df.tow_speed==self.U_nom].values[0]
-        self.drag = self.drag - self.tare_drag
-        # Compute RPM and omega
-        self.angle = nidata["turbine_angle"]
-        self.rpm_ni = fdiff.second_order_diff(self.angle, self.t_ni)/6.0
-        self.rpm_ni = ts.smooth(self.rpm_ni, 8)
-        self.omega_ni = self.rpm_ni*2*np.pi/60.0
-        # Choose reference RPM, using NI for all except Perf-0.4
-        if self.section == "Perf-0.4":
-            rpm_ref = self.rpm_acs_interp
-            omega_ref = self.omega_acs_interp
-        else:
-            rpm_ref = self.rpm_ni
-            omega_ref = self.omega_ni
-        # Add tare torque
-        self.tare_torque = calc_tare_torque(rpm_ref)
-        self.torque = self.torque + self.tare_torque
-        # Compute power
-        self.power = self.torque*omega_ref
-        self.tsr = self.omega_acs_interp*R/self.U_ref
-        # Compute power and drag coefficients
-        self.cp = self.power/(0.5*rho*A*self.U_ref**3)
-        self.cd = self.drag/(0.5*rho*A*self.U_ref**2)
-        # Remove datapoints for coefficients where tow speed is small
-        self.cp[np.abs(self.U_ref < 0.01)] = np.nan
-        self.cd[np.abs(self.U_ref < 0.01)] = np.nan
-        # Load Vectrino data
+        
+    def load_vecdata(self):
         try:
-            vecdata = loadmat(self.folder + "/" + "vecdata.mat", 
+            vecdata = loadmat(self.raw_dir + "/" + "vecdata.mat", 
                               squeeze_me=True)
             self.sr_vec = 200.0
-            self.t_vec = vecdata["t"]
+            self.time_vec = vecdata["t"]
             self.u = vecdata["u"]
             self.v = vecdata["v"]
             self.w = vecdata["w"]
         except IOError:
             self.vecdata = None
-        # Put in some guesses for t1 and t2
-        self.t1, self.t2 = times[self.U_nom]
-        self.loaded = True
         
-    def loadvectxt(self):
+    def subtract_tare_drag(self):
+        df = pd.read_csv(os.path.join("Data", "Processed", "Tare drag.csv"))
+        self.tare_drag = df.tare_drag[df.tow_speed==self.tow_speed_nom].values[0]
+        self.drag = self.drag - self.tare_drag
+        
+    def add_tare_torque(self):
+        # Choose reference RPM, using NI for all except Perf-0.4
+        if self.section == "Perf-0.4":
+            rpm_ref = self.rpm_acs_interp
+        else:
+            rpm_ref = self.rpm_ni
+        # Add tare torque
+        self.tare_torque = calc_tare_torque(rpm_ref)
+        self.torque += self.tare_torque
+        
+    def calc_perf_instantaneous(self):
+        if self.section == "Perf-0.4":
+            omega_ref = self.omega_acs_interp
+        else:
+            omega_ref = self.omega_ni
+        # Compute power
+        self.power = self.torque*omega_ref
+        self.tsr = omega_ref*R/self.tow_speed_ref
+        # Compute power, drag, and torque coefficients
+        self.cp = self.power/(0.5*rho*A*self.tow_speed_ref**3)
+        self.cd = self.drag/(0.5*rho*A*self.tow_speed_ref**2)
+        self.ct = self.torque/(0.5*rho*A*R*self.tow_speed_ref**2)
+        # Remove datapoints for coefficients where tow speed is small
+        self.cp[np.abs(self.tow_speed_ref < 0.01)] = np.nan
+        self.cd[np.abs(self.tow_speed_ref < 0.01)] = np.nan
+        
+    def load_vectxt(self):
         """Loads Vectrino data from text (*.dat) file."""
-        data = np.loadtxt(self.folder + "/vecdata.dat", unpack=True)
-        self.t_vec_txt = data[0]
+        data = np.loadtxt(self.raw_dir + "/vecdata.dat", unpack=True)
+        self.time_vec_txt = data[0]
         self.u_txt = data[3]
+        
+    def make_trimmed(self):
+        """Trim all time series and replace the full run names with names with
+        the '_all' suffix."""
+        # Put in some guesses for t1 and t2
+        self.t1, self.t2 = times[self.tow_speed_nom]
+        self.find_t2()
+        # Trim performance quantities
+        self.time_ni_all = self.time_ni
+        self.time_perf_all = self.time_ni
+        self.time_ni = self.time_ni_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        self.time_perf = self.time_ni
+        self.torque_all = self.torque
+        self.torque = self.torque_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        self.torque_arm_all = self.torque_arm
+        self.torque_arm = self.torque_arm_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        self.omega_all = self.omega
+        self.omega = self.omega_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        self.tow_speed_all = self.tow_speed
+        if self.lin_enc:
+            self.tow_speed = self.tow_speed_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        self.tsr_all = self.tsr
+        self.tsr = self.tsr_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        self.cp_all = self.cp
+        self.cp = self.cp_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        self.ct_all = self.ct
+        self.ct = self.ct_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        self.cd_all = self.cd
+        self.cd = self.cd_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        self.rpm_ni_all = self.rpm_ni
+        self.rpm_ni = self.rpm_ni_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        self.rpm = self.rpm_ni
+        self.rpm_all = self.rpm_ni_all
+        self.drag_all = self.drag
+        self.drag = self.drag_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
+        # Trim wake quantities
+        self.u_all = self.u
+        self.u = self.u_all[self.t1*self.sr_vec:self.t2*self.sr_vec]
+        self.v_all = self.v
+        self.v = self.v_all[self.t1*self.sr_vec:self.t2*self.sr_vec]
+        self.w_all = self.w
+        self.w = self.w_all[self.t1*self.sr_vec:self.t2*self.sr_vec]
         
     def find_t2(self):
         sr = self.sr_ni
@@ -215,36 +283,27 @@ class Run(object):
         self.nrevs = int(np.floor((angle2-angle1)/360.0))
         angle2 = angle1 + n3rdrevs*120
         t2i = np.where(np.round(self.angle)==np.round(angle2))[0][0]
-        t2 = self.t_ni[t2i]
+        t2 = self.time_ni[t2i]
         self.t2 = np.round(t2, decimals=2)
         self.t2found = True
         
-    def calc_perf(self, verbose=True):
-        """Calculates mean performance based on data between t0 and t1"""
-        if verbose:
-            print("Calculating performance for {} run {}".format(self.section,
-                  str(self.nrun)))
-        if not self.loaded:
-            self.load()
-        if self.not_loadable:
-            self.meantsr = np.nan
-            self.meancp = np.nan
-            self.meancd = np.nan
-            return None
-        self.find_t2()
-        self.meantsr, x = ts.calcstats(self.tsr, self.t1, self.t2, self.sr_ni)
-        self.meancd, x = ts.calcstats(self.cd, self.t1, self.t2, self.sr_ni)
-        self.meancp, x = ts.calcstats(self.cp, self.t1, self.t2, self.sr_ni)
-        self.calc_unc_perf()
+    def calc_perf_stats(self):
+        """Calculates mean performance based on trimmed time series."""
+        self.mean_tsr, self.std_tsr = nanmean(self.tsr), nanstd(self.tsr)
+        self.mean_cp, self.std_cp = nanmean(self.cp), nanstd(self.cp)
+        self.mean_cd, self.std_cd = nanmean(self.cd), nanstd(self.cd)
+        self.mean_ct, self.std_ct = nanmean(self.ct), nanstd(self.ct)
         if self.lin_enc:
-            self.mean_u_enc, self.std_u_enc = ts.calcstats(self.U_ni, self.t1, self.t2, self.sr_ni)
-            if verbose:            
-                print("U_enc =", self.mean_u_enc, "std =", self.std_u_enc)
-        if verbose:
-            print("U_nom =", self.U_nom)
-            print("tsr =", self.meantsr)
-            print("C_P =", self.meancp, "+/-", self.delta_cp/2)
-            print("C_D =", self.meancd, "+/-", self.delta_cd/2)
+            self.mean_u_enc = nanmean(self.tow_speed)
+            self.std_u_enc = nanstd(self.tow_speed)
+
+    def print_perf_stats(self):
+        print("tow_speed_nom =", self.tow_speed_nom)
+        if self.lin_enc:
+            print("tow_speed_enc =", self.mean_u_enc, "std =", self.std_u_enc)
+        print("tsr =", self.meantsr)
+        print("C_P =", self.meancp, "+/-", self.delta_cp/2)
+        print("C_D =", self.meancd, "+/-", self.delta_cd/2)
         
     def calc_unc_perf(self):
         torque, x = ts.calcstats(self.torque, self.t1, self.t2, self.sr_ni)
@@ -256,61 +315,72 @@ class Run(object):
         taretorque = unc.ufloat(taretorque, d_torque/2)
         drag = unc.ufloat(drag, np.sqrt(2*(d_force/2)**2))
         taredrag = unc.ufloat(self.tare_drag, np.sqrt(2*(d_force/2)**2))
-        cp = (torque + taretorque)*omega/(0.5*rho*A*self.U_nom**3)
-        cd = (drag - taredrag)/(0.5*rho*A*self.U_nom**2)
+        cp = (torque + taretorque)*omega/(0.5*rho*A*self.tow_speed_nom**3)
+        cd = (drag - taredrag)/(0.5*rho*A*self.tow_speed_nom**2)
         self.delta_cp = cp.std_dev*2
         self.delta_cd = cd.std_dev*2
         
+    def calc_wake_instantaneous(self):
+        """Creates fluctuating and Reynolds stress time series. Note that
+        time series must be trimmed first, or else subtracting the mean makes
+        no sense. Prime variables are denoted by a `p` e.g., $u'$ is `up`."""
+        self.up = self.u - nanmean(self.u)
+        self.vp = self.v - nanmean(self.v)
+        self.wp = self.w - nanmean(self.w)
+        self.upup = self.up**2
+        self.upvp = self.up*self.vp
+        self.upwp = self.up*self.wp
+        self.vpvp = self.vp**2
+        self.vpwp = self.vp*self.wp
+        self.wpwp = self.wp**2
+        
     def filter_wake(self, stdfilt=True, threshfilt=True):
         """Applies filtering to wake velocity data with a standard deviation
-        filter, threshold filter, or both."""
+        filter, threshold filter, or both. Renames unfiltered time series with
+        the '_unf' suffix. Time series are already trimmed before they reach 
+        this point, so no slicing is necessary"""
         std = 8
         passes = 1
         fthresh = 0.9
         # Calculate means
-        mean_u, x = ts.calcstats(self.u, self.t1, self.t2, self.sr_vec)
-        mean_v, x = ts.calcstats(self.v, self.t1, self.t2, self.sr_vec)
-        mean_w, x = ts.calcstats(self.w, self.t1, self.t2, self.sr_vec)
-        # Create new filtered arrays
-        self.u_f = self.u*1
-        self.v_f = self.v*1
-        self.w_f = self.w*1
+        mean_u = self.u.mean()
+        mean_v = self.v.mean()
+        mean_w = self.w.mean()
+        # Create new unfiltered arrays
+        self.u_unf = self.u*1
+        self.v_unf = self.v*1
+        self.w_unf = self.w*1
         if stdfilt:
         # Do standard deviation filters
-            self.u_f[200*self.t1:200*self.t2] = \
-                ts.sigmafilter(self.u[200*self.t1:200*self.t2], std, passes)
-            self.v_f[200*self.t1:200*self.t2] = \
-                ts.sigmafilter(self.v[200*self.t1:200*self.t2], std, passes)
-            self.w_f[200*self.t1:200*self.t2] = \
-                ts.sigmafilter(self.w[200*self.t1:200*self.t2], std, passes)
+            self.u = ts.sigmafilter(self.u, std, passes)
+            self.v = ts.sigmafilter(self.v, std, passes)
+            self.w = ts.sigmafilter(self.w, std, passes)
         if threshfilt:
             # Do threshold filter on u
             ibad = np.where(self.u > mean_u + fthresh)[0]
             ibad = np.append(ibad, np.where(self.u < mean_u - fthresh)[0])
             i = np.where(np.logical_and(ibad > self.t1*200, 
                                         ibad < self.t2*200))[0]
-            self.u_f[ibad[i]] = np.nan
+            self.u[ibad[i]] = np.nan
             # Do threshold filter on v
             ibad = np.where(self.v > mean_v + fthresh)[0]
             ibad = np.append(ibad, np.where(self.v < mean_v - fthresh)[0])
             i = np.where(np.logical_and(ibad > self.t1*200, 
                                         ibad < self.t2*200))[0]
-            self.v_f[ibad[i]] = np.nan
+            self.v[ibad[i]] = np.nan
             # Do threshold filter on w
             ibad = np.where(self.w > mean_w + fthresh)[0]
             ibad = np.append(ibad, np.where(self.w < mean_w - fthresh)[0])
             i = np.where(np.logical_and(ibad > self.t1*200, 
                                         ibad < self.t2*200))[0]
-            self.w_f[ibad[i]] = np.nan
+            self.w[ibad[i]] = np.nan
         # Count up bad datapoints
-        self.nbadu = len(np.where(np.isnan(self.u_f)==True)[0])
-        self.nbadv = len(np.where(np.isnan(self.v_f)==True)[0])
-        self.nbadw = len(np.where(np.isnan(self.w_f)==True)[0])
+        self.nbadu = len(np.where(np.isnan(self.u)==True)[0])
+        self.nbadv = len(np.where(np.isnan(self.v)==True)[0])
+        self.nbadw = len(np.where(np.isnan(self.w)==True)[0])
         self.nbad = self.nbadu + self.nbadv + self.nbadw
         
-    def calc_wake(self, verbose=True):
-        if verbose:
-            print("Calculating wake statistics for", self.section, "run "+str(self.nrun))
+    def calc_wake_stats(self):
         if self.not_loadable:
             self.mean_u = np.nan
             self.mean_v = np.nan
@@ -319,99 +389,32 @@ class Run(object):
         if not self.t2found:
             self.find_t2()
         self.filter_wake()
-        self.mean_u, self.std_u = ts.calcstats(self.u_f, self.t1, self.t2, self.sr_vec)
-        self.mean_v, self.std_v = ts.calcstats(self.v_f, self.t1, self.t2, self.sr_vec)
-        self.mean_w, self.std_w = ts.calcstats(self.w_f, self.t1, self.t2, self.sr_vec)
-        uv = (self.u_f - self.mean_u)*(self.v_f - self.mean_v)
-        self.mean_upvp, self.std_uv = ts.calcstats(uv, self.t1, self.t2, self.sr_vec)
-        self.k = 0.5*(self.std_u**2 + self.std_v**2 + self.std_w**2)
+        self.mean_u, self.std_u = nanmean(self.u), nanstd(self.u)
+        self.mean_v, self.std_v = nanmean(self.v), nanstd(self.v)
+        self.mean_w, self.std_w = nanmean(self.w), nanstd(self.w)
+        self.mean_upup, self.std_upup = nanmean(self.upup), nanstd(self.upup)
+        self.mean_upvp, self.std_upvp = nanmean(self.upvp), nanstd(self.upvp)
+        self.mean_upwp, self.std_upwp = nanmean(self.upwp), nanstd(self.upwp)
+        self.mean_vpvp, self.std_vpvp = nanmean(self.vpvp), nanstd(self.vpvp)
+        self.mean_vpwp, self.std_vpwp = nanmean(self.vpwp), nanstd(self.vpwp)
+        self.mean_wpwp, self.std_wpwp = nanmean(self.wpwp), nanstd(self.wpwp)
+        self.k = 0.5*(self.mean_upup + self.mean_vpvp + self.mean_wpwp)
+            
+    def print_wake_stats(self):
         ntotal = int((self.t2 - self.t1)*self.sr_vec*3)
-        self.calc_unc_wake()
-        self.wake_calculated = True
-        if verbose:
-            print("y/R =", self.y_R)
-            print("z/H =", self.z_H)
-            print("U_vec/U_nom =", self.mean_u/self.U_nom, "+/-", 
-                  self.delta_mean_u/2/self.U_nom)
-            print("std_u/U_nom =", self.std_u/self.U_nom, "+/-",
-                  self.delta_std_u/2/self.U_nom)
-            print(str(self.nbad)+"/"+str(ntotal), "data points omitted")
+        print("y/R =", self.y_R)
+        print("z/H =", self.z_H)
+        print("tow_speed_vec/tow_speed_nom =", self.mean_u/self.tow_speed_nom, "+/-", 
+              self.delta_mean_u/2/self.tow_speed_nom)
+        print("std_u/tow_speed_nom =", self.std_u/self.tow_speed_nom, "+/-",
+              self.delta_std_u/2/self.tow_speed_nom)
+        print(str(self.nbad)+"/"+str(ntotal), "data points omitted")
         
     def calc_unc_wake(self):
         """Computes delta values for wake measurements from Vectrino accuracy
         specs, not statistical uncertainties."""
-#        u_seg = self.u_f[self.t1*200:self.t2*200]
-#        u_seg = u_seg[~np.isnan(u_seg)]
-#        d_u = calc_d_vel(u_seg)
-#        u_seg = np.array(unp.uarray(u_seg, d_u/2))
-#        mean_u = u_seg.sum()/len(u_seg)
-#        self.delta_mean_u = mean_u.std_dev*2
-#        upup = (u_seg - self.mean_u)**2
-#        std_u = upup.sum()**0.5/len(u_seg)**0.5
-#        self.delta_std_u = std_u.std_dev*2
-#        print(mean_u/self.U_nom)
-#        print(std_u/self.U_nom)
-#        self.delta_mean_u = np.sqrt(np.sum(d_u**2))/len(u_seg)
         self.delta_mean_u = np.nan
         self.delta_std_u = np.nan
-        
-    @property
-    def torque_trimmed(self):
-        if not self.t2found:
-            self.find_t2()
-        return self.torque[self.t1*self.sr_ni:self.t2*self.sr_ni]
-        
-    @property
-    def torque_arm_trimmed(self):
-        if not self.t2found:
-            self.find_t2()
-        return self.torque_arm[self.t1*self.sr_ni:self.t2*self.sr_ni]
-    
-    @property
-    def cp_trimmed(self):
-        if not self.t2found:
-            self.find_t2()
-        return self.cp[self.t1*self.sr_ni:self.t2*self.sr_ni]
-        
-    @property
-    def t_ni_trimmed(self):
-        if not self.t2found:
-            self.find_t2()
-        return self.t_ni[self.t1*self.sr_ni:self.t2*self.sr_ni]
-
-    @property
-    def angle_trimmed(self):
-        """Returns segment of turbine angle."""
-        if not self.t2found:
-            self.find_t2()
-        return self.angle[self.t1*self.sr_ni:self.t2*self.sr_ni]
-        
-    @property
-    def omega_trimmed(self):
-        """Returns segment of turbine omega."""
-        if not self.t2found:
-            self.find_t2()
-        return self.omega_ni[self.t1*self.sr_ni:self.t2*self.sr_ni]
-        
-    @property
-    def u_infty_trimmed(self):
-        """Returns segment of carriage speed."""
-        if not self.t2found:
-            self.find_t2()
-        return self.U_ni[self.t1*self.sr_ni:self.t2*self.sr_ni]
-        
-    @property
-    def u_trimmed(self):
-        """Returns segment of filtered streamwise velocity."""
-        if not self.wake_calculated:
-            self.calc_wake(verbose=False)
-        return self.u_f[self.t1*self.sr_vec:self.t2*self.sr_vec]
-        
-    @property
-    def t_vec_trimmed(self):
-        if not self.t2found:
-            self.find_t2()
-        return self.t_vec[self.t1*self.sr_vec:self.t2*self.sr_vec]
         
     def calc_perf_per_rev(self):
         """Computes mean power coefficient over each revolution."""
@@ -428,7 +431,7 @@ class Run(object):
             cp[n] = self.cp_trimmed[ind].mean()
             torque[n] = self.torque_trimmed[ind].mean()
             omega[n] = self.omega_trimmed[ind].mean()
-            u_infty3[n] = (self.U_ni[self.t1*self.sr_ni:self.t2*self.sr_ni]**3)[ind].mean()
+            u_infty3[n] = (self.tow_speed_ni[self.t1*self.sr_ni:self.t2*self.sr_ni]**3)[ind].mean()
             start_angle += 360
         self.cp_per_rev = cp
         self.std_cp_per_rev = cp.std()
@@ -472,7 +475,7 @@ class Run(object):
             ylabel = "$C_P$"
             ylim = (-1, 1)
         plt.figure()
-        plt.plot(self.t_ni, quantity, 'k')
+        plt.plot(self.time_ni, quantity, 'k')
         plt.xlabel("Time (s)")
         plt.ylabel(ylabel)
         plt.ylim(ylim)
@@ -484,7 +487,7 @@ class Run(object):
             self.load()
         plt.figure()
         self.filter_wake()
-        plt.plot(self.t_vec, self.u_f, 'k')
+        plt.plot(self.time_vec, self.u_f, 'k')
         plt.xlabel("Time (s)")
         plt.ylabel("$u$ (m/s)")
         
@@ -492,20 +495,20 @@ class Run(object):
         if not self.loaded:
             self.load()
         plt.figure()
-        plt.plot(self.t_acs, self.rpm_acs)
+        plt.plot(self.time_acs, self.rpm_acs)
         plt.hold(True)
-        plt.plot(self.t_ni, self.rpm_ni)
+        plt.plot(self.time_ni, self.rpm_ni)
         plt.figure()
-        plt.plot(self.t_ni, self.U_ni)
+        plt.plot(self.time_ni, self.tow_speed_ni)
         plt.hold(True)
-        plt.plot(self.t_acs, self.U_acs)
+        plt.plot(self.time_acs, self.tow_speed_acs)
         plt.show()
         
     def plotvel(self):
         if not self.loaded:
             self.load()
         plt.figure()
-        plt.plot(self.t_ni, self.U_ni)
+        plt.plot(self.time_ni, self.tow_speed_ni)
         plt.tight_layout()
         plt.show()
 
@@ -529,10 +532,10 @@ class Section(object):
 
 class PerfCurve(object):
     """Object that represents a performance curve."""
-    def __init__(self, U):
-        self.U = U
-        self.Re_D = U*D/nu
-        self.section = "Perf-{}".format(U)
+    def __init__(self, tow_speed):
+        self.tow_speed = tow_speed
+        self.Re_D = tow_speed*D/nu
+        self.section = "Perf-{}".format(tow_speed)
         self.raw_data_dir = os.path.join("Data", "Raw", self.section)
         self.df = pd.read_csv(os.path.join("Data", "Processed", self.section+".csv"))
         self.testplan = pd.read_csv(os.path.join("Config", "Test plan", self.section+".csv")) 
@@ -557,7 +560,7 @@ class PerfCurve(object):
             nrun = self.runs[n]
             if reprocess or nrun not in runsdone or np.isnan(tsr_old[n]):
                 print("Processing run " + str(self.runs[nrun]) + "...")
-                run = Run("Perf-{:0.1f}".format(self.U), nrun)
+                run = Run("Perf-{:0.1f}".format(self.tow_speed), nrun)
                 run.calc_perf()
                 tsr[n] = run.meantsr
                 cp[n] = run.meancp
@@ -632,10 +635,10 @@ class PerfCurve(object):
             plt.show()
         
 class WakeProfile(object):
-    def __init__(self, U, z_H, quantity, orientation="horizontal"):
-        self.U = U
+    def __init__(self, tow_speed, z_H, quantity, orientation="horizontal"):
+        self.tow_speed = tow_speed
         self.z_H = z_H
-        self.section = "Wake-" + str(U)
+        self.section = "Wake-" + str(tow_speed)
         self.testplan = pd.read_csv(os.path.join("Config", "Test plan", 
                                                  self.section+".csv"))
         self.runs = self.testplan.Run[self.testplan["z/H"]==z_H]
@@ -656,23 +659,23 @@ class WakeProfile(object):
         q = self.df[quantity]
         loc = 1
         if quantity == "mean_u":
-            q = q/self.U
-            ylab = r"$U/U_\infty$"
+            q = q/self.tow_speed
+            ylab = r"$tow_speed/tow_speed_\infty$"
             loc = 3
         if quantity == "mean_w":
-            q = q/self.U
-            ylab = r"$U/U_\infty$"
+            q = q/self.tow_speed
+            ylab = r"$tow_speed/tow_speed_\infty$"
             loc = 4
         if quantity == "mean_v":
-            q = q/self.U
-            ylab = r"$V/U_\infty$"
+            q = q/self.tow_speed
+            ylab = r"$V/tow_speed_\infty$"
             loc=4
         if quantity == "std_u":
-            q = q/self.U
-            ylab = r"$\sigma_u/U_\infty$"
+            q = q/self.tow_speed
+            ylab = r"$\sigma_u/tow_speed_\infty$"
         if quantity is "mean_upvp":
-            q = q/(self.U**2)
-            ylab = r"$\overline{u'v'}/U_\infty^2$" 
+            q = q/(self.tow_speed**2)
+            ylab = r"$\overline{u'v'}/tow_speed_\infty^2$" 
         if newfig:
             if quantity == "mean_u":
                 plt.figure(figsize=(10,5))
@@ -690,19 +693,19 @@ class WakeProfile(object):
             plt.savefig(savepath+quantity+"_Re_dep_exp"+savetype)
     
 class WakeMap(object):
-    def __init__(self, U_infty):
-        self.U_infty = U_infty
+    def __init__(self, tow_speed_infty):
+        self.tow_speed_infty = tow_speed_infty
         self.z_H = [0.0, 0.125, 0.25, 0.375, 0.5, 0.625]
         self.loaded = False
         self.load()
         
     def load(self):
-        self.y_R = WakeProfile(self.U_infty, 0, "mean_u").y_R
+        self.y_R = WakeProfile(self.tow_speed_infty, 0, "mean_u").y_R
         self.mean_u = np.zeros((len(self.z_H), len(self.y_R)))
         self.mean_v = self.mean_u*1
         self.mean_w = self.mean_u*1
         for z_H in self.z_H:
-            wp = WakeProfile(self.U_infty, z_H, "mean_u")
+            wp = WakeProfile(self.tow_speed_infty, z_H, "mean_u")
             self.mean_u[self.z_H.index(z_H)] = wp.df.mean_u
             self.mean_v[self.z_H.index(z_H)] = wp.df.mean_v
             self.mean_w[self.z_H.index(z_H)] = wp.df.mean_w
@@ -725,14 +728,14 @@ class WakeMap(object):
         plt.ylabel(r"$z/H$")
         cb = plt.colorbar(cs, shrink=1, extend="both", 
                           orientation="horizontal", pad=0.3)
-        cb.set_label(r"$U/U_{\infty}$")
+        cb.set_label(r"$tow_speed/tow_speed_{\infty}$")
         self.turb_lines()
         ax = plt.axes()
         ax.set_aspect(2)
         plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
         plt.tight_layout()
         if save:
-            plt.savefig(savepath+"/Ucont"+savetype)
+            plt.savefig(savepath+"/tow_speedcont"+savetype)
         if show:
             self.show()
     
@@ -740,20 +743,20 @@ class WakeMap(object):
                            savetype=".pdf"):
         plt.figure(figsize=(10,6))
         # Add contours of mean velocity
-        cs = plt.contourf(self.y_R, self.z_H, self.mean_u/self.U_infty, 20, 
+        cs = plt.contourf(self.y_R, self.z_H, self.mean_u/self.tow_speed_infty, 20, 
                           cmap=plt.cm.coolwarm)
         cb = plt.colorbar(cs, shrink=1, extend="both", 
                           orientation="horizontal", pad=0.2)
-        cb.set_label(r"$U/U_{\infty}$")
+        cb.set_label(r"$tow_speed/tow_speed_{\infty}$")
         plt.hold(True)
         # Make quiver plot of v and w velocities
-        Q = plt.quiver(self.y_R, self.z_H, self.mean_v/self.U_infty, 
-                       self.mean_w/self.U_infty, width=0.0022)
+        Q = plt.quiver(self.y_R, self.z_H, self.mean_v/self.tow_speed_infty, 
+                       self.mean_w/self.tow_speed_infty, width=0.0022)
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
         plt.xlim(-3.2, 3.2)
-        plt.quiverkey(Q, 0.75, 0.3, 0.1, r"$0.1 U_\infty$",
+        plt.quiverkey(Q, 0.75, 0.3, 0.1, r"$0.1 tow_speed_\infty$",
                       labelpos="E",
                       coordinates="figure",
                       fontproperties={"size": "small"})
@@ -771,9 +774,9 @@ class WakeMap(object):
     def plot_xvorticity(self):
         pass
     
-    def plot_diff(self, quantity="mean_u", U_infty_diff=1.0, save=False, 
+    def plot_diff(self, quantity="mean_u", tow_speed_infty_diff=1.0, save=False, 
                   show=False, savepath="", savetype=""):
-        wm_diff = WakeMap(U_infty_diff)
+        wm_diff = WakeMap(tow_speed_infty_diff)
         q_ref, q_diff = None, None
         if quantity in ["mean_u", "mean_v", "mean_w"]:
             exec("q_ref = self." + quantity)
@@ -782,8 +785,8 @@ class WakeMap(object):
         else:
             print("Not a valid quantity")
             return None
-        a_diff = (q_ref/self.U_infty - \
-                  q_diff/wm_diff.U_infty)#/q_ref/self.U_infty*100
+        a_diff = (q_ref/self.tow_speed_infty - \
+                  q_diff/wm_diff.tow_speed_infty)#/q_ref/self.tow_speed_infty*100
         plt.figure(figsize=(12,3.75))
         cs = plt.contourf(self.y_R, self.z_H, a_diff, 20,
                           cmap=plt.cm.coolwarm)
@@ -801,25 +804,25 @@ class WakeMap(object):
             if savepath: savepath += "/"
             plt.savefig(savepath+"/"+quantity+"_diff"+savetype)
     
-    def plot_meancomboquiv_diff(self, U_infty_diff, save=False, show=False,
+    def plot_meancomboquiv_diff(self, tow_speed_infty_diff, save=False, show=False,
                                 savepath="", savetype="", percent=True):
-        wm_diff = WakeMap(U_infty_diff)
-        mean_u_diff = (self.mean_u/self.U_infty - \
-                wm_diff.mean_u/wm_diff.U_infty)
-        mean_v_diff = (self.mean_v/self.U_infty - \
-                wm_diff.mean_v/wm_diff.U_infty)
-        mean_w_diff = (self.mean_w/self.U_infty - \
-                wm_diff.mean_w/wm_diff.U_infty)
+        wm_diff = WakeMap(tow_speed_infty_diff)
+        mean_u_diff = (self.mean_u/self.tow_speed_infty - \
+                wm_diff.mean_u/wm_diff.tow_speed_infty)
+        mean_v_diff = (self.mean_v/self.tow_speed_infty - \
+                wm_diff.mean_v/wm_diff.tow_speed_infty)
+        mean_w_diff = (self.mean_w/self.tow_speed_infty - \
+                wm_diff.mean_w/wm_diff.tow_speed_infty)
         if percent:
-            mean_u_diff = mean_u_diff/self.mean_u/self.U_infty*100
-            mean_v_diff = mean_v_diff/self.mean_v/self.U_infty*100
-            mean_w_diff = mean_w_diff/self.mean_w/self.U_infty*100
+            mean_u_diff = mean_u_diff/self.mean_u/self.tow_speed_infty*100
+            mean_v_diff = mean_v_diff/self.mean_v/self.tow_speed_infty*100
+            mean_w_diff = mean_w_diff/self.mean_w/self.tow_speed_infty*100
         plt.figure(figsize=(12,4))
         cs = plt.contourf(self.y_R, self.z_H, mean_u_diff, 20,
                           cmap=plt.cm.coolwarm)
         cb = plt.colorbar(cs, shrink=1, fraction=0.15,
                           orientation="vertical", pad=0.05)
-        cb.set_label(r"$\Delta U$ (\%)")
+        cb.set_label(r"$\Delta tow_speed$ (\%)")
         plt.hold(True)
         # Make quiver plot of v and w velocities
         Q = plt.quiver(self.y_R, self.z_H, mean_v_diff, 
@@ -852,7 +855,7 @@ class WakeMap(object):
         u_array = np.arange(0.4, 1.4, 0.2)
         for u in u_array:
             wm = WakeMap(u)
-            mean_u = wm.mean_u/wm.U_infty
+            mean_u = wm.mean_u/wm.tow_speed_infty
             std.append(np.std((mean_u - mean_u_ref)/mean_u_ref))
         std = np.asarray(std)
         plt.figure()
@@ -928,7 +931,7 @@ def batch_process_all():
     for section in sections:
         batch_process_section(section)
     
-def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="", 
+def plot_trans_wake_profile(quantity, tow_speed=0.4, z_H=0.0, save=False, savepath="", 
                             savetype=".pdf", newfig=True, marker="-ok",
                             fill="none", oldwake=False, figsize=(10, 5)):
     """Plots the transverse wake profile of some quantity. These can be
@@ -937,9 +940,9 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
       * mean_w
       * std_u
     """
-    Re_D = U*D/nu
+    Re_D = tow_speed*D/nu
     label = str((Re_D/1e6)) + "e6"
-    section = "Wake-" + str(U)
+    section = "Wake-" + str(tow_speed)
     df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
     df = df[df.z_H==z_H]
     q = df[quantity]
@@ -949,9 +952,9 @@ def plot_trans_wake_profile(quantity, U=0.4, z_H=0.0, save=False, savepath="",
     if oldwake:
         plot_old_wake(quantity, y_R)
     if quantity in ["mean_upvp"]:
-        unorm = U**2
+        unorm = tow_speed**2
     else:
-        unorm = U
+        unorm = tow_speed
     plt.plot(y_R, q/unorm, marker, markerfacecolor=fill, label=label)
     plt.xlabel(r"$y/R$")
     plt.ylabel(ylabels[quantity])
@@ -1077,9 +1080,9 @@ def plot_cfd_perf(quantity="cp", normalize_by="CFD"):
         normval = normalize_by
     plt.plot(Re_D, q/normval, "--^k", label="Simulation")
     
-def plot_settling(U):
+def plot_settling(tow_speed):
     """Plot data from the settling experiments."""
-    data = np.loadtxt("Settling/U_" + str(U) + "/vecdata.dat", unpack=True)
+    data = np.loadtxt("Settling/tow_speed_" + str(tow_speed) + "/vecdata.dat", unpack=True)
     u = data[2] # 2 for x velocity
     t = data[0]*0.005
 #    i = np.where(np.round(t)==88)[0][0]
@@ -1121,7 +1124,7 @@ def process_tare_drag(nrun, plot=False):
         metadata = json.load(f)
     speed = float(metadata["Tow speed (m/s)"])
     nidata = loadmat(os.path.join(rdpath, "nidata.mat"), squeeze_me=True)
-    t_ni  = nidata["t"]
+    time_ni  = nidata["t"]
     drag = nidata["drag_left"] + nidata["drag_right"]
     drag = drag - np.mean(drag[:2000])
     t1, t2 = times[speed]
@@ -1129,7 +1132,7 @@ def process_tare_drag(nrun, plot=False):
     print("Tare drag =", meandrag, "N at", speed, "m/s")
     if plot:
         plt.figure()
-        plt.plot(t_ni, drag, 'k')
+        plt.plot(time_ni, drag, 'k')
         plt.show()
     return speed, meandrag
         
@@ -1172,9 +1175,9 @@ def process_tare_torque(nrun, plot=False):
     nidata = loadmat("Data/Raw/Tare torque/" + str(nrun) + "/nidata.mat", 
                      squeeze_me=True)
     # Compute RPM
-    t_ni  = nidata["t"]
+    time_ni  = nidata["t"]
     angle = nidata["turbine_angle"]
-    rpm_ni = fdiff.second_order_diff(angle, t_ni)/6.0
+    rpm_ni = fdiff.second_order_diff(angle, time_ni)/6.0
     rpm_ni = ts.smooth(rpm_ni, 8)
     try:
         t1, t2 = times[nrun]
@@ -1187,7 +1190,7 @@ def process_tare_torque(nrun, plot=False):
     print("Tare torque =", meantorque, "Nm at", meanrpm, "RPM")
     if plot:
         plt.figure()
-        plt.plot(t_ni, torque)
+        plt.plot(time_ni, torque)
         plt.xlabel("Time (s)")
         plt.ylabel("Torque (Nm)")
         plt.tight_layout()
@@ -1250,15 +1253,15 @@ def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
                   "std_u" : 1,
                   "mean_upvp" : 1}
     for q in ["mean_u", "std_u", "mean_upvp"]:
-        plot_trans_wake_profile(q, U=0.4, z_H=z_H, newfig=True, marker="--vb",
+        plot_trans_wake_profile(q, tow_speed=0.4, z_H=z_H, newfig=True, marker="--vb",
                                 fill="blue")
-        plot_trans_wake_profile(q, U=0.6, z_H=z_H, newfig=False, marker="sk",
+        plot_trans_wake_profile(q, tow_speed=0.6, z_H=z_H, newfig=False, marker="sk",
                                 fill="lightblue")
-        plot_trans_wake_profile(q, U=0.8, z_H=z_H, newfig=False, marker="<k",
+        plot_trans_wake_profile(q, tow_speed=0.8, z_H=z_H, newfig=False, marker="<k",
                                 fill="gray")
-        plot_trans_wake_profile(q, U=1.0, z_H=z_H, newfig=False, marker="-ok",
+        plot_trans_wake_profile(q, tow_speed=1.0, z_H=z_H, newfig=False, marker="-ok",
                                 fill="orange")
-        plot_trans_wake_profile(q, U=1.2, z_H=z_H, newfig=False, marker="^k",
+        plot_trans_wake_profile(q, tow_speed=1.2, z_H=z_H, newfig=False, marker="^k",
                                 fill="red")
         plt.legend(loc=legendlocs[q])
         if q == "mean_upvp":
