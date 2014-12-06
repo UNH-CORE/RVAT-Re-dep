@@ -109,7 +109,7 @@ class Run(object):
         self.make_trimmed()
         self.filter_wake()
         self.calc_wake_instantaneous()
-#        self.make_ts_per_rev()
+        self.calc_perf_per_rev()
         self.calc_perf_stats()
         self.calc_wake_stats()
         
@@ -244,6 +244,8 @@ class Run(object):
         self.time_perf_all = self.time_ni
         self.time_ni = self.time_ni_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
         self.time_perf = self.time_ni
+        self.angle_all = self.angle
+        self.angle = self.angle_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
         self.torque_all = self.torque
         self.torque = self.torque_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
         self.torque_arm_all = self.torque_arm
@@ -418,7 +420,7 @@ class Run(object):
         
     def calc_perf_per_rev(self):
         """Computes mean power coefficient over each revolution."""
-        angle = self.angle_trimmed
+        angle = self.angle
         angle -= angle[0]
         cp = np.zeros(self.nrevs)
         torque = np.zeros(self.nrevs)
@@ -427,11 +429,11 @@ class Run(object):
         start_angle = 0.0
         for n in range(self.nrevs):
             end_angle = start_angle + 360
-            ind = np.logical_and(end_angle > angle, angle >= start_angle)
-            cp[n] = self.cp_trimmed[ind].mean()
-            torque[n] = self.torque_trimmed[ind].mean()
-            omega[n] = self.omega_trimmed[ind].mean()
-            u_infty3[n] = (self.tow_speed_ni[self.t1*self.sr_ni:self.t2*self.sr_ni]**3)[ind].mean()
+            ind = np.logical_and(angle >= start_angle, end_angle > angle)
+            cp[n] = self.cp[ind].mean()
+            torque[n] = self.torque[ind].mean()
+            omega[n] = self.omega[ind].mean()
+            u_infty3[n] = (self.tow_speed_ni**3)[ind].mean()
             start_angle += 360
         self.cp_per_rev = cp
         self.std_cp_per_rev = cp.std()
