@@ -489,11 +489,11 @@ class Run(object):
             self.load()
         plt.figure()
         self.filter_wake()
-        plt.plot(self.time_vec, self.u_f, 'k')
+        plt.plot(self.time_vec, self.u, 'k')
         plt.xlabel("Time (s)")
         plt.ylabel("$u$ (m/s)")
         
-    def plotacs(self):
+    def plot_acs(self):
         if not self.loaded:
             self.load()
         plt.figure()
@@ -506,7 +506,7 @@ class Run(object):
         plt.plot(self.time_acs, self.tow_speed_acs)
         plt.show()
         
-    def plotvel(self):
+    def plot_carriage_vel(self):
         if not self.loaded:
             self.load()
         plt.figure()
