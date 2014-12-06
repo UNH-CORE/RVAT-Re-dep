@@ -12,12 +12,13 @@ from Modules.processing import *
 
 def test_run():
     print("Testing Run class")
-    run = Run("Wake-1.0", 25)
+    run = Run("Wake-1.0", 20)
     print(run.cp_per_rev)
     print(run.std_cp_per_rev)
     print(run.cp_conf_interval)
     print(run.mean_cp)
     print(run.unc_cp)
+    print(run.exp_unc_cp)
     print("PASS")
     
 def test_section():

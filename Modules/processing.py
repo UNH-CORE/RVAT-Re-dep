@@ -110,6 +110,7 @@ class Run(object):
         self.calc_perf_stats()
         self.calc_wake_stats()
         self.calc_perf_uncertainty()
+        self.calc_perf_exp_uncertainty()
         
     def load(self):
         """Loads the data from the run into memory"""
@@ -317,7 +318,20 @@ class Run(object):
         b_cp = np.sqrt((omega/(const*u_infty**3))**2*b_torque**2 + \
                        (torque/(const*u_infty**3))**2*b_angle**2 + \
                        (-3*torque*omega/(const*u_infty**4))**2*b_car_pos**2)
+        self.b_cp = b_cp
         self.unc_cp = calc_uncertainty(self.cp_per_rev, b_cp)
+        
+    def calc_perf_exp_uncertainty(self):
+        """See uncertainty IPython notebook for equation."""
+        s_cp = self.std_cp_per_rev
+        nu_s_cp = len(self.cp_per_rev) - 1
+        b_cp = self.b_cp
+        b_cp_rel_unc = 0.25 # A guess
+        nu_b_cp = 0.5*b_cp_rel_unc**(-2)
+        nu_cp = ((s_cp**2 + b_cp**2)**2)/(s_cp**4/nu_s_cp + b_cp**4/nu_b_cp)
+        t = scipy.stats.t.interval(alpha=0.95, df=nu_cp)[-1]
+        self.exp_unc_cp = t*self.unc_cp
+        self.dof_cp = nu_cp
         
     def calc_wake_instantaneous(self):
         """Creates fluctuating and Reynolds stress time series. Note that
