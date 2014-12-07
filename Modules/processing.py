@@ -20,12 +20,6 @@ import json
 import os
 import sys
 import pandas as pd
-try:
-    import Modules.plotting
-    from Modules.plotting import ylabels
-except ImportError:
-    import plotting
-    from plotting import ylabels
 
 # Dict for runs corresponding to each height
 wakeruns = {0.0 : np.arange(0, 45),
@@ -550,12 +544,12 @@ class Run(object):
         s["mean_u"] = self.mean_u
         s["mean_v"] = self.mean_v
         s["mean_w"] = self.mean_w
-        s["mean_upvp"] = self.mean_upvp
-        s["mean_upwp"] = self.mean_upwp
-        s["mean_vpwp"] = self.mean_vpwp
         s["std_u"] = self.std_u
         s["std_v"] = self.std_v
         s["std_w"] = self.std_w
+        s["mean_upvp"] = self.mean_upvp
+        s["mean_upwp"] = self.mean_upwp
+        s["mean_vpwp"] = self.mean_vpwp
         s["k"] = self.k
         return s
         
@@ -626,15 +620,17 @@ class Section(object):
     @property
     def mean_cp(self):
         return self.data.mean_cp
-    def process(self):
+    def process(self, nproc=8, save=True):
         """To-do: Process an entire section of data."""
-        self.process_parallel()
+        self.process_parallel(nproc=nproc)
+        if save:
+            self.data.to_csv(self.processed_path, na_rep="NaN", index=False)
     def process_parallel(self, nproc=8, nruns="all"):
         s = self.name
         runs = self.test_plan["Run"]
         if nruns != "all":
             runs = runs[:nruns]
-        pool = mp.Pool(processes = nproc)
+        pool = mp.Pool(processes=nproc)
         results = [pool.apply_async(process_run, args=(s,n)) for n in runs]
         output = [p.get() for p in results]
         self.data = pd.DataFrame(output)
@@ -985,79 +981,11 @@ def load_test_plan_section(section):
     df = df.dropna(how="all", axis=1).dropna(how="all", axis=0)
     if "Run" in df:
         df["Run"] = df["Run"].astype(int)
-    return df
-            
-def batch_process_section(section, reprocess=True):
-    """Processes all data in a section. Will skip already processed
-    runs if `reprocess = False`. Something is up with this algorithm, as it
-    sometimes will save the wrong y_R value."""
-    test_plan = load_test_plan_section(section)
-    if not reprocess:
-        try:
-            data = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
-            runs = data.run
-        except:
-            reprocess = True
-            data = pd.DataFrame()
-            data["run"] = runs = test_plan["Run"]
-    else:
-        print("Reprocessing", section)
-        data = pd.DataFrame()
-        data["run"] = runs = test_plan["Run"]
-    # Create a empty arrays for all quantities
-    if reprocess:
-        for q in ["mean_tow_speed", "std_tow_speed", "t1", "t2", "n_blade_pass", 
-                  "n_revs", "mean_tsr", "mean_cp", "mean_cd", "std_tsr", 
-                  "std_cp", "std_cd", "std_tsr_per_rev", "std_cp_per_rev",
-                  "std_cd_per_rev", "exp_unc_tsr", "exp_unc_cp", "exp_unc_cd", 
-                  "dof_tsr", "dof_cp", "dof_cd", "t1_wake", "t2_wake", "y_R", 
-                  "z_H", "mean_u", "mean_v", "mean_w", "std_u", "std_v", 
-                  "std_w", "mean_upvp", "mean_upwp", "mean_vpwp", "k"]:
-            data[q] = np.zeros(len(data.run))*np.nan
-    for n in runs:
-        if reprocess or True in np.isnan(data.iloc[n,:]).values:
-            r = Run(section, n)
-            if r.not_loadable:
-                pass
-            else:
-                print("Processing data from {} run {}".format(section, n))
-                data.mean_tow_speed.iloc[n] = r.mean_u_enc
-                data.std_tow_speed.iloc[n] = r.std_u_enc
-                data.t1.iloc[n] = r.t1
-                data.t1_wake.iloc[n] = r.t1_wake
-                data.t2.iloc[n] = r.t2
-                data.t2_wake.iloc[n] = r.t2_wake
-                data.n_revs.iloc[n] = r.n_revs
-                data.n_blade_pass.iloc[n] = r.n_blade_pass
-                data.y_R.iloc[n] = r.y_R
-                data.z_H.iloc[n] = r.z_H
-                data.mean_tsr.iloc[n] = r.mean_tsr
-                data.mean_cp.iloc[n] = r.mean_cp
-                data.mean_cd.iloc[n] = r.mean_cd
-                data.std_tsr.iloc[n] = r.std_tsr
-                data.std_cp.iloc[n] = r.std_cp
-                data.std_cd.iloc[n] = r.std_cd
-                data.std_tsr_per_rev.iloc[n] = r.std_tsr_per_rev
-                data.std_cp_per_rev.iloc[n] = r.std_cp_per_rev
-                data.std_cd_per_rev.iloc[n] = r.std_cd_per_rev
-                data.exp_unc_tsr.iloc[n] = r.exp_unc_tsr
-                data.exp_unc_cp.iloc[n] = r.exp_unc_cp
-                data.exp_unc_cd.iloc[n] = r.exp_unc_cd
-                data.dof_tsr.iloc[n] = r.dof_tsr
-                data.dof_cp.iloc[n] = r.dof_cp
-                data.dof_cd.iloc[n] = r.dof_cd
-                data.mean_u.iloc[n] = r.mean_u
-                data.mean_v.iloc[n] = r.mean_v
-                data.mean_w.iloc[n] = r.mean_w
-                data.mean_upvp.iloc[n] = r.mean_upvp
-                data.mean_upwp.iloc[n] = r.mean_upwp
-                data.mean_vpwp.iloc[n] = r.mean_vpwp
-                data.std_u.iloc[n] = r.std_u
-                data.std_v.iloc[n] = r.std_v
-                data.std_w.iloc[n] = r.std_w
-                data.k.iloc[n] = r.k
-    data.to_csv(os.path.join(processed_data_dir, section+".csv"), index=False,
-                na_rep="NaN")
+    return df               
+
+def batch_process_section(name):
+    s = Section(name)
+    s.process()
     
 def batch_process_all():
     """Batch processes all sections."""
@@ -1068,180 +996,8 @@ def batch_process_all():
                 "Wake-0.6", "Wake-0.8", "Wake-1.0",
                 "Wake-1.2"]
     for section in sections:
+        print("Processing {}".format(section))
         batch_process_section(section)
-    
-def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savepath="", 
-                            savetype=".pdf", newfig=True, marker="-ok",
-                            fill="none", oldwake=False, figsize=(10, 5)):
-    """Plots the transverse wake profile of some quantity. These can be
-      * mean_u
-      * mean_v
-      * mean_w
-      * std_u
-    """
-    Re_D = U_infty*D/nu
-    label = str((Re_D/1e6)) + "e6"
-    section = "Wake-" + str(U_infty)
-    df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
-    df = df[df.z_H==z_H]
-    q = df[quantity]
-    y_R = df.y_R
-    if newfig:
-        plt.figure(figsize=figsize)
-    if oldwake:
-        plot_old_wake(quantity, y_R)
-    if quantity in ["mean_upvp"]:
-        unorm = U_infty**2
-    else:
-        unorm = U_infty
-    plt.plot(y_R, q/unorm, marker, markerfacecolor=fill, label=label)
-    plt.xlabel(r"$y/R$")
-    plt.ylabel(ylabels[quantity])
-    plt.grid(True)
-    plt.tight_layout()
-    
-def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
-                     cfd=False, normalize_by="default", dual_xaxes=False, show=True):
-    speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
-    cp = np.zeros(len(speeds))
-    std_cp = np.zeros(len(speeds))
-    exp_unc_cp = np.zeros(len(speeds))
-    cd = np.zeros(len(speeds))
-    std_cd = np.zeros(len(speeds))
-    exp_unc_cd = np.zeros(len(speeds))
-    Re_D = speeds*D/1e-6
-    for n in range(len(speeds)):
-        if speeds[n] in [0.3, 0.5, 0.7, 0.9, 1.1, 1.3]:
-            section = "Perf-"+str(speeds[n])
-            df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
-            cp_s = df.mean_cp
-            dcp_s = df.exp_unc_cp
-            cd_s = df.mean_cd
-            dcd_s = df.exp_unc_cd
-            cp[n] = np.mean(cp_s)
-            exp_unc_cp[n] = np.mean(dcp_s)
-            cd[n] = np.mean(cd_s)
-            exp_unc_cd[n] = np.mean(dcd_s)
-        else:
-            section = "Wake-"+str(speeds[n])
-            df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
-            cp_s = df.mean_cp
-            dcp_s = df.exp_unc_cp
-            cd_s = df.mean_cd
-            dcd_s = df.exp_unc_cd
-            cp[n], std_cp[n] = np.mean(cp_s), np.std(cp_s)
-            cd[n], std_cd[n] = np.mean(cd_s), np.std(cd_s)
-            exp_unc_cp[n] = np.mean(dcp_s)
-            exp_unc_cd[n] = np.mean(dcd_s)
-    plt.figure()
-    if normalize_by == "default":
-        norm_cp = cp[-4]
-        norm_cd = cd[-4]
-        norm_cfd = "CFD"
-    else:
-        norm_cp = normalize_by
-        norm_cd = normalize_by
-        norm_cfd = normalize_by
-    if errorbars:    
-        plt.errorbar(Re_D, cp/norm_cp, yerr=exp_unc_cp/2/cp[-4], fmt="-ok",
-                     markerfacecolor="none", label="Experiment")
-    else:
-        plt.plot(Re_D, cp/norm_cp, '-ok', markerfacecolor="none", label="Experiment")
-    if cfd:
-        plot_cfd_perf("cp", normalize_by=norm_cfd)
-    plt.xlabel(r"$Re_D$")
-    if normalize_by == "default":
-        plt.ylabel(r"$C_P/C_{P0}$")
-    else:
-        plt.ylabel(r"$C_P$")
-#    plt.ylim((0.4, 1.2))
-    ax = plt.gca()
-    plt.grid(True)
-    if dual_xaxes:
-        plt.text(1.27e6, 1.11, r"$\times 10^5$", color=r"#555555")
-        ax2 = ax.twiny()
-        ax.xaxis.get_majorticklocs()
-        ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
-        ticklabs = ticklabs/D*1.9*0.14/1e5
-        ticklabs = [str(np.round(ticklab, decimals=1)) for ticklab in ticklabs]
-        ax2.set_xticks(ax.xaxis.get_ticklocs())
-        ax2.set_xlim((0.2e6, 1.4e6))
-        ax2.set_xticklabels(ticklabs)
-#        ax2.xaxis.major.formatter.set_powerlimits((0,0)) 
-        ax2.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
-    if cfd:
-        plt.legend(loc=4)
-    ax.xaxis.major.formatter.set_powerlimits((0,0)) 
-    plt.tight_layout()
-    if save:
-        plt.savefig(savepath + "/re_dep_cp" + savetype)
-    plt.figure()
-    if errorbars:
-        plt.errorbar(Re_D, cd/norm_cd, yerr=exp_unc_cd/cd[-4]/2, fmt="-ok",
-                     markerfacecolor="none", label="Experiment")
-    else:
-        plt.plot(Re_D, cd/cd[-4], '-ok', markerfacecolor="none", label="Experiment")
-    plt.xlabel(r"$Re_D$")
-    if normalize_by == "default":
-        plt.ylabel(r"$C_D/C_{D0}$")
-    else:
-        plt.ylabel(r"$C_D$")
-    plt.hold(True)
-    if cfd:
-        plot_cfd_perf("cd", normalize_by=norm_cfd)
-#    plt.ylim((0.5,1.1))
-    plt.grid(True)
-    if cfd:
-        plt.legend(loc=4)
-    ax = plt.gca()
-    ax.xaxis.major.formatter.set_powerlimits((0,0)) 
-    plt.tight_layout()
-    if save:
-        plt.savefig(savepath + "/re_dep_cd" + savetype)
-    if show:
-        plt.show()
-    
-def plot_old_wake(quantity, y_R):
-    plt.hold(True)
-    runs = range(32, 77)
-    ind = [run-1 for run in runs]
-    f = "../2013.03 VAT/Processed/"+quantity+".npy"
-    q = np.load(f)[ind]
-    plt.plot(y_R, q, 'xr', label=r"$Re_D=1.0 \times 10^6$", 
-             markerfacecolor="none")
-             
-def plot_cfd_perf(quantity="cp", normalize_by="CFD"):
-    Re_D = np.load(cfd_path + "/processed/Re_D.npy")
-    q = np.load(cfd_path + "/processed/" + quantity + ".npy")
-    if normalize_by=="CFD":
-        normval = q[-3]
-    else:
-        normval = normalize_by
-    plt.plot(Re_D, q/normval, "--^k", label="Simulation")
-    
-def plot_settling(tow_speed):
-    """Plot data from the settling experiments."""
-    data = np.loadtxt("Settling/tow_speed_" + str(tow_speed) + "/vecdata.dat", unpack=True)
-    u = data[2] # 2 for x velocity
-    t = data[0]*0.005
-#    i = np.where(np.round(t)==88)[0][0]
-    i = 0
-    u = u[i:]
-    t = t[i:]
-#    u_f = ts.sigmafilter(u, 3, 1)
-    t_std, u_std = ts.runningstd(t, u, 400)
-#    u_std = ts.smooth(u_std, 500)
-    u = ts.smooth(u, 400)
-    plt.figure()
-    plt.plot(t-t[0], u, "k")
-    plt.xlabel("t (s)")
-    plt.ylabel("$u$ (m/s)")
-    plt.tight_layout()
-    plt.figure()
-    plt.plot(t_std, u_std)
-    plt.xlabel("t (s)")
-    plt.ylabel(r"$\sigma_u$")
-    plt.tight_layout()
     
 def process_tare_drag(nrun, plot=False):
     """Processes a single tare drag run."""
@@ -1360,57 +1116,9 @@ def batch_process_tare_torque(plot=False):
         plt.ylim((0, 1))
         plt.tight_layout()
         plt.show()
-        
-def plot_perf_curves(subplots=True, save=False, savepath="", savetype=".pdf"):
-    """Plots all performance curves."""
-    if subplots:
-        plt.figure(figsize=(12,5))
-        plt.subplot(121)
-    PerfCurve(0.4).plotcp(newfig=not subplots, show=False, marker=">")
-    PerfCurve(0.6).plotcp(newfig=False, show=False, marker="s")
-    PerfCurve(0.8).plotcp(newfig=False, show=False, marker="<")
-    PerfCurve(1.0).plotcp(newfig=False, show=False, marker="o")
-    PerfCurve(1.2).plotcp(newfig=False, show=False, marker="^")
-    if subplots:
-        plt.subplot(122)
-    PerfCurve(0.4).plotcd(newfig=not subplots, show=False, marker=">")
-    PerfCurve(0.6).plotcd(newfig=False, show=False, marker="s")
-    PerfCurve(0.8).plotcd(newfig=False, show=False, marker="<")
-    PerfCurve(1.0).plotcd(newfig=False, show=False, marker="o")
-    PerfCurve(1.2).plotcd(newfig=False, show=False, marker="^")
-    plt.legend(("0.4e6", "0.6e6", "0.8e6", "1.0e6", "1.2e6"), 
-               loc="lower right", ncol=2)
-    plt.show()
-    if save:
-        if savepath != "":
-            savepath += "/"
-        plt.savefig(savepath + "perf_curves" + savetype)
-    
-def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
-    """Plots all wake profiles of interest."""
-    legendlocs = {"mean_u" : 4,
-                  "std_u" : 1,
-                  "mean_upvp" : 1}
-    for q in ["mean_u", "std_u", "mean_upvp"]:
-        plot_trans_wake_profile(q, U_infty=0.4, z_H=z_H, newfig=True, marker="--vb",
-                                fill="blue")
-        plot_trans_wake_profile(q, U_infty=0.6, z_H=z_H, newfig=False, marker="sk",
-                                fill="lightblue")
-        plot_trans_wake_profile(q, U_infty=0.8, z_H=z_H, newfig=False, marker="<k",
-                                fill="gray")
-        plot_trans_wake_profile(q, U_infty=1.0, z_H=z_H, newfig=False, marker="-ok",
-                                fill="orange")
-        plot_trans_wake_profile(q, U_infty=1.2, z_H=z_H, newfig=False, marker="^k",
-                                fill="red")
-        plt.legend(loc=legendlocs[q])
-        if q == "mean_upvp":
-            plt.ylim((-0.015, 0.025))
-        if save:
-            plt.savefig(os.path.join(savepath, q+savetype))
-    plt.show()
     
 def main():
-    plot_perf_re_dep(dual_xaxes=True)
+    pass
         
 if __name__ == "__main__":
     if os.getcwd()[-7:] == "Modules":

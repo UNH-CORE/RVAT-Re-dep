@@ -10,6 +10,7 @@ if os.getcwd()[-7:] == "Modules":
     print("Changing working directory to experiment root directory")
     os.chdir("../")
 from Modules.processing import *
+from Modules.plotting import *
 
 def test_run():
     print("Testing Run class")
@@ -77,6 +78,15 @@ def test_process_section_parallel():
     assert(np.all(s.data.mean_cd == df.mean_cd))
     print("PASS")
     
+def test_batch_process_section_vs_parallel():
+    name = "Perf-1.0"
+    t0 = time.time()
+    batch_process_section_old(name)
+    print(time.time() - t0)
+    t0 = time.time()
+    Section(name).process()
+    print(time.time() - t0)
+    
 def test_all():
     test_run()
     test_section()
@@ -113,4 +123,5 @@ if __name__ == "__main__":
 #    plot_perf_curves()
 #    test_section()
 #    test_batch_process_section()
-    test_process_section_parallel()
+#    test_process_section_parallel()
+    test_batch_process_section_vs_parallel()
