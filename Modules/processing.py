@@ -593,25 +593,37 @@ class Section(object):
     def process(self):
         """To-do: Process an entire section of data."""
         pass
-    def process_parallel(self, nproc=16):
+    def process_parallel(self, nproc=8, nruns=24):
         """To-do: Process a section in parallel."""
         output = mp.Queue()
         processes = []
+        runs_per_proc = int(np.ceil(nruns/nproc))
         for n in range(nproc):
-            processes.append(mp.Process(target=process_run_parallel, 
-                                        args=(self.name, n, output)))
+            n1 = n*runs_per_proc
+            n2 = (n+1)*runs_per_proc
+            if n2 > nruns:
+                n2 = nruns + 1
+            runs = range(n1, n2)
+            processes.append(mp.Process(target=process_runs_parallel, 
+                                        args=(self.name, runs, output)))
         for p in processes:
             p.start()
         for p in processes:
             p.join()
         results = [output.get() for p in processes]
         results.sort()
-        print(results)
+        all_results = []
+        for r in results:
+            all_results += r
+        print(all_results)
             
 
-def process_run_parallel(section, nrun, output):
-    run = Run(section, nrun)
-    output.put(run.mean_cp)
+def process_runs_parallel(section, nrunlist, output):
+    mean_cp = []
+    for nrun in nrunlist:
+        run = Run(section, nrun)
+        mean_cp.append(run.mean_cp)
+    output.put(mean_cp)
 
 
 class PerfCurve(object):

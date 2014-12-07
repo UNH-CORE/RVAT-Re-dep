@@ -60,14 +60,15 @@ def test_wake_map():
     print("PASS")
     
 def test_process_section_parallel():
-    nproc = 24
+    nproc = 4
+    nruns = 64
     t0 = time.time()
-    s = Section("Perf-1.0")
-    s.process_parallel(nproc=nproc)
+    s = Section("Wake-1.0")
+    s.process_parallel(nproc=nproc, nruns=nruns)
     print("Parallel elapsed time: {} seconds".format(time.time() - t0))
     t0 = time.time()
     cp = []
-    for n in range(nproc):
+    for n in range(nruns):
         r = Run(s.name, n)
         cp.append(r.mean_cp)
     print(cp)
