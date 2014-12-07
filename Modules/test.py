@@ -64,14 +64,14 @@ def test_process_section_parallel():
     t0 = time.time()
     s = Section("Perf-1.0")
     s.process_parallel(nproc=nproc)
-    print("Parallel ellapsed time: {} seconds".format(time.time() - t0))
+    print("Parallel elapsed time: {} seconds".format(time.time() - t0))
     t0 = time.time()
     cp = []
     for n in range(nproc):
         r = Run(s.name, n)
         cp.append(r.mean_cp)
     print(cp)
-    print("Serial ellapsed time: {} seconds".format(time.time() - t0))
+    print("Serial elapsed time: {} seconds".format(time.time() - t0))
     
 def test_all():
     test_run()
