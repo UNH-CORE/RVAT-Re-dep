@@ -630,35 +630,10 @@ class Section(object):
         """To-do: Process an entire section of data."""
         pass
     def process_parallel(self, nproc=8, nruns=24):
-        """To-do: Process a section in parallel."""
-        output = mp.Queue()
-        processes = []
-        runs_per_proc = int(np.ceil(nruns/nproc))
-        for n in range(nproc):
-            n1 = n*runs_per_proc
-            n2 = (n+1)*runs_per_proc
-            if n2 > nruns:
-                n2 = nruns + 1
-            runs = list(range(n1, n2))
-            processes.append(mp.Process(target=process_runs_parallel, 
-                                        args=(self.name, runs, output)))
-        for p in processes:
-            p.start()
-        for p in processes:
-            p.join()
-        results = [output.get() for p in processes]
-        results.sort()
-        self.data = pd.DataFrame()
-        for r in results:
-            self.data = self.data.append(r[1], ignore_index=True)
-            
-
-def process_runs_parallel(section, nrunlist, output):
-    df = pd.DataFrame()
-    for nrun in nrunlist:
-        run = Run(section, nrun)
-        df = df.append(run.summary, ignore_index=True)
-    output.put((nrunlist[0], df))
+        pool = mp.Pool(processes = nproc)
+        results = [pool.apply_async(process_run, args=(self.name,n)) for n in range(nruns)]
+        output = [p.get() for p in results]
+        self.data = pd.DataFrame(output)
 
 
 class PerfCurve(object):
@@ -995,6 +970,11 @@ class WakeMap(object):
         
     def show(self):
         plt.show()
+        
+
+def process_run(section, nrun):
+    run = Run(section, nrun)
+    return run.summary                
         
 def load_test_plan_section(section):
     df = pd.read_csv(os.path.join("Config", "Test plan", section+".csv"))
