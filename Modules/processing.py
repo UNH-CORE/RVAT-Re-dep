@@ -12,6 +12,7 @@ from pxl import timeseries as ts
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
 from scipy import interpolate
+import multiprocessing as mp
 import scipy.stats
 from scipy.stats import nanmean, nanstd
 from pxl import fdiff
@@ -591,7 +592,26 @@ class Section(object):
         return self.data.cp
     def process(self):
         """To-do: Process an entire section of data."""
-        pass        
+        pass
+    def process_parallel(self, nproc=16):
+        """To-do: Process a section in parallel."""
+        output = mp.Queue()
+        processes = []
+        for n in range(nproc):
+            processes.append(mp.Process(target=process_run_parallel, 
+                                        args=(self.name, n, output)))
+        for p in processes:
+            p.start()
+        for p in processes:
+            p.join()
+        results = [output.get() for p in processes]
+        results.sort()
+        print(results)
+            
+
+def process_run_parallel(section, nrun, output):
+    run = Run(section, nrun)
+    output.put(run.mean_cp)
 
 
 class PerfCurve(object):

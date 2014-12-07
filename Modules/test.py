@@ -5,6 +5,7 @@ Created on Wed Dec  3 08:51:05 2014
 @author: Pete
 """
 import os
+import time
 if os.getcwd()[-7:] == "Modules":
     print("Changing working directory to experiment root directory")
     os.chdir("../")
@@ -58,6 +59,20 @@ def test_wake_map():
 #    wm.plot_meancomboquiv_diff(0.8, percent=False)
     print("PASS")
     
+def test_process_section_parallel():
+    nproc = 24
+    t0 = time.time()
+    s = Section("Perf-1.0")
+    s.process_parallel(nproc=nproc)
+    print("Parallel ellapsed time: {} seconds".format(time.time() - t0))
+    t0 = time.time()
+    cp = []
+    for n in range(nproc):
+        r = Run(s.name, n)
+        cp.append(r.mean_cp)
+    print(cp)
+    print("Serial ellapsed time: {} seconds".format(time.time() - t0))
+    
 def test_all():
     test_run()
     test_section()
@@ -88,9 +103,10 @@ def test_all():
     
 if __name__ == "__main__":
 #    test_run()
-    test_all()
+#    test_all()
 #    test_wake_profile()
 #    test_wake_map()
 #    plot_perf_curves()
 #    test_section()
 #    test_batch_process_section()
+    test_process_section_parallel()
