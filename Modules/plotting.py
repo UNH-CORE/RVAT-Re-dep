@@ -34,7 +34,7 @@ def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savepath
       * std_u
     """
     Re_D = U_infty*D/nu
-    label = str((Re_D/1e6)) + "e6"
+    label = "{:.1f}e6".format(Re_D/1e6)
     section = "Wake-" + str(U_infty)
     df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
     df = df[df.z_H==z_H]
