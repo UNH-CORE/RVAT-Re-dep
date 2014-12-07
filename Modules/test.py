@@ -60,8 +60,8 @@ def test_wake_map():
     print("PASS")
     
 def test_process_section_parallel():
-    nproc = 4
-    nruns = 64
+    nproc = 8
+    nruns = 128
     t0 = time.time()
     s = Section("Wake-1.0")
     s.process_parallel(nproc=nproc, nruns=nruns)

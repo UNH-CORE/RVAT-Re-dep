@@ -603,7 +603,7 @@ class Section(object):
             n2 = (n+1)*runs_per_proc
             if n2 > nruns:
                 n2 = nruns + 1
-            runs = range(n1, n2)
+            runs = list(range(n1, n2))
             processes.append(mp.Process(target=process_runs_parallel, 
                                         args=(self.name, runs, output)))
         for p in processes:
@@ -614,7 +614,7 @@ class Section(object):
         results.sort()
         all_results = []
         for r in results:
-            all_results += r
+            all_results += r[-1]
         print(all_results)
             
 
@@ -623,7 +623,7 @@ def process_runs_parallel(section, nrunlist, output):
     for nrun in nrunlist:
         run = Run(section, nrun)
         mean_cp.append(run.mean_cp)
-    output.put(mean_cp)
+    output.put((nrunlist[0], mean_cp))
 
 
 class PerfCurve(object):
