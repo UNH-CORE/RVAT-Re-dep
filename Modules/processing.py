@@ -8,8 +8,6 @@ experiment.
 """
 from __future__ import division, print_function
 import numpy as np
-import uncertainties as unc
-from uncertainties import unumpy as unp
 from pxl import timeseries as ts
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
