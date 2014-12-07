@@ -624,14 +624,18 @@ class Section(object):
         self.data = pd.read_csv(self.processed_path)
         self.test_plan = pd.read_csv(self.test_plan_path)
     @property
-    def cp(self):
-        return self.data.cp
+    def mean_cp(self):
+        return self.data.mean_cp
     def process(self):
         """To-do: Process an entire section of data."""
-        pass
-    def process_parallel(self, nproc=8, nruns=24):
+        self.process_parallel()
+    def process_parallel(self, nproc=8, nruns="all"):
+        s = self.name
+        runs = self.test_plan["Run"]
+        if nruns != "all":
+            runs = runs[:nruns]
         pool = mp.Pool(processes = nproc)
-        results = [pool.apply_async(process_run, args=(self.name,n)) for n in range(nruns)]
+        results = [pool.apply_async(process_run, args=(s,n)) for n in runs]
         output = [p.get() for p in results]
         self.data = pd.DataFrame(output)
 
