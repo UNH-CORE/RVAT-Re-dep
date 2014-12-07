@@ -60,18 +60,19 @@ def test_wake_map():
     print("PASS")
     
 def test_process_section_parallel():
-    nproc = 8
-    nruns = 128
+    nproc = 4
+    nruns = 32
     t0 = time.time()
     s = Section("Wake-1.0")
     s.process_parallel(nproc=nproc, nruns=nruns)
     print("Parallel elapsed time: {} seconds".format(time.time() - t0))
     t0 = time.time()
-    cp = []
+#    print(s.data)
+    df = pd.DataFrame()
     for n in range(nruns):
         r = Run(s.name, n)
-        cp.append(r.mean_cp)
-    print(cp)
+        df = df.append(r.summary, ignore_index=True)
+#    print(df)
     print("Serial elapsed time: {} seconds".format(time.time() - t0))
     
 def test_all():

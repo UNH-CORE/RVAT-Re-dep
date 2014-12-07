@@ -76,6 +76,7 @@ if "linux" in sys.platform:
     cfd_path = "/media/pete/BigPocket/OpenFOAM/pete-2.3.0/run/unh-rvat-2d_re-dep_2"
 elif "win" in sys.platform:
     cfd_path = "G:/OpenFOAM/pete-2.3.0/run/unh-rvat-2d_re-dep_2"
+    
 
 class Run(object):
     """Object that represents a single turbine tow"""
@@ -479,7 +480,6 @@ class Run(object):
         tsr = np.zeros(self.n_revs)
         torque = np.zeros(self.n_revs)
         omega = np.zeros(self.n_revs)
-        u_infty3 = np.zeros(self.n_revs)
         start_angle = 0.0
         for n in range(self.n_revs):
             end_angle = start_angle + 360
@@ -489,10 +489,6 @@ class Run(object):
             tsr[n] = self.tsr[ind].mean()
             torque[n] = self.torque[ind].mean()
             omega[n] = self.omega[ind].mean()
-            try:
-                u_infty3[n] = (self.tow_speed_ni**3)[ind].mean()
-            except AttributeError:
-                u_infty3[n] = self.tow_speed_nom**3
             start_angle += 360
         self.cp_per_rev = cp
         self.std_cp_per_rev = cp.std()
@@ -502,7 +498,6 @@ class Run(object):
         self.std_tsr_per_rev = tsr.std()
         self.torque_per_rev = torque
         self.std_torque_per_rev = torque.std()
-        self.u_infty3_per_rev = u_infty3
         
     @property
     def cp_conf_interval(self, alpha=0.95):
@@ -522,6 +517,47 @@ class Run(object):
         else:
             self.badvec = False
             print("Vectrino data okay")
+            
+    @property
+    def summary(self):
+        s = pd.Series()
+        s["run"] = self.nrun
+        s["mean_tow_speed"] = self.mean_u_enc
+        s["std_tow_speed"] = self.std_u_enc
+        s["t1"] = self.t1
+        s["t1_wake"] = self.t1_wake
+        s["t2"] = self.t2
+        s["t2_wake"] = self.t2_wake
+        s["n_revs"] = self.n_revs
+        s["n_blade_pass"] = self.n_blade_pass
+        s["y_R"] = self.y_R
+        s["z_H"] = self.z_H
+        s["mean_tsr"] = self.mean_tsr
+        s["mean_cp"] = self.mean_cp
+        s["mean_cd"] = self.mean_cd
+        s["std_tsr"] = self.std_tsr
+        s["std_cp"] = self.std_cp
+        s["std_cd"] = self.std_cd
+        s["std_tsr_per_rev"] = self.std_tsr_per_rev
+        s["std_cp_per_rev"] = self.std_cp_per_rev
+        s["std_cd_per_rev"] = self.std_cd_per_rev
+        s["exp_unc_tsr"] = self.exp_unc_tsr
+        s["exp_unc_cp"] = self.exp_unc_cp
+        s["exp_unc_cd"] = self.exp_unc_cd
+        s["dof_tsr"] = self.dof_tsr
+        s["dof_cp"] = self.dof_cp
+        s["dof_cd"] = self.dof_cd
+        s["mean_u"] = self.mean_u
+        s["mean_v"] = self.mean_v
+        s["mean_w"] = self.mean_w
+        s["mean_upvp"] = self.mean_upvp
+        s["mean_upwp"] = self.mean_upwp
+        s["mean_vpwp"] = self.mean_vpwp
+        s["std_u"] = self.std_u
+        s["std_v"] = self.std_v
+        s["std_w"] = self.std_w
+        s["k"] = self.k
+        return s
         
     def plot_perf(self, quantity="power coefficient"):
         """Plots the run's data"""
@@ -612,18 +648,17 @@ class Section(object):
             p.join()
         results = [output.get() for p in processes]
         results.sort()
-        all_results = []
+        self.data = pd.DataFrame()
         for r in results:
-            all_results += r[-1]
-        print(all_results)
+            self.data = self.data.append(r[1], ignore_index=True)
             
 
 def process_runs_parallel(section, nrunlist, output):
-    mean_cp = []
+    df = pd.DataFrame()
     for nrun in nrunlist:
         run = Run(section, nrun)
-        mean_cp.append(run.mean_cp)
-    output.put((nrunlist[0], mean_cp))
+        df = df.append(run.summary, ignore_index=True)
+    output.put((nrunlist[0], df))
 
 
 class PerfCurve(object):
