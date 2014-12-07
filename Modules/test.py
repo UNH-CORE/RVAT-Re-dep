@@ -67,13 +67,13 @@ def test_process_section_parallel():
     s.process_parallel(nproc=nproc, nruns=nruns)
     print("Parallel elapsed time: {} seconds".format(time.time() - t0))
     t0 = time.time()
-#    print(s.data)
-    df = pd.DataFrame()
-    for n in range(nruns):
-        r = Run(s.name, n)
-        df = df.append(r.summary, ignore_index=True)
+    print(s.data)
+#    df = pd.DataFrame()
+#    for n in range(nruns):
+#        r = Run(s.name, n)
+#        df = df.append(r.summary, ignore_index=True)
 #    print(df)
-    print("Serial elapsed time: {} seconds".format(time.time() - t0))
+#    print("Serial elapsed time: {} seconds".format(time.time() - t0))
     
 def test_all():
     test_run()
