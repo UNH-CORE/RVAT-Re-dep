@@ -117,11 +117,11 @@ def test_all():
     
 if __name__ == "__main__":
 #    test_run()
-#    test_all()
+    test_all()
 #    test_wake_profile()
 #    test_wake_map()
 #    plot_perf_curves()
 #    test_section()
 #    test_batch_process_section()
 #    test_process_section_parallel()
-    test_batch_process_section_vs_parallel()
+#    test_batch_process_section_vs_parallel()

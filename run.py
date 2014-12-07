@@ -6,6 +6,7 @@ Created on Tue Nov 25 16:03:29 2014
 """
 
 from Modules.processing import *
+from Modules.plotting import *
 from Modules import test
 
 def plot_meancomboquiv(U_infty=1.0):
@@ -36,20 +37,19 @@ if __name__ == "__main__":
     """Tare drag and torque"""
 #    process_tare_torque(2, plot=True)
 #    batch_process_tare_torque(plot=True)
-
 #    process_tare_drag(5, plot=True)
 #    batch_process_tare_drag(plot=True)
 #    plot_tare_drag()
     
     """Batch processing"""
-#    batch_process_section("Perf-1.0", reprocess=True)
+#    batch_process_section("Perf-0.3")
 #    batch_process_all()
-#    test.test_all()
+    test.test_all()
     
     """Plotting"""
 #    plot_perf_curves(save=False, savepath=p)
-    plot_perf_re_dep(save=True, cfd=False, savepath=p, normalize_by="default",
-                     dual_xaxes=True)
+#    plot_perf_re_dep(save=False, cfd=False, savepath=p, normalize_by="default",
+#                     dual_xaxes=True)
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 #    plot_settling(1.0)
 #    plot_meancomboquiv(U_infty=0.4)

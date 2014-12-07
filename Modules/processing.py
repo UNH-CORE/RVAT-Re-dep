@@ -76,6 +76,7 @@ class Run(object):
     """Object that represents a single turbine tow"""
     def __init__(self, section, nrun):
         self.section = section
+        nrun = int(nrun)
         section_raw_dir = os.path.join("Data", "Raw", section)
         if nrun < 0:
             runs = []
@@ -519,13 +520,9 @@ class Run(object):
         s["mean_tow_speed"] = self.mean_u_enc
         s["std_tow_speed"] = self.std_u_enc
         s["t1"] = self.t1
-        s["t1_wake"] = self.t1_wake
         s["t2"] = self.t2
-        s["t2_wake"] = self.t2_wake
-        s["n_revs"] = self.n_revs
         s["n_blade_pass"] = self.n_blade_pass
-        s["y_R"] = self.y_R
-        s["z_H"] = self.z_H
+        s["n_revs"] = self.n_revs
         s["mean_tsr"] = self.mean_tsr
         s["mean_cp"] = self.mean_cp
         s["mean_cd"] = self.mean_cd
@@ -541,6 +538,10 @@ class Run(object):
         s["dof_tsr"] = self.dof_tsr
         s["dof_cp"] = self.dof_cp
         s["dof_cd"] = self.dof_cd
+        s["t1_wake"] = self.t1_wake
+        s["t2_wake"] = self.t2_wake
+        s["y_R"] = self.y_R
+        s["z_H"] = self.z_H
         s["mean_u"] = self.mean_u
         s["mean_v"] = self.mean_v
         s["mean_w"] = self.mean_w
@@ -634,6 +635,8 @@ class Section(object):
         results = [pool.apply_async(process_run, args=(s,n)) for n in runs]
         output = [p.get() for p in results]
         self.data = pd.DataFrame(output)
+        self.data.run = [int(run) for run in self.data.run]
+        pool.close()
 
 
 class PerfCurve(object):
