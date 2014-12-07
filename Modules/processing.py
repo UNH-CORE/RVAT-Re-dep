@@ -288,6 +288,8 @@ class Run(object):
         t2 = self.time_ni[t2i]
         self.t2 = np.round(t2, decimals=2)
         self.t2found = True
+        self.t1_wake = self.t1
+        self.t2_wake = self.t2
         
     def calc_perf_stats(self):
         """Calculates mean performance based on trimmed time series."""
@@ -298,6 +300,9 @@ class Run(object):
         if self.lin_enc:
             self.mean_u_enc = nanmean(self.tow_speed)
             self.std_u_enc = nanstd(self.tow_speed)
+        else:
+            self.mean_u_enc = np.nan
+            self.std_u_enc = np.nan
 
     def print_perf_stats(self):
         print("tow_speed_nom =", self.tow_speed_nom)
@@ -468,7 +473,7 @@ class Run(object):
         
     def calc_perf_per_rev(self):
         """Computes mean power coefficient over each revolution."""
-        angle = self.angle
+        angle = self.angle*1
         angle -= angle[0]
         cp = np.zeros(self.n_revs)
         cd = np.zeros(self.n_revs)
@@ -637,8 +642,8 @@ class PerfCurve(object):
         """Generates power coefficient curve plot."""
         # Check to see if processed data exists and if not, process it
         label = "$Re_D = {:0.1e}$".format(self.Re_D)
-        self.tsr = self.df.tsr
-        self.cp = self.df.cp
+        self.tsr = self.df.mean_tsr
+        self.cp = self.df.mean_cp
         if newfig:
             plt.figure()
         if splinefit and not True in np.isnan(self.tsr):
@@ -668,8 +673,8 @@ class PerfCurve(object):
         """Generates power coefficient curve plot."""
         # Check to see if processed data exists and if not, process it
         label = "$Re_D = {:0.1e}$".format(self.Re_D)
-        self.tsr = self.df.tsr
-        self.cd = self.df.cd
+        self.tsr = self.df.mean_tsr
+        self.cd = self.df.mean_cd
         if newfig:
             plt.figure()
         if splinefit and not True in np.isnan(self.tsr):
@@ -952,10 +957,13 @@ def batch_process_section(section, reprocess=True):
         data["run"] = runs = test_plan["Run"]
     # Create a empty arrays for all quantities
     if reprocess:
-        for q in ["tsr", "cp", "cd", "exp_unc_tsr", "exp_unc_cp", "exp_unc_cd", 
-                  "dof_tsr", "dof_cp", "dof_cd", "y_R", "z_H", "mean_u", 
-                  "mean_v", "mean_w", "std_u", "std_v", "std_w", "mean_upvp", 
-                  "mean_upwp", "mean_vpwp", "k"]:
+        for q in ["mean_tow_speed", "std_tow_speed", "t1", "t2", "n_blade_pass", 
+                  "n_revs", "mean_tsr", "mean_cp", "mean_cd", "std_tsr", 
+                  "std_cp", "std_cd", "std_tsr_per_rev", "std_cp_per_rev",
+                  "std_cd_per_rev", "exp_unc_tsr", "exp_unc_cp", "exp_unc_cd", 
+                  "dof_tsr", "dof_cp", "dof_cd", "t1_wake", "t2_wake", "y_R", 
+                  "z_H", "mean_u", "mean_v", "mean_w", "std_u", "std_v", 
+                  "std_w", "mean_upvp", "mean_upwp", "mean_vpwp", "k"]:
             data[q] = np.zeros(len(data.run))*np.nan
     for n in runs:
         if reprocess or True in np.isnan(data.iloc[n,:]).values:
@@ -964,11 +972,25 @@ def batch_process_section(section, reprocess=True):
                 pass
             else:
                 print("Processing data from {} run {}".format(section, n))
+                data.mean_tow_speed.iloc[n] = r.mean_u_enc
+                data.std_tow_speed.iloc[n] = r.std_u_enc
+                data.t1.iloc[n] = r.t1
+                data.t1_wake.iloc[n] = r.t1_wake
+                data.t2.iloc[n] = r.t2
+                data.t2_wake.iloc[n] = r.t2_wake
+                data.n_revs.iloc[n] = r.n_revs
+                data.n_blade_pass.iloc[n] = r.n_blade_pass
                 data.y_R.iloc[n] = r.y_R
                 data.z_H.iloc[n] = r.z_H
-                data.tsr.iloc[n] = r.mean_tsr
-                data.cp.iloc[n] = r.mean_cp
-                data.cd.iloc[n] = r.mean_cd
+                data.mean_tsr.iloc[n] = r.mean_tsr
+                data.mean_cp.iloc[n] = r.mean_cp
+                data.mean_cd.iloc[n] = r.mean_cd
+                data.std_tsr.iloc[n] = r.std_tsr
+                data.std_cp.iloc[n] = r.std_cp
+                data.std_cd.iloc[n] = r.std_cd
+                data.std_tsr_per_rev.iloc[n] = r.std_tsr_per_rev
+                data.std_cp_per_rev.iloc[n] = r.std_cp_per_rev
+                data.std_cd_per_rev.iloc[n] = r.std_cd_per_rev
                 data.exp_unc_tsr.iloc[n] = r.exp_unc_tsr
                 data.exp_unc_cp.iloc[n] = r.exp_unc_cp
                 data.exp_unc_cd.iloc[n] = r.exp_unc_cd
@@ -1043,9 +1065,9 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
         if speeds[n] in [0.3, 0.5, 0.7, 0.9, 1.1, 1.3]:
             section = "Perf-"+str(speeds[n])
             df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
-            cp_s = df.cp
+            cp_s = df.mean_cp
             dcp_s = df.exp_unc_cp
-            cd_s = df.cd
+            cd_s = df.mean_cd
             dcd_s = df.exp_unc_cd
             cp[n] = np.mean(cp_s)
             exp_unc_cp[n] = np.mean(dcp_s)
@@ -1054,9 +1076,9 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
         else:
             section = "Wake-"+str(speeds[n])
             df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
-            cp_s = df.cp
+            cp_s = df.mean_cp
             dcp_s = df.exp_unc_cp
-            cd_s = df.cd
+            cd_s = df.mean_cd
             dcd_s = df.exp_unc_cd
             cp[n], std_cp[n] = np.mean(cp_s), np.std(cp_s)
             cd[n], std_cd[n] = np.mean(cd_s), np.std(cd_s)

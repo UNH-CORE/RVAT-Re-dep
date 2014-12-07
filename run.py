@@ -44,6 +44,7 @@ if __name__ == "__main__":
     """Batch processing"""
 #    batch_process_section("Perf-1.0", reprocess=True)
 #    batch_process_all()
+#    test.test_all()
     
     """Plotting"""
 #    plot_perf_curves(save=False, savepath=p)

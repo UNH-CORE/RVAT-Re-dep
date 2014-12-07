@@ -33,7 +33,7 @@ def test_batch_process_section():
     df = pd.read_csv("Data/Processed/Perf-1.0.csv")
     print(df)
     plt.figure()
-    plt.plot(df.tsr, df.cp)
+    plt.plot(df.mean_tsr, df.mean_cp)
     plt.show()
     
 def test_perf_curve():
