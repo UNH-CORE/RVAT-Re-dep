@@ -51,7 +51,6 @@ def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savepath
     plt.plot(y_R, q/unorm, marker, markerfacecolor=fill, label=label)
     plt.xlabel(r"$y/R$")
     plt.ylabel(ylabels[quantity])
-    plt.grid(True)
     plt.tight_layout()
     
 def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
