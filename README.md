@@ -31,18 +31,22 @@ To contribute back to the main repository, use GitHub's fork/pull mechanism.
   * pandas
   * [PXL](https://github.com/petebachant/PXL)
 
+Dependencies can be installed automatically by running
+
+    pip install -r requirements.txt
+
 ## How to cite
 Please cite 
 
 ```bibtex
 @Misc{Bachant2014_Re-dep-data,
-  Title                    = {TBD},
+  Title                    = {UNH-RVAT Reynolds number dependence experiment: Reduced dataset and processing code, rev1},
   Author                   = {Peter Bachant and Martin Wosnik},
-  HowPublished             = {fig\textbf{share}. {URL},
-  Month                    = {December},
-  Year                     = {2014},
-  Doi                      = {DOI},
-  Url                      = {URL}
+  HowPublished             = {fig\textbf{share}. http://dx.doi.org/10.6084/m9.figshare.1286960,
+  Month                    = {January},
+  Year                     = {2015},
+  Doi                      = {10.6084/m9.figshare.1286960},
+  Url                      = {http://dx.doi.org/10.6084/m9.figshare.1286960}
 }
 ```
 
