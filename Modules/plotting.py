@@ -243,6 +243,10 @@ def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
         if save:
             plt.savefig(os.path.join(savepath, q+savetype))
     plt.show()
+    
+def plot_meancomboquiv(U_infty=1.0):
+    wm = WakeMap(U_infty)
+    wm.plot_meancomboquiv()
 
 if __name__ == "__main__":
     pass

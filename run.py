@@ -8,10 +8,6 @@ Created on Tue Nov 25 16:03:29 2014
 from Modules.processing import *
 from Modules.plotting import *
 
-def plot_meancomboquiv(U_infty=1.0):
-    wm = WakeMap(U_infty)
-    wm.plot_meancomboquiv()
-
 if __name__ == "__main__":
     """Choose functions to run here."""
     plt.close("all")
@@ -27,8 +23,8 @@ if __name__ == "__main__":
 #    r.plot_wake()
     
     """Performance curves"""
-    pc = PerfCurve(1.0)
-    pc.plotcp(save=True, savepath=p)
+#    pc = PerfCurve(1.0)
+#    pc.plotcp(save=True, savepath=p)
 
     """Tare drag and torque"""
 #    process_tare_torque(2, plot=True)
@@ -47,5 +43,5 @@ if __name__ == "__main__":
 #                     dual_xaxes=True)
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 #    plot_settling(1.0)
-#    plot_meancomboquiv(U_infty=0.4)
+    plot_meancomboquiv(U_infty=0.4)
 #    plot_meancomboquiv(U_infty=1.2)
