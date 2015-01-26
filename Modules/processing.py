@@ -17,11 +17,15 @@ import scipy.stats
 from scipy.stats import nanmean, nanstd
 from pxl import fdiff
 import progressbar
-import urllib
 import json
 import os
 import sys
 import pandas as pd
+
+if sys.version_info[0] == 3:
+    from urllib.request import urlretrieve
+else:
+    from urllib import urlretrieve
 
 # Dict for runs corresponding to each height
 wakeruns = {0.0 : np.arange(0, 45),
@@ -266,6 +270,8 @@ class Run(object):
         self.drag_all = self.drag
         self.drag = self.drag_all[self.t1*self.sr_ni:self.t2*self.sr_ni]
         # Trim wake quantities
+        self.time_vec_all = self.time_vec
+        self.time_vec = self.time_vec_all[self.t1*self.sr_vec:self.t2*self.sr_vec]
         self.u_all = self.u
         self.u = self.u_all[self.t1*self.sr_vec:self.t2*self.sr_vec]
         self.v_all = self.v
@@ -1144,7 +1150,7 @@ def download_raw_data(section, nrun, datatype):
     url = urls[remote_name]
     print("Downloading", url)
     pbar.start()
-    urllib.urlretrieve(url, local_path, reporthook=download_progress)
+    urlretrieve(url, local_path, reporthook=download_progress)
     pbar.finish()
     
 def main():
