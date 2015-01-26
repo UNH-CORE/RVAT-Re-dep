@@ -310,7 +310,8 @@ class Run(object):
     def print_perf_stats(self):
         print("tow_speed_nom =", self.tow_speed_nom)
         if self.lin_enc:
-            print("tow_speed_enc =", self.mean_u_enc, "std =", self.std_u_enc)
+            print("mean_tow_speed_enc =", self.mean_u_enc)
+            print("std_tow_speed_enc =", self.std_u_enc)
         print("TSR = {:.2f} +/- {:.2f}".format(self.mean_tsr, self.exp_unc_tsr))
         print("C_P = {:.2f} +/- {:.2f}".format(self.mean_cp, self.exp_unc_cp))
         print("C_D = {:.2f} +/- {:.2f}".format(self.mean_cd, self.exp_unc_cd))
