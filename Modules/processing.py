@@ -1130,25 +1130,37 @@ def batch_process_tare_torque(plot=False):
 def make_remote_name(local_path):
     return "_".join(local_path.split("\\")[-3:])
         
-def download_raw_data(section, nrun, datatype):
-    """Downloads a run's raw data. `datatype` can be
-      * `"ni"` -- Data from the NI DAQ system
-      * `"acs"` -- Data from the tow tank's motion controller
-      * `"vec"` -- Data from the Nortek Vectrino
+def download_raw(section, nrun, name):
     """
-    pbar = progressbar.ProgressBar()
-    def download_progress(blocks_transferred, block_size, total_size):
-        percent = int(blocks_transferred*block_size*100/total_size)
-        pbar.update(percent)
+    Downloads a run's raw data. `name` can be either the file name with
+    extension, or
+      * `"metadata"` -- Metadata in JSON format
+      * `"nidata"` -- Data from the NI DAQ system
+      * `"acsdata"` -- Data from the tow tank's motion controller
+      * `"vecdata"` -- Data from the Nortek Vectrino
+    """
+    if name == "metadata":
+        filename = "metadata.json"
+    elif name in ["vecdata", "nidata", "acsdata"]:
+        filename = name + ".mat"
+    else: 
+        filename = name
+    print("Downloading", filename)
     local_dir = os.path.join("Data", "Raw", section, str(nrun))
     if not os.path.isdir(local_dir):
         os.makedirs(local_dir)
-    local_path = os.path.join(local_dir, datatype+"data.mat")
+    local_path = os.path.join(local_dir, filename)
     remote_name = make_remote_name(local_path)
     with open("Config/raw_data_urls.json") as f:
         urls = json.load(f)
     url = urls[remote_name]
-    print("Downloading", url)
+    pbar = progressbar.ProgressBar()
+    def download_progress(blocks_transferred, block_size, total_size):
+        percent = int(blocks_transferred*block_size*100/total_size)
+        try:
+            pbar.update(percent)
+        except ValueError:
+            pass
     pbar.start()
     urlretrieve(url, local_path, reporthook=download_progress)
     pbar.finish()

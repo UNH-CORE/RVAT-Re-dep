@@ -87,9 +87,24 @@ def test_batch_process_section_vs_parallel():
     Section(name).process()
     print(time.time() - t0)
     
-def test_download_raw_data():
-    """Tests the `processing.download_raw_data` function."""
-    download_raw_data("Perf-1.0", 0, "ni")
+def test_download_raw():
+    """Tests the `processing.download_raw` function."""
+    # First rename target file
+    fpath = "Data/Raw/Perf-1.0/0/metadata.json"
+    fpath_temp = "Data/Raw/Perf-1.0/0/metadata-temp.json"
+    os.rename(fpath, fpath_temp)
+    try:
+        download_raw("Perf-1.0", 0, "metadata")
+        # Check that file contents are equal
+        with open(fpath) as f:
+            content_new = f.read()
+        with open(fpath_temp) as f:
+            content_old = f.read()
+        assert(content_new == content_old)
+    except ValueError as e:
+        print(e)
+    os.remove(fpath)
+    os.rename(fpath_temp, fpath)
     print("PASS")
     
 def test_all():
