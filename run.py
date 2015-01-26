@@ -16,11 +16,9 @@ if __name__ == "__main__":
         os.makedirs(p)
 
     """Dealing with individual runs"""
-#    r = Run("Wake-0.4", 20)
-#    r.calc_perf()
-#    r.calc_wake()
-#    r.plot_perf("cp")
-#    r.plot_wake()
+    r = Run("Wake-0.4", 20)
+    r.plot_perf("cp")
+    r.plot_wake()
     
     """Performance curves"""
 #    pc = PerfCurve(1.0)
@@ -43,5 +41,5 @@ if __name__ == "__main__":
 #                     dual_xaxes=True)
 #    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
 #    plot_settling(1.0)
-    plot_meancomboquiv(U_infty=0.4)
+#    plot_meancomboquiv(U_infty=0.4)
 #    plot_meancomboquiv(U_infty=1.2)
