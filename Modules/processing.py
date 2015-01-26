@@ -1132,10 +1132,8 @@ def download_raw_data(section, nrun, datatype):
     """
     pbar = progressbar.ProgressBar()
     def download_progress(blocks_transferred, block_size, total_size):
-        if pbar.maxval is None:
-            pbar.maxval = total_size
-            pbar.start()
-        pbar.update(min(blocks_transferred*block_size, total_size))
+        percent = int(blocks_transferred*block_size*100/total_size)
+        pbar.update(percent)
     local_dir = os.path.join("Data", "Raw", section, str(nrun))
     if not os.path.isdir(local_dir):
         os.makedirs(local_dir)
@@ -1145,6 +1143,7 @@ def download_raw_data(section, nrun, datatype):
         urls = json.load(f)
     url = urls[remote_name]
     print("Downloading", url)
+    pbar.start()
     urllib.urlretrieve(url, local_path, reporthook=download_progress)
     pbar.finish()
     
