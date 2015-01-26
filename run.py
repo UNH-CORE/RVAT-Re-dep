@@ -7,7 +7,6 @@ Created on Tue Nov 25 16:03:29 2014
 
 from Modules.processing import *
 from Modules.plotting import *
-from Modules import test
 
 def plot_meancomboquiv(U_infty=1.0):
     wm = WakeMap(U_infty)
@@ -16,12 +15,9 @@ def plot_meancomboquiv(U_infty=1.0):
 if __name__ == "__main__":
     """Choose functions to run here."""
     plt.close("all")
-#    p = "Google Drive/Research/Papers/CFT Re dependence/figures"
-    p = "Google Drive/Research/Experiments/RM2 tow tank/Documents/Test plan/Figures"
-    p = os.path.join(os.path.expanduser("~"), p)
-
-    """Tests"""
-#    test.test_all()
+    p = "Figures"
+    if not os.path.isdir(p):
+        os.makedirs(p)
 
     """Dealing with individual runs"""
 #    r = Run("Wake-0.4", 20)
@@ -31,8 +27,8 @@ if __name__ == "__main__":
 #    r.plot_wake()
     
     """Performance curves"""
-#    pc = PerfCurve(1.0)
-#    pc.plotcp(save=True, savepath=p)
+    pc = PerfCurve(1.0)
+    pc.plotcp(save=True, savepath=p)
 
     """Tare drag and torque"""
 #    process_tare_torque(2, plot=True)
@@ -44,7 +40,6 @@ if __name__ == "__main__":
     """Batch processing"""
 #    batch_process_section("Perf-0.3")
 #    batch_process_all()
-    test.test_all()
     
     """Plotting"""
 #    plot_perf_curves(save=False, savepath=p)
