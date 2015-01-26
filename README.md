@@ -7,33 +7,28 @@ performed in Spring 2014.
 **Note:** This repository is still in active development and is not ready
 for use.
 
-Documents
----------
+Getting started
+---------------
 
-  * [Uncertainty calculations](http://nbviewer.ipython.org/github/UNH-CORE/RVAT-Re-dep/blob/master/Documents/IPython%20notebooks/uncertainty.ipynb)
+We recommend the 
+[Anaconda Python distribution](https://store.continuum.io/cshop/anaconda/)
+(Python 3.4) since it includes most dependencies. The remaining 
+can be installed by executing
 
-Download/usage
---------------
-
-To download, use the git clone URL to the right. For example, in a terminal
-
-    git clone https://github.com/UNH-CORE/RVAT-Re-dep.git
+    pip install -r requirements.txt
 
 See `run.py` for functions to process and visualize the data.
 
-To contribute back to the main repository, use GitHub's fork/pull mechanism.
+Contributing
+------------
 
-### Dependencies
+Pull requests welcome!
 
-  * NumPy
-  * SciPy
-  * matplotlib
-  * pandas
-  * [PXL](https://github.com/petebachant/PXL)
+Documents and other resources
+-----------------------------
 
-Dependencies can be installed automatically by running
-
-    pip install -r requirements.txt
+  * [Uncertainty calculations](http://nbviewer.ipython.org/github/UNH-CORE/RVAT-Re-dep/blob/master/Documents/IPython%20notebooks/uncertainty.ipynb)
+  * [UNH-RVAT CAD models](http://figshare.com/articles/UNH_RVAT_CAD_models/1062009)
 
 ## How to cite
 Please cite 
@@ -56,17 +51,14 @@ These data were used in the following publications:
 
 ```bibtex
 @INPROCEEDINGS{Bachant2014
-  author = {Bachant, P. and Wosnik, M.},
-  title = {Reynolds Number Dependence of Cross-Flow Turbine Performance and Near-Wake Characteristics},
-  booktitle = {Proceedings of the 2nd Marine Energy Technology Symposium METS2014},
-  year = {2014},
+  Author                   = {Bachant, P. and Wosnik, M.},
+  Title                    = {Reynolds Number Dependence of Cross-Flow Turbine Performance and Near-Wake Characteristics},
+  Booktitle                = {Proceedings of the 2nd Marine Energy Technology Symposium METS2014},
+  Month                    = {April},
+  Year                     = {2014},
+  Address                  = {Seattle, WA}
 }
 ```
-
-Other resources
----------------
-
-Turbine CAD (STEP) files are available at http://figshare.com/articles/UNH_RVAT_CAD_models/1062009
 
 License
 -------
