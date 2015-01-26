@@ -462,10 +462,8 @@ class Run(object):
         ntotal = int((self.t2 - self.t1)*self.sr_vec*3)
         print("y/R =", self.y_R)
         print("z/H =", self.z_H)
-        print("tow_speed_vec/tow_speed_nom =", self.mean_u/self.tow_speed_nom, "+/-", 
-              self.delta_mean_u/2/self.tow_speed_nom)
-        print("std_u/tow_speed_nom =", self.std_u/self.tow_speed_nom, "+/-",
-              self.delta_std_u/2/self.tow_speed_nom)
+        print("mean_u/tow_speed_nom =", self.mean_u/self.tow_speed_nom)
+        print("std_u/tow_speed_nom =", self.std_u/self.tow_speed_nom)
         print(str(self.nbad)+"/"+str(ntotal), "data points omitted")
         
     def calc_wake_uncertainty(self):
