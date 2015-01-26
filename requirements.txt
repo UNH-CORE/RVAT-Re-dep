@@ -3,4 +3,4 @@ pxl>=0.0.2
 numpy
 pandas
 scipy
-progressbar
+progressbar33
