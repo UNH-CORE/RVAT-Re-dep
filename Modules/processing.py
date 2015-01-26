@@ -101,43 +101,68 @@ class Run(object):
         self.wake_calculated = False
         # Do all processing
         self.load()
-        self.subtract_tare_drag()
-        self.add_tare_torque()
-        self.calc_perf_instantaneous()
-        self.make_trimmed()
-        self.filter_wake()
-        self.calc_wake_instantaneous()
-        self.calc_perf_per_rev()
-        self.calc_perf_stats()
-        self.calc_wake_stats()
-        self.calc_perf_uncertainty()
-        self.calc_perf_exp_uncertainty()
+        if self.loaded:
+            self.subtract_tare_drag()
+            self.add_tare_torque()
+            self.calc_perf_instantaneous()
+            self.make_trimmed()
+            self.filter_wake()
+            self.calc_wake_instantaneous()
+            self.calc_perf_per_rev()
+            self.calc_perf_stats()
+            self.calc_wake_stats()
+            self.calc_perf_uncertainty()
+            self.calc_perf_exp_uncertainty()
         
     def load(self):
-        """Loads the data from the run into memory"""
-        self.load_metadata()
-        self.load_nidata()
-        self.load_acsdata()
-        self.load_vecdata()
+        """Loads the data from the run into memory."""
         self.loaded = True
+        try:
+            with open("Config/raw_data_urls.json") as f:
+                raw_data_urls = json.load(f)
+        except IOError:
+            raw_data_urls = {}
+        # Load metadata if it exists
+        fpath_metadata = os.path.join(self.raw_dir, "metadata.json")
+        if os.path.isfile(fpath_metadata):
+            self.load_metadata()
+        elif make_remote_name(fpath_metadata) in raw_data_urls:
+            self.download_raw("metadata.json")
+            self.load_metadata()
+        else:
+            self.loaded = False
+        # Load NI data if it exists
+        fpath_nidata = os.path.join(self.raw_dir, "nidata.mat")
+        if os.path.isfile(fpath_nidata):
+            self.load_nidata()
+        elif make_remote_name(fpath_nidata) in raw_data_urls:
+            self.download_raw("nidata.mat")
+            self.load_nidata()
+        else:
+            self.loaded = False
+        # Load ACS data if it exists
+        fpath_acsdata = os.path.join(self.raw_dir, "acsdata.mat")
+        if os.path.isfile(fpath_acsdata):
+            self.load_acsdata()
+        elif make_remote_name(fpath_acsdata) in raw_data_urls:
+            self.download_raw("acsdata.mat")
+            self.load_acsdata()
+        else:
+            self.loaded = False
+        # Load Vectrino data if it exists
+        fpath_vecdata = os.path.join(self.raw_dir, "vecdata.mat")
+        if os.path.isfile(fpath_vecdata):
+            self.load_vecdata()
+        elif make_remote_name(fpath_vecdata) in raw_data_urls:
+            self.download_raw("vecdata.mat")
+            self.load_vecdata()
+        else:
+            self.loaded = False
         
     def load_metadata(self):
         """Loads run metadata."""
-        try: 
-            with open(os.path.join(self.raw_dir, "metadata.json")) as f:
-                self.metadata = json.load(f)
-        except IOError:
-            if self.nrun < 0:
-                self.nrun -= 1
-                self.raw_dir = os.path.join("Data", "Raw", section, str(self.nrun))
-            else:
-                pass
-        try:
-            with open(os.path.join(self.raw_dir, "metadata.json")) as f:
-                self.metadata = json.load(f)
-        except IOError:
-            self.not_loadable = True
-            return None
+        with open(os.path.join(self.raw_dir, "metadata.json")) as f:
+            self.metadata = json.load(f)
         self.tow_speed_nom = np.round(self.metadata["Tow speed (m/s)"], decimals=1)
         self.y_R = self.metadata["Vectrino y/R"]
         self.z_H = self.metadata["Vectrino z/H"]
@@ -195,6 +220,9 @@ class Run(object):
             self.w = vecdata["w"]
         except IOError:
             self.vecdata = None
+
+    def download_raw(self, name):
+        download_raw(self.section, self.nrun, name)
         
     def subtract_tare_drag(self):
         df = pd.read_csv(os.path.join("Data", "Processed", "Tare drag.csv"))
@@ -1158,7 +1186,7 @@ def download_raw(section, nrun, name):
         percent = int(blocks_transferred*block_size*100/total_size)
         try:
             pbar.update(percent)
-        except ValueError:
+        except ValueError or AssertionError:
             pass
     pbar.start()
     urlretrieve(url, local_path, reporthook=download_progress)
