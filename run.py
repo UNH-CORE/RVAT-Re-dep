@@ -19,6 +19,8 @@ if __name__ == "__main__":
     r = Run("Wake-0.4", 20)
     r.plot_perf("cp")
     r.plot_wake()
+    r.print_perf_stats()
+    r.print_wake_stats()
     
     """Performance curves"""
 #    pc = PerfCurve(1.0)
