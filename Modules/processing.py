@@ -16,6 +16,8 @@ import multiprocessing as mp
 import scipy.stats
 from scipy.stats import nanmean, nanstd
 from pxl import fdiff
+import progressbar
+import urllib
 import json
 import os
 import sys
@@ -1118,6 +1120,33 @@ def batch_process_tare_torque(plot=False):
         plt.ylim((0, 1))
         plt.tight_layout()
         plt.show()
+        
+def make_remote_name(local_path):
+    return "_".join(local_path.split("\\")[-3:])
+        
+def download_raw_data(section, nrun, datatype):
+    """Downloads a run's raw data. `datatype` can be
+      * `"ni"` -- Data from the NI DAQ system
+      * `"acs"` -- Data from the tow tank's motion controller
+      * `"vec"` -- Data from the Nortek Vectrino
+    """
+    pbar = progressbar.ProgressBar()
+    def download_progress(blocks_transferred, block_size, total_size):
+        if pbar.maxval is None:
+            pbar.maxval = total_size
+            pbar.start()
+        pbar.update(min(blocks_transferred*block_size, total_size))
+    local_dir = os.path.join("Data", "Raw", section, str(nrun))
+    if not os.path.isdir(local_dir):
+        os.makedirs(local_dir)
+    local_path = os.path.join(local_dir, datatype+"data.mat")
+    remote_name = make_remote_name(local_path)
+    with open("Config/raw_data_urls.json") as f:
+        urls = json.load(f)
+    url = urls[remote_name]
+    print("Downloading", url)
+    urllib.urlretrieve(url, local_path, reporthook=download_progress)
+    pbar.finish()
     
 def main():
     pass

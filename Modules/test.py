@@ -87,6 +87,11 @@ def test_batch_process_section_vs_parallel():
     Section(name).process()
     print(time.time() - t0)
     
+def test_download_raw_data():
+    """Tests the `processing.download_raw_data` function."""
+    download_raw_data("Perf-1.0", 0, "ni")
+    print("PASS")
+    
 def test_all():
     test_run()
     test_section()
@@ -113,15 +118,8 @@ def test_all():
     print("PASS")
     test_wake_map()
     plt.show()
+    test_download_raw_data()
     print("All tests passed")
     
 if __name__ == "__main__":
-#    test_run()
-    test_all()
-#    test_wake_profile()
-#    test_wake_map()
-#    plot_perf_curves()
-#    test_section()
-#    test_batch_process_section()
-#    test_process_section_parallel()
-#    test_batch_process_section_vs_parallel()
+    pass
