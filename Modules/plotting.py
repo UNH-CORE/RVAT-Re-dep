@@ -24,7 +24,7 @@ ylabels = {"mean_u" : r"$U/U_\infty$",
            "mean_v_diff" : r"$\Delta V$ (\%)",
            "mean_w_diff" : r"$\Delta W$ (\%)"}
            
-def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savepath="", 
+def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir="Figures", 
                             savetype=".pdf", newfig=True, marker="-ok",
                             fill="none", oldwake=False, figsize=(10, 5)):
     """Plots the transverse wake profile of some quantity. These can be
@@ -53,7 +53,7 @@ def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savepath
     plt.ylabel(ylabels[quantity])
     plt.tight_layout()
     
-def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
+def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf", errorbars=False,
                      cfd=False, normalize_by="default", dual_xaxes=False, show=True):
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
@@ -127,7 +127,7 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.tight_layout()
     if save:
-        plt.savefig(savepath + "/re_dep_cp" + savetype)
+        plt.savefig(savedir + "/re_dep_cp" + savetype)
     plt.figure()
     if errorbars:
         plt.errorbar(Re_D, cd/norm_cd, yerr=exp_unc_cd/cd[-4]/2, fmt="-ok",
@@ -150,7 +150,7 @@ def plot_perf_re_dep(save=False, savepath="", savetype=".pdf", errorbars=False,
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.tight_layout()
     if save:
-        plt.savefig(savepath + "/re_dep_cd" + savetype)
+        plt.savefig(savedir + "/re_dep_cd" + savetype)
     if show:
         plt.show()
     
@@ -174,7 +174,10 @@ def plot_cfd_perf(quantity="cp", normalize_by="CFD"):
     
 def plot_settling(tow_speed):
     """Plot data from the settling experiments."""
-    data = np.loadtxt("Settling/tow_speed_" + str(tow_speed) + "/vecdata.dat", unpack=True)
+    testplan = pd.read_csv("Config/Test plan/Settling.csv")
+    nrun = testplan["Run"][testplan["U"] == tow_speed].iloc[0]
+    fpath = "Data/Raw/Settling/{}/vecdata.dat".format(nrun)
+    data = np.loadtxt(fpath, unpack=True)
     u = data[2] # 2 for x velocity
     t = data[0]*0.005
 #    i = np.where(np.round(t)==88)[0][0]
@@ -196,7 +199,7 @@ def plot_settling(tow_speed):
     plt.ylabel(r"$\sigma_u$")
     plt.tight_layout()
     
-def plot_perf_curves(subplots=True, save=False, savepath="", savetype=".pdf"):
+def plot_perf_curves(subplots=True, save=False, savedir="Figures", savetype=".pdf"):
     """Plots all performance curves."""
     if subplots:
         plt.figure(figsize=(12,5))
@@ -217,11 +220,11 @@ def plot_perf_curves(subplots=True, save=False, savepath="", savetype=".pdf"):
                loc="lower right", ncol=2)
     plt.show()
     if save:
-        if savepath != "":
-            savepath += "/"
-        plt.savefig(savepath + "perf_curves" + savetype)
+        if savedir != "":
+            savedir += "/"
+        plt.savefig(savedir + "perf_curves" + savetype)
     
-def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
+def plot_wake_profiles(z_H=0.25, save=False, savedir="Figures", savetype=".pdf"):
     """Plots all wake profiles of interest."""
     legendlocs = {"mean_u" : 4,
                   "std_u" : 1,
@@ -241,7 +244,7 @@ def plot_wake_profiles(z_H=0.25, save=False, savepath="", savetype=".pdf"):
         if q == "mean_upvp":
             plt.ylim((-0.015, 0.025))
         if save:
-            plt.savefig(os.path.join(savepath, q+savetype))
+            plt.savefig(os.path.join(savedir, q+savetype))
     plt.show()
     
 def plot_meancomboquiv(U_infty=1.0):

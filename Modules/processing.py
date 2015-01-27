@@ -715,7 +715,7 @@ class PerfCurve(object):
                 cd[n] = cd_old[np.where(runsdone==nrun)[0]]
         # Save updated DataFrame
         
-    def plotcp(self, newfig=True, show=True, save=False, savepath="",
+    def plotcp(self, newfig=True, show=True, save=False, savedir="Figures",
                savetype=".pdf", splinefit=False, marker="o"):
         """Generates power coefficient curve plot."""
         # Check to see if processed data exists and if not, process it
@@ -742,11 +742,11 @@ class PerfCurve(object):
         plt.grid(True)
         plt.tight_layout()
         if save:
-            plt.savefig(os.path.join(savepath, "cp_vs_tsr" + savetype))
+            plt.savefig(os.path.join(savedir, "cp_vs_tsr" + savetype))
         if show:
             plt.show()
             
-    def plotcd(self, newfig=True, show=True, save=False, savepath="",
+    def plotcd(self, newfig=True, show=True, save=False, savedir="Figures",
                savetype=".pdf", splinefit=False, marker="o"):
         """Generates power coefficient curve plot."""
         # Check to see if processed data exists and if not, process it
@@ -774,7 +774,7 @@ class PerfCurve(object):
         plt.grid(True)
         plt.tight_layout()
         if save:
-            plt.savefig(os.path.join(savepath, "cd_vs_tsr" + savetype))
+            plt.savefig(os.path.join(savedir, "cd_vs_tsr" + savetype))
         if show:
             plt.show()
         
@@ -797,7 +797,7 @@ class WakeProfile(object):
         self.y_R = self.df["y_R"]
         
     def plot(self, quantity, newfig=True, show=True, save=False, 
-             savepath="", savetype=".pdf", linetype='--ok'):
+             savedir="Figures", savetype=".pdf", linetype='--ok'):
         """Plots some quantity"""
         y_R = self.df["y_R"]
         q = self.df[quantity]
@@ -833,7 +833,7 @@ class WakeProfile(object):
         if show:
             plt.show()
         if save:
-            plt.savefig(savepath+quantity+"_Re_dep_exp"+savetype)
+            plt.savefig(savedir+quantity+"_Re_dep_exp"+savetype)
     
 class WakeMap(object):
     def __init__(self, U_infty):
@@ -862,8 +862,9 @@ class WakeMap(object):
         plt.vlines(1, -0.2, 0.5, linestyles=linestyles, colors="gray",
                    linewidth=linewidth)
         
-    def plot_mean_u(self, save=False, show=False, savepath="", savetype=".pdf"):
-        # Plot contours of mean streamwise velocity
+    def plot_mean_u(self, save=False, show=False, savedir="Figures", 
+                    savetype=".pdf"):
+        """Plot contours of mean streamwise velocity."""
         plt.figure(figsize=(10,5))
         cs = plt.contourf(self.y_R, self.z_H, self.mean_u, 20,
                           cmap=plt.cm.coolwarm)
@@ -878,12 +879,16 @@ class WakeMap(object):
         plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
         plt.tight_layout()
         if save:
-            plt.savefig(savepath+"/mean_u_cont"+savetype)
+            plt.savefig(savedir+"/mean_u_cont"+savetype)
         if show:
             self.show()
     
-    def plot_meancomboquiv(self, save=False, show=False, savepath="",
+    def plot_meancomboquiv(self, save=False, show=False, savedir="Figures",
                            savetype=".pdf"):
+        """
+        Plot contours of mean velocity and vector arrows showing mean
+        cross-stream and vertical velocity.
+        """
         plt.figure(figsize=(10,6))
         # Add contours of mean velocity
         cs = plt.contourf(self.y_R, self.z_H, self.mean_u/self.U_infty, 20, 
@@ -912,13 +917,13 @@ class WakeMap(object):
         if show:
             self.show()
         if save:
-            plt.savefig(savepath+"/meancomboquiv"+savetype)
+            plt.savefig(savedir+"/meancomboquiv"+savetype)
     
     def plot_xvorticity(self):
         pass
     
     def plot_diff(self, quantity="mean_u", U_infty_diff=1.0, save=False, 
-                  show=False, savepath="", savetype=""):
+                  show=False, savedir="Figures", savetype=""):
         wm_diff = WakeMap(U_infty_diff)
         q_ref, q_diff = None, None
         if quantity in ["mean_u", "mean_v", "mean_w"]:
@@ -944,11 +949,11 @@ class WakeMap(object):
         if show:
             self.show()
         if save:
-            if savepath: savepath += "/"
-            plt.savefig(savepath+"/"+quantity+"_diff"+savetype)
+            if savedir: savedir += "/"
+            plt.savefig(savedir+"/"+quantity+"_diff"+savetype)
     
     def plot_meancomboquiv_diff(self, U_infty_diff, save=False, show=False,
-                                savepath="", savetype="", percent=True):
+                                savedir="Figures", savetype="", percent=True):
         wm_diff = WakeMap(U_infty_diff)
         mean_u_diff = (self.mean_u/self.U_infty - \
                 wm_diff.mean_u/wm_diff.U_infty)
@@ -988,8 +993,8 @@ class WakeMap(object):
         if show:
             self.show()
         if save:
-            if savepath: savepath += "/"
-            plt.savefig(savepath+"/meancomboquiv_diff"+savetype)
+            if savedir: savedir += "/"
+            plt.savefig(savedir+"/meancomboquiv_diff"+savetype)
             
     def plot_mean_u_diff_std(self):
         u_ref = 1.0

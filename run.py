@@ -11,9 +11,8 @@ from Modules.plotting import *
 if __name__ == "__main__":
     """Choose functions to run here."""
     plt.close("all")
-    p = "Figures"
-    if not os.path.isdir(p):
-        os.makedirs(p)
+    if not os.path.isdir("Figures"):
+        os.makedirs("Figures")
 
     """Dealing with individual runs"""
     r = Run("Wake-0.4", 20)
@@ -23,8 +22,8 @@ if __name__ == "__main__":
     r.print_wake_stats()
     
     """Performance curves"""
-#    pc = PerfCurve(1.0)
-#    pc.plotcp(save=True, savepath=p)
+    pc = PerfCurve(1.0)
+    pc.plotcp(save=True)
 
     """Tare drag and torque"""
 #    process_tare_torque(2, plot=True)
@@ -38,10 +37,11 @@ if __name__ == "__main__":
 #    batch_process_all()
     
     """Plotting"""
-#    plot_perf_curves(save=False, savepath=p)
-#    plot_perf_re_dep(save=False, cfd=False, savepath=p, normalize_by="default",
-#                     dual_xaxes=True)
-#    plot_wake_profiles(z_H=0.0, save=True, savepath=p)
+    plot_perf_curves(save=True)
+    plot_perf_re_dep(save=False, cfd=False, normalize_by="default", 
+                     dual_xaxes=True)
+    plot_wake_profiles(z_H=0.0, save=True)
 #    plot_settling(1.0)
-#    plot_meancomboquiv(U_infty=0.4)
-#    plot_meancomboquiv(U_infty=1.2)
+    plot_meancomboquiv(U_infty=0.4)
+    plot_meancomboquiv(U_infty=1.2)
+    plt.show()

@@ -107,6 +107,11 @@ def test_download_raw():
     os.rename(fpath_temp, fpath)
     print("PASS")
     
+def test_plot_settling():
+    print("Testing plotting.plot_settling")
+    plot_settling(1.0)
+    print("PASS")
+    
 def test_all():
     test_run()
     test_section()
@@ -133,7 +138,8 @@ def test_all():
     print("PASS")
     test_wake_map()
     plt.show()
-    test_download_raw_data()
+    test_download_raw()
+    test_plot_settling()
     print("All tests passed")
     
 if __name__ == "__main__":
