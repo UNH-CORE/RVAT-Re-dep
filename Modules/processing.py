@@ -11,7 +11,6 @@ import numpy as np
 from pxl import timeseries as ts
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
-from scipy import interpolate
 import multiprocessing as mp
 import scipy.stats
 from scipy.stats import nanmean, nanstd
