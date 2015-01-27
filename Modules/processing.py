@@ -1043,7 +1043,7 @@ def batch_process_all():
     
 def process_tare_drag(nrun, plot=False):
     """Processes a single tare drag run."""
-    print("Processing tare drag run", str(nrun)+"...")
+    print("Processing tare drag run", nrun)
     times = {0.3 : (10, 77),
              0.4 : (8, 60),
              0.5 : (8, 47),
@@ -1104,7 +1104,7 @@ def plot_tare_drag():
     
 def process_tare_torque(nrun, plot=False):
     """Processes a single tare torque run."""
-    print("Processing tare torque run", str(nrun)+"...")
+    print("Processing tare torque run", nrun)
     times = {0 : (35, 86),
              1 : (12, 52),
              2 : (11, 32),
@@ -1177,7 +1177,7 @@ def download_raw(section, nrun, name):
         filename = name + ".mat"
     else: 
         filename = name
-    print("Downloading", filename)
+    print("Downloading", filename, "from", section, "run", nrun)
     local_dir = os.path.join("Data", "Raw", section, str(nrun))
     if not os.path.isdir(local_dir):
         os.makedirs(local_dir)
@@ -1191,7 +1191,9 @@ def download_raw(section, nrun, name):
         percent = int(blocks_transferred*block_size*100/total_size)
         try:
             pbar.update(percent)
-        except ValueError or AssertionError:
+        except ValueError:
+            pass
+        except AssertionError:
             pass
     pbar.start()
     urlretrieve(url, local_path, reporthook=download_progress)
