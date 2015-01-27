@@ -4,9 +4,9 @@ This script will run tests.
 
 """
 
-from Modules import test
+from Modules import tests
 
 if __name__ == "__main__":
-    test.test_all()
-#    test.test_download_raw()
-#    test.test_plot_settling()
+    tests.test_all()
+#    tests.test_download_raw()
+#    tests.test_plot_settling()
