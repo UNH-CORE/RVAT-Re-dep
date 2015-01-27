@@ -17,5 +17,5 @@ if __name__ == "__main__":
     plot_perf_re_dep(save=True, show=False, normalize_by="default", 
                      dual_xaxes=True)
     plot_wake_profiles(z_H=0.0, save=True)
-    plot_meancomboquiv(U_infty=0.4, show=False)
-    plot_meancomboquiv(U_infty=1.2, show=True)
+    plot_meancontquiv(U_infty=0.4, show=False)
+    plot_meancontquiv(U_infty=1.2, show=True)

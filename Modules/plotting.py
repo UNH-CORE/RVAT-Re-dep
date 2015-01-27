@@ -203,8 +203,8 @@ class WakeMap(object):
         if show:
             self.show()
     
-    def plot_meancomboquiv(self, save=False, show=False, savedir="Figures",
-                           savetype=".pdf", cb_orientation="vertical"):
+    def plot_meancontquiv(self, save=False, show=False, savedir="Figures",
+                          savetype=".pdf", cb_orientation="vertical"):
         """
         Plot contours of mean velocity and vector arrows showing mean
         cross-stream and vertical velocity.
@@ -249,7 +249,7 @@ class WakeMap(object):
         if show:
             self.show()
         if save:
-            plt.savefig(savedir+"/meancomboquiv"+savetype)
+            plt.savefig(savedir+"/meancontquiv"+savetype)
     
     def plot_xvorticity(self):
         pass
@@ -284,8 +284,8 @@ class WakeMap(object):
             if savedir: savedir += "/"
             plt.savefig(savedir+"/"+quantity+"_diff"+savetype)
     
-    def plot_meancomboquiv_diff(self, U_infty_diff, save=False, show=False,
-                                savedir="Figures", savetype="", percent=True):
+    def plot_meancontquiv_diff(self, U_infty_diff, save=False, show=False,
+                               savedir="Figures", savetype="", percent=True):
         wm_diff = WakeMap(U_infty_diff)
         mean_u_diff = (self.mean_u/self.U_infty - \
                 wm_diff.mean_u/wm_diff.U_infty)
@@ -326,7 +326,7 @@ class WakeMap(object):
             self.show()
         if save:
             if savedir: savedir += "/"
-            plt.savefig(savedir+"/meancomboquiv_diff"+savetype)
+            plt.savefig(savedir+"/meancontquiv_diff"+savetype)
             
     def plot_mean_u_diff_std(self):
         u_ref = 1.0
@@ -587,9 +587,9 @@ def plot_wake_profiles(z_H=0.25, save=False, show=False, savedir="Figures",
     if show:
         plt.show()
     
-def plot_meancomboquiv(U_infty=1.0, show=False, cb_orientation="vertical"):
+def plot_meancontquiv(U_infty=1.0, show=False, cb_orientation="vertical"):
     wm = WakeMap(U_infty)
-    wm.plot_meancomboquiv(show=show, cb_orientation=cb_orientation)
+    wm.plot_meancontquiv(show=show, cb_orientation=cb_orientation)
 
 if __name__ == "__main__":
     pass

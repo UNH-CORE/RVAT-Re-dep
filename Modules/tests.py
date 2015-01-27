@@ -53,11 +53,11 @@ def test_wake_profile():
 def test_wake_map():
     print("Testing WakeMap class")
     wm = WakeMap(0.4)
-    wm.plot_meancomboquiv()
+    wm.plot_meancontquiv()
     wm2 = WakeMap(1.2)
-    wm2.plot_meancomboquiv()
+    wm2.plot_meancontquiv()
 #    wm.plot_diff(quantity="mean_w", U_infty_diff=0.6)
-#    wm.plot_meancomboquiv_diff(0.8, percent=False)
+#    wm.plot_meancontquiv_diff(0.8, percent=False)
     print("PASS")
     
 def test_process_section_parallel():
