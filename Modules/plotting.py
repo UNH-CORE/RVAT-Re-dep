@@ -179,17 +179,15 @@ def plot_settling(tow_speed):
     fpath = "Data/Raw/Settling/{}/vecdata.dat".format(nrun)
     data = np.loadtxt(fpath, unpack=True)
     u = data[2] # 2 for x velocity
+    print(len(u))
     t = data[0]*0.005
-#    i = np.where(np.round(t)==88)[0][0]
-    i = 0
-    u = u[i:]
-    t = t[i:]
-#    u_f = ts.sigmafilter(u, 3, 1)
-    t_std, u_std = ts.runningstd(t, u, 400)
-#    u_std = ts.smooth(u_std, 500)
-    u = ts.smooth(u, 400)
+    uf = u.copy()
+    uf[t>80] = ts.sigmafilter(uf[t>80], 4, 1)
+    print(len(u))
+    t_std, u_std = ts.runningstd(t, uf, 1000)
+    u = ts.smooth(u, 200)
     plt.figure()
-    plt.plot(t-t[0], u, "k")
+    plt.plot(t, u, "k")
     plt.xlabel("t (s)")
     plt.ylabel("$u$ (m/s)")
     plt.tight_layout()
