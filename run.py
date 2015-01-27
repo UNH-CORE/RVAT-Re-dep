@@ -19,4 +19,3 @@ if __name__ == "__main__":
     plot_wake_profiles(z_H=0.0, save=True)
     plot_meancomboquiv(U_infty=0.4, show=False)
     plot_meancomboquiv(U_infty=1.2, show=True)
-#    plot_settling(1.0)
