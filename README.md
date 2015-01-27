@@ -17,7 +17,8 @@ can be installed by executing
 
     pip install -r requirements.txt
 
-See `run.py` for functions to process and visualize the data.
+After installing all dependencies, execute `python run.py` to generate
+figures from the experiment. 
 
 Contributing
 ------------
