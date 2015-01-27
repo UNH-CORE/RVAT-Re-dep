@@ -89,22 +89,28 @@ def test_batch_process_section_vs_parallel():
     
 def test_download_raw():
     """Tests the `processing.download_raw` function."""
+    print("Testing processing.download_raw")
     # First rename target file
     fpath = "Data/Raw/Perf-1.0/0/metadata.json"
     fpath_temp = "Data/Raw/Perf-1.0/0/metadata-temp.json"
-    os.rename(fpath, fpath_temp)
+    exists = False
+    if os.path.isfile(fpath):
+        exists = True
+        os.rename(fpath, fpath_temp)
     try:
         download_raw("Perf-1.0", 0, "metadata")
         # Check that file contents are equal
         with open(fpath) as f:
             content_new = f.read()
-        with open(fpath_temp) as f:
-            content_old = f.read()
-        assert(content_new == content_old)
+        if exists:
+            with open(fpath_temp) as f:
+                content_old = f.read()
+            assert(content_new == content_old)
     except ValueError as e:
         print(e)
     os.remove(fpath)
-    os.rename(fpath_temp, fpath)
+    if exists:
+        os.rename(fpath_temp, fpath)
     print("PASS")
     
 def test_plot_settling():
