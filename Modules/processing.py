@@ -894,17 +894,18 @@ class WakeMap(object):
         cs = plt.contourf(self.y_R, self.z_H, self.mean_u/self.U_infty, 20, 
                           cmap=plt.cm.coolwarm)
         cb = plt.colorbar(cs, shrink=1, extend="both", 
-                          orientation="horizontal", pad=0.2)
+                          orientation="horizontal", pad=0.14)
         cb.set_label(r"$U/U_{\infty}$")
         plt.hold(True)
         # Make quiver plot of v and w velocities
         Q = plt.quiver(self.y_R, self.z_H, self.mean_v/self.U_infty, 
-                       self.mean_w/self.U_infty, width=0.0022)
+                       self.mean_w/self.U_infty, width=0.0022,
+                       edgecolor="none")
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
         plt.xlim(-3.2, 3.2)
-        plt.quiverkey(Q, 0.75, 0.3, 0.1, r"$0.1 U_\infty$",
+        plt.quiverkey(Q, 0.75, 0.26, 0.1, r"$0.1 U_\infty$",
                       labelpos="E",
                       coordinates="figure",
                       fontproperties={"size": "small"})
