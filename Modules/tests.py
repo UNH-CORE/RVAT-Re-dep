@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Dec  3 08:51:05 2014
+This module contains test functions.
 
-@author: Pete
 """
 import os
 import time

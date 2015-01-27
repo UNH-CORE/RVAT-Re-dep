@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This code processes the data from the 2014 Spring RVAT Re dependence 
-experiment.
-
-@author: Pete Bachant
+This module contains classes and functions for processing data.
 
 """
 from __future__ import division, print_function

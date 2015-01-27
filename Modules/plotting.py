@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Dec  3 09:15:20 2014
+This module contains classes and functions for plotting data.
 
-@author: Pete
 """
 from Modules.processing import *
 import matplotlib
