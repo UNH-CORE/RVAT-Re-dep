@@ -8,11 +8,10 @@ store them in the `Figures` directory.
 from Modules.plotting import *
 
 if __name__ == "__main__":
-    """Choose functions to run here."""
-    plt.close("all")
     if not os.path.isdir("Figures"):
         os.makedirs("Figures")
-    
+
+    plt.close("all")    
     plot_cp_curve(1.0, save=True, show=False)
     plot_perf_curves(save=True, show=False)
     plot_perf_re_dep(save=True, show=False, normalize_by="default", 
