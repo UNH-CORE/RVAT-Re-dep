@@ -587,9 +587,9 @@ def plot_wake_profiles(z_H=0.25, save=False, show=False, savedir="Figures",
     if show:
         plt.show()
     
-def plot_meancomboquiv(U_infty=1.0, show=False):
+def plot_meancomboquiv(U_infty=1.0, show=False, cb_orientation="vertical"):
     wm = WakeMap(U_infty)
-    wm.plot_meancomboquiv(show=show)
+    wm.plot_meancomboquiv(show=show, cb_orientation=cb_orientation)
 
 if __name__ == "__main__":
     pass
