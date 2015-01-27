@@ -1093,14 +1093,6 @@ def batch_process_tare_drag(plot=False):
         plt.ylabel("Tare drag (N)")
         plt.tight_layout()
         plt.show()
-        
-def plot_tare_drag():
-    df = pd.read_csv("Data/Processed/Tare drag.csv")
-    plt.figure()
-    plt.plot(df.tow_speed, df.tare_drag, "-ok")
-    plt.xlabel("Tow speed (m/s)")
-    plt.ylabel("Tare drag (N)")
-    plt.show()
     
 def process_tare_torque(nrun, plot=False):
     """Processes a single tare torque run."""

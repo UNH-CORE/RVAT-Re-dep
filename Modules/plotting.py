@@ -172,6 +172,14 @@ def plot_cfd_perf(quantity="cp", normalize_by="CFD"):
         normval = normalize_by
     plt.plot(Re_D, q/normval, "--^k", label="Simulation")
     
+def plot_tare_drag():
+    df = pd.read_csv("Data/Processed/Tare drag.csv")
+    plt.figure()
+    plt.plot(df.tow_speed, df.tare_drag, "-ok")
+    plt.xlabel("Tow speed (m/s)")
+    plt.ylabel("Tare drag (N)")
+    plt.show()
+    
 def plot_settling(tow_speed):
     """Plot data from the settling experiments."""
     testplan = pd.read_csv("Config/Test plan/Settling.csv")
