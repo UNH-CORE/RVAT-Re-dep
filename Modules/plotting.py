@@ -195,7 +195,18 @@ def plot_settling(tow_speed):
     plt.ylabel(r"$\sigma_u$")
     plt.tight_layout()
     
-def plot_perf_curves(subplots=True, save=False, savedir="Figures", savetype=".pdf"):
+def plot_cp_curve(u_infty, save=False, show=False, savedir="Figures",
+                  savetype=".pdf"):
+    pc = PerfCurve(u_infty)
+    pc.plotcp(save=False, show=False)
+    if save:
+        savepath = os.path.join(savedir, "cp_vs_tsr_{}".format(u_infty) + savetype)
+        plt.savefig(savepath)
+    if show:
+        plt.show()
+    
+def plot_perf_curves(subplots=True, save=False, savedir="Figures", 
+                     show=False, savetype=".pdf"):
     """Plots all performance curves."""
     if subplots:
         plt.figure(figsize=(12,5))
@@ -214,13 +225,15 @@ def plot_perf_curves(subplots=True, save=False, savedir="Figures", savetype=".pd
     PerfCurve(1.2).plotcd(newfig=False, show=False, marker="^")
     plt.legend(("0.4e6", "0.6e6", "0.8e6", "1.0e6", "1.2e6"), 
                loc="lower right", ncol=2)
-    plt.show()
     if save:
         if savedir != "":
             savedir += "/"
         plt.savefig(savedir + "perf_curves" + savetype)
+    if show:
+        plt.show()
     
-def plot_wake_profiles(z_H=0.25, save=False, savedir="Figures", savetype=".pdf"):
+def plot_wake_profiles(z_H=0.25, save=False, show=False, savedir="Figures", 
+                       savetype=".pdf"):
     """Plots all wake profiles of interest."""
     legendlocs = {"mean_u" : 4,
                   "std_u" : 1,
@@ -241,11 +254,12 @@ def plot_wake_profiles(z_H=0.25, save=False, savedir="Figures", savetype=".pdf")
             plt.ylim((-0.015, 0.025))
         if save:
             plt.savefig(os.path.join(savedir, q+savetype))
-    plt.show()
+    if show:
+        plt.show()
     
-def plot_meancomboquiv(U_infty=1.0):
+def plot_meancomboquiv(U_infty=1.0, show=False):
     wm = WakeMap(U_infty)
-    wm.plot_meancomboquiv()
+    wm.plot_meancomboquiv(show=show)
 
 if __name__ == "__main__":
     pass

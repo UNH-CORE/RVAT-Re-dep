@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Nov 25 16:03:29 2014
+This script generates all relevant figures from the experiment and
+store them in the `Figures` directory.
 
-@author: Pete
 """
 
-from Modules.processing import *
 from Modules.plotting import *
 
 if __name__ == "__main__":
@@ -13,35 +12,12 @@ if __name__ == "__main__":
     plt.close("all")
     if not os.path.isdir("Figures"):
         os.makedirs("Figures")
-
-    """Dealing with individual runs"""
-    r = Run("Wake-0.4", 20)
-    r.plot_perf("cp")
-    r.plot_wake()
-    r.print_perf_stats()
-    r.print_wake_stats()
     
-    """Performance curves"""
-    pc = PerfCurve(1.0)
-    pc.plotcp(save=True)
-
-    """Tare drag and torque"""
-#    process_tare_torque(2, plot=True)
-#    batch_process_tare_torque(plot=True)
-#    process_tare_drag(5, plot=True)
-#    batch_process_tare_drag(plot=True)
-#    plot_tare_drag()
-    
-    """Batch processing"""
-#    batch_process_section("Perf-0.3")
-#    batch_process_all()
-    
-    """Plotting"""
-    plot_perf_curves(save=True)
-    plot_perf_re_dep(save=False, cfd=False, normalize_by="default", 
+    plot_cp_curve(1.0, save=True, show=False)
+    plot_perf_curves(save=True, show=False)
+    plot_perf_re_dep(save=True, show=False, normalize_by="default", 
                      dual_xaxes=True)
     plot_wake_profiles(z_H=0.0, save=True)
+    plot_meancomboquiv(U_infty=0.4, show=False)
+    plot_meancomboquiv(U_infty=1.2, show=True)
 #    plot_settling(1.0)
-    plot_meancomboquiv(U_infty=0.4)
-    plot_meancomboquiv(U_infty=1.2)
-    plt.show()
