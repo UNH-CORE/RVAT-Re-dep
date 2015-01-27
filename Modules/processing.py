@@ -884,7 +884,7 @@ class WakeMap(object):
             self.show()
     
     def plot_meancomboquiv(self, save=False, show=False, savedir="Figures",
-                           savetype=".pdf"):
+                           savetype=".pdf", cb_orientation="vertical"):
         """
         Plot contours of mean velocity and vector arrows showing mean
         cross-stream and vertical velocity.
@@ -893,8 +893,12 @@ class WakeMap(object):
         # Add contours of mean velocity
         cs = plt.contourf(self.y_R, self.z_H, self.mean_u/self.U_infty, 20, 
                           cmap=plt.cm.coolwarm)
-        cb = plt.colorbar(cs, shrink=1, extend="both", 
-                          orientation="horizontal", pad=0.14)
+        if cb_orientation == "horizontal":
+            cb = plt.colorbar(cs, shrink=1, extend="both",
+                              orientation="horizontal", pad=0.14)
+        elif cb_orientation == "vertical":
+            cb = plt.colorbar(cs, shrink=0.401, extend="both", 
+                              orientation="vertical", pad=0.02)
         cb.set_label(r"$U/U_{\infty}$")
         plt.hold(True)
         # Make quiver plot of v and w velocities
@@ -905,10 +909,16 @@ class WakeMap(object):
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
         plt.xlim(-3.2, 3.2)
-        plt.quiverkey(Q, 0.75, 0.26, 0.1, r"$0.1 U_\infty$",
-                      labelpos="E",
-                      coordinates="figure",
-                      fontproperties={"size": "small"})
+        if cb_orientation == "horizontal":
+            plt.quiverkey(Q, 0.65, 0.26, 0.1, r"$0.1 U_\infty$",
+                          labelpos="E",
+                          coordinates="figure",
+                          fontproperties={"size": "small"})
+        elif cb_orientation == "vertical":
+            plt.quiverkey(Q, 0.65, 0.23, 0.1, r"$0.1 U_\infty$",
+                          labelpos="E",
+                          coordinates="figure",
+                          fontproperties={"size": "small"})
         self.turb_lines()
         ax = plt.axes()
         ax.set_aspect(2)
