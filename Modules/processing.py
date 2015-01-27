@@ -675,7 +675,26 @@ class Section(object):
 
 def process_run(section, nrun):
     run = Run(section, nrun)
-    return run.summary                
+    return run.summary
+
+def process_latest_run(section):
+    """
+    Automatically detects the most recently acquired run and processes it,
+    printing a summary to the shell.
+    """
+    print("Processing latest run in", section)
+    raw_dir = os.path.join("Data", "Raw", section)
+    dirlist = [os.path.join(raw_dir, d) for d in os.listdir(raw_dir) \
+               if os.path.isdir(os.path.join(raw_dir, d))]
+    dirlist = sorted(dirlist, key=os.path.getmtime, reverse=True)
+    for d in dirlist:
+        try:
+            nrun = int(os.path.split(d)[-1])
+            break
+        except ValueError:
+            print(d, "is not a properly formatted directory")
+    print("\nSummary for {} run {}:".format(section, nrun))
+    print(Run(section, nrun).summary)
         
 def load_test_plan_section(section):
     df = pd.read_csv(os.path.join("Config", "Test plan", section+".csv"))
