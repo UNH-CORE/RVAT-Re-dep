@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 This script generates all relevant figures from the experiment and
-store them in the `Figures` directory.
+stores them in the `Figures` directory.
 
 """
 
