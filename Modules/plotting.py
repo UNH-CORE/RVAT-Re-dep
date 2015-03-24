@@ -140,7 +140,6 @@ class WakeProfile(object):
             plt.ylabel(ylab)
             plt.xlabel(r"$y/R$")
         plt.plot(y_R, q, "-.^k", label=r"$Re_D=0.4 \times 10^6$")
-#        plot_old_wake(quantity, y_R)
         plt.legend(loc=loc)
         plt.tight_layout()
         if show:
