@@ -368,8 +368,9 @@ def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir=
     plt.ylabel(ylabels[quantity])
     plt.tight_layout()
     
-def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf", errorbars=False,
-                     cfd=False, normalize_by="default", dual_xaxes=False, show=True):
+def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf", 
+                     errorbars=False, cfd=False, normalize_by="default", 
+                     dual_xaxes=False, show=False):
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
     std_cp = np.zeros(len(speeds))
@@ -580,9 +581,14 @@ def plot_wake_profiles(z_H=0.25, save=False, show=False, savedir="Figures",
     if show:
         plt.show()
     
-def plot_meancontquiv(U_infty=1.0, show=False, cb_orientation="vertical"):
+def plot_meancontquiv(U_infty=1.0, save=False, savetype=".pdf", show=False, 
+                      cb_orientation="vertical"):
     wm = WakeMap(U_infty)
-    wm.plot_meancontquiv(show=show, cb_orientation=cb_orientation)
+    wm.plot_meancontquiv(show=False, cb_orientation=cb_orientation)
+    if save:
+        plt.savefig("Figures/meancontquiv_{}{}".format(U_infty, savetype))
+    if show:
+        plt.show()
 
 if __name__ == "__main__":
     pass
