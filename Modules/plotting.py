@@ -167,6 +167,92 @@ class WakeMap(object):
             self.mean_w[self.z_H.index(z_H)] = wp.df.mean_w
         self.loaded = True
         
+    def calc_wake_transport(self):
+        """
+        Calculates wake tranport terms similar to Bachant and Wosnik (2015)
+        "Characterising the near wake of a cross-flow turbine."
+        """
+        pass
+    
+    def calc_meankturbtrans(self):
+        """Calculates the transport of $K$ by turbulent fluctuations."""
+        ddy_uvU = np.zeros(grdims)
+        ddz_uwU = np.zeros(grdims)
+        ddy_vvV = np.zeros(grdims)
+        ddz_vwV = np.zeros(grdims)
+        ddy_vwW = np.zeros(grdims)
+        ddz_wwW = np.zeros(grdims)
+        for n in range(len(z)):
+            ddy_uvU[n,:] = fdiff.second_order_diff((uv*meanu).iloc[n,:], y)
+            ddy_vvV[n,:] = fdiff.second_order_diff((vv*meanv).iloc[n,:], y)
+            ddy_vwW[n,:] = fdiff.second_order_diff((vw*meanw).iloc[n,:], y)
+        for n in range(len(y)):
+            ddz_uwU[:,n] = fdiff.second_order_diff((uw*meanu).iloc[:,n], z)
+            ddz_vwV[:,n] = fdiff.second_order_diff((vw*meanv).iloc[:,n], z)
+            ddz_wwW[:,n] = fdiff.second_order_diff((ww*meanw).iloc[:,n], z)
+        tt = -0.5*(ddy_uvU + ddz_uwU + ddy_vvV + ddz_vwV + ddy_vwW + ddz_wwW)
+        tty = -0.5*(ddy_uvU + ddy_vvV + ddy_vwW) # Only ddy terms
+        ttz = -0.5*(ddz_uwU + ddz_vwV + ddz_wwW) # Only ddz terms
+        return tt, tty, ttz
+        
+    def calc_kprod_meandiss():
+        """
+        Calculates the production of turbulent kinetic energy and dissipation
+        from mean shear.
+        """
+        dUdy = np.zeros(grdims)
+        dUdz = np.zeros(grdims)
+        dVdy = np.zeros(grdims)
+        dVdz = np.zeros(grdims)
+        dWdy = np.zeros(grdims)
+        dWdz = np.zeros(grdims)
+        for n in range(len(z)):
+            dUdy[n,:] = fdiff.second_order_diff(meanu.iloc[n,:], y)
+            dVdy[n,:] = fdiff.second_order_diff(meanv.iloc[n,:], y)
+            dWdy[n,:] = fdiff.second_order_diff(meanw.iloc[n,:], y)
+        for n in range(len(y)):
+            dUdz[:,n] = fdiff.second_order_diff(meanu.iloc[:,n], z)
+            dVdz[:,n] = fdiff.second_order_diff(meanv.iloc[:,n], z)
+            dWdz[:,n] = fdiff.second_order_diff(meanw.iloc[:,n], z)
+        kprod = uv*dUdy + uw*dUdz + vw*dVdz + vw*dWdy\
+                + vv*dVdy + ww*dWdz
+        meandiss = -2.0*nu*(dUdy**2 + dUdz**2 + dVdy**2 + dVdz**2 + dWdy**2 + dWdz**2)
+        return kprod, meandiss
+        
+    def calc_meankgrad():
+        """Calulates $y$- and $z$-derivatives of $K$."""
+        z = H*z_H
+        y = R*y_R
+        dKdy = np.zeros(np.shape(meanu))
+        dKdz = np.zeros(np.shape(meanu))
+        for n in range(len(z)):
+            dKdy[n,:] = fdiff.second_order_diff(grdata.meank.iloc[n,:], y)
+        for n in range(len(y)):
+            dKdz[:,n] = fdiff.second_order_diff(grdata.meank.iloc[:,n], z)
+        return dKdy, dKdz
+
+    def calc_mom_transport():
+        """
+        Calculates relevant (and available) momentum transport terms in the 
+        RANS equations.
+        """
+        ddy_upvp = np.zeros(grdims)
+        ddz_upwp = np.zeros(grdims)
+        d2Udy2 = np.zeros(grdims)
+        d2Udz2 = np.zeros(grdims)
+        dUdy = np.zeros(grdims)
+        dUdz = np.zeros(grdims)
+        for n in range(len(z)):
+            ddy_upvp[n,:] = fdiff.second_order_diff(grdata.meanupvp.iloc[n,:], y)
+            dUdy[n,:] = fdiff.second_order_diff(grdata.meanu.iloc[n,:], y)
+            d2Udy2[n,:] = fdiff.second_order_diff(dUdy[n,:], y)
+        for n in range(len(y)):
+            ddz_upwp[:,n] = fdiff.second_order_diff(grdata.meanupwp.iloc[:,n], z)
+            dUdz[:,n] = fdiff.second_order_diff(grdata.meanu.iloc[:,n], z)
+            d2Udz2[:,n] = fdiff.second_order_diff(dUdz[:,n], z)
+        return {"dUdy" : dUdy, "ddy_upvp" : ddy_upvp, "d2Udy2" : d2Udy2,
+                "dUdz" : dUdz, "ddz_upwp" : ddz_upwp, "d2Udz2" : d2Udz2}
+        
     def turb_lines(self, linestyles="solid", linewidth=3, colors="gray"):
         plt.hlines(0.5, -1, 1, linestyles=linestyles, colors="gray",
                    linewidth=linewidth)
