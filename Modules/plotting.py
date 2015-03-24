@@ -155,6 +155,7 @@ class WakeMap(object):
         self.load()
         
     def load(self):
+        self.df = pd.DataFrame() 
         self.y_R = WakeProfile(self.U_infty, 0, "mean_u").y_R
         self.mean_u = np.zeros((len(self.z_H), len(self.y_R)))
         self.mean_v = self.mean_u*1
@@ -164,6 +165,8 @@ class WakeMap(object):
             self.mean_u[self.z_H.index(z_H)] = wp.df.mean_u
             self.mean_v[self.z_H.index(z_H)] = wp.df.mean_v
             self.mean_w[self.z_H.index(z_H)] = wp.df.mean_w
+            self.df = self.df.append(wp.df, ignore_index=True)
+        self.df = self.df.pivot(index="z_H", columns="y_R")
         self.loaded = True
         
     def calc_wake_transport(self):
@@ -194,7 +197,7 @@ class WakeMap(object):
         ttz = -0.5*(ddz_uwU + ddz_vwV + ddz_wwW) # Only ddz terms
         return tt, tty, ttz
         
-    def calc_kprod_meandiss():
+    def calc_kprod_meandiss(self):
         """
         Calculates the production of turbulent kinetic energy and dissipation
         from mean shear.
@@ -218,7 +221,7 @@ class WakeMap(object):
         meandiss = -2.0*nu*(dUdy**2 + dUdz**2 + dVdy**2 + dVdz**2 + dWdy**2 + dWdz**2)
         return kprod, meandiss
         
-    def calc_meankgrad():
+    def calc_meankgrad(self):
         """Calulates $y$- and $z$-derivatives of $K$."""
         z = H*z_H
         y = R*y_R
@@ -230,7 +233,7 @@ class WakeMap(object):
             dKdz[:,n] = fdiff.second_order_diff(grdata.meank.iloc[:,n], z)
         return dKdy, dKdz
 
-    def calc_mom_transport():
+    def calc_mom_transport(self):
         """
         Calculates relevant (and available) momentum transport terms in the 
         RANS equations.
