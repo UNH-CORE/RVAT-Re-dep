@@ -150,23 +150,21 @@ class WakeProfile(object):
 class WakeMap(object):
     def __init__(self, U_infty):
         self.U_infty = U_infty
-        self.z_H = [0.0, 0.125, 0.25, 0.375, 0.5, 0.625]
+        self.z_H = np.array([0.0, 0.125, 0.25, 0.375, 0.5, 0.625])
         self.loaded = False
         self.load()
         
     def load(self):
         self.df = pd.DataFrame() 
-        self.y_R = WakeProfile(self.U_infty, 0, "mean_u").y_R
-        self.mean_u = np.zeros((len(self.z_H), len(self.y_R)))
-        self.mean_v = self.mean_u*1
-        self.mean_w = self.mean_u*1
+        self.y_R = WakeProfile(self.U_infty, 0, "mean_u").y_R.values
         for z_H in self.z_H:
             wp = WakeProfile(self.U_infty, z_H, "mean_u")
-            self.mean_u[self.z_H.index(z_H)] = wp.df.mean_u
-            self.mean_v[self.z_H.index(z_H)] = wp.df.mean_v
-            self.mean_w[self.z_H.index(z_H)] = wp.df.mean_w
             self.df = self.df.append(wp.df, ignore_index=True)
         self.df = self.df.pivot(index="z_H", columns="y_R")
+        self.mean_u = self.df.mean_u
+        self.mean_v = self.df.mean_v
+        self.mean_w = self.df.mean_w
+        self.grdims = (len(self.z_H), len(self.y_R))
         self.loaded = True
         
     def calc_wake_transport(self):
@@ -238,22 +236,26 @@ class WakeMap(object):
         Calculates relevant (and available) momentum transport terms in the 
         RANS equations.
         """
-        ddy_upvp = np.zeros(grdims)
-        ddz_upwp = np.zeros(grdims)
-        d2Udy2 = np.zeros(grdims)
-        d2Udz2 = np.zeros(grdims)
-        dUdy = np.zeros(grdims)
-        dUdz = np.zeros(grdims)
+        y = self.y_R*R
+        z = self.z_H*H
+        self.ddy_upvp = np.zeros(self.grdims)
+        self.ddz_upwp = np.zeros(self.grdims)
+        self.d2Udy2 = np.zeros(self.grdims)
+        self.d2Udz2 = np.zeros(self.grdims)
+        self.dUdy = np.zeros(self.grdims)
+        self.dUdz = np.zeros(self.grdims)
         for n in range(len(z)):
-            ddy_upvp[n,:] = fdiff.second_order_diff(grdata.meanupvp.iloc[n,:], y)
-            dUdy[n,:] = fdiff.second_order_diff(grdata.meanu.iloc[n,:], y)
-            d2Udy2[n,:] = fdiff.second_order_diff(dUdy[n,:], y)
+            self.ddy_upvp[n, :] = \
+                fdiff.second_order_diff(self.df.mean_upvp.iloc[n, :], y)
+            self.dUdy[n, :] = \
+                fdiff.second_order_diff(self.df.mean_u.iloc[n, :], y)
+            self.d2Udy2[n, :] = fdiff.second_order_diff(self.dUdy[n, :], y)
         for n in range(len(y)):
-            ddz_upwp[:,n] = fdiff.second_order_diff(grdata.meanupwp.iloc[:,n], z)
-            dUdz[:,n] = fdiff.second_order_diff(grdata.meanu.iloc[:,n], z)
-            d2Udz2[:,n] = fdiff.second_order_diff(dUdz[:,n], z)
-        return {"dUdy" : dUdy, "ddy_upvp" : ddy_upvp, "d2Udy2" : d2Udy2,
-                "dUdz" : dUdz, "ddz_upwp" : ddz_upwp, "d2Udz2" : d2Udz2}
+            self.ddz_upwp[:, n] = \
+                fdiff.second_order_diff(self.df.mean_upwp.iloc[:, n], z)
+            self.dUdz[:, n] = \
+                fdiff.second_order_diff(self.df.mean_u.iloc[:, n], z)
+            self.d2Udz2[:, n] = fdiff.second_order_diff(self.dUdz[:, n], z)
         
     def turb_lines(self, linestyles="solid", linewidth=3, colors="gray"):
         plt.hlines(0.5, -1, 1, linestyles=linestyles, colors="gray",
