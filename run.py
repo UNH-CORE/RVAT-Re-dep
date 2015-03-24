@@ -7,7 +7,7 @@ stores them in the `Figures` directory.
 
 from Modules.plotting import *
 
-show = False
+show = True
 save = True
 savetype = ".pdf"
 
@@ -17,8 +17,12 @@ def main():
     plot_perf_re_dep(save=save, savetype=savetype, normalize_by="default", 
                      dual_xaxes=True)
     plot_wake_profiles(z_H=0.0, save=save, savetype=savetype)
-    plot_meancontquiv(U_infty=0.4, save=save, savetype=savetype)
-    plot_meancontquiv(U_infty=1.2, save=save, savetype=savetype)
+    wm = WakeMap(0.4)
+    wm.plot_meancontquiv(save=save, savetype=savetype)
+    wm.plot_k(save=save, savetype=savetype)
+    wm = WakeMap(1.2)
+    wm.plot_meancontquiv(save=save, savetype=savetype)
+    wm.plot_k(save=save, savetype=savetype)
     if show:
         plt.show()
 
