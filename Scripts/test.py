@@ -5,7 +5,7 @@ This script will run tests from `Modules.tests`.
 """
 from __future__ import print_function
 import os
-if os.getcwd()[-7:] == "Scripts":
+if os.path.split(os.getcwd())[-1] == "Scripts":
     print("Changing working directory to experiment root directory")
     os.chdir("../")
 from Modules import tests
