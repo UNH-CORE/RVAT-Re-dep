@@ -579,9 +579,12 @@ class Run(object):
         s["std_u"] = self.std_u
         s["std_v"] = self.std_v
         s["std_w"] = self.std_w
+        s["mean_upup"] = self.mean_upup
         s["mean_upvp"] = self.mean_upvp
         s["mean_upwp"] = self.mean_upwp
+        s["mean_vpvp"] = self.mean_vpvp
         s["mean_vpwp"] = self.mean_vpwp
+        s["mean_wpwp"] = self.mean_wpwp
         s["k"] = self.k
         return s
         
@@ -652,12 +655,12 @@ class Section(object):
     @property
     def mean_cp(self):
         return self.data.mean_cp
-    def process(self, nproc=8, save=True):
+    def process(self, nproc=4, save=True):
         """To-do: Process an entire section of data."""
         self.process_parallel(nproc=nproc)
         if save:
             self.data.to_csv(self.processed_path, na_rep="NaN", index=False)
-    def process_parallel(self, nproc=8, nruns="all"):
+    def process_parallel(self, nproc=4, nruns="all"):
         s = self.name
         runs = self.test_plan["Run"]
         if nruns != "all":
