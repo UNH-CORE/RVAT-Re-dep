@@ -297,27 +297,46 @@ class WakeMap(object):
                    linewidth=linewidth)
         plt.vlines(1, -0.2, 0.5, linestyles=linestyles, colors="gray",
                    linewidth=linewidth)
-        
-    def plot_mean_u(self, save=False, show=False, savedir="Figures", 
-                    savetype=".pdf"):
-        """Plot contours of mean streamwise velocity."""
+                   
+    def plot_contours(self, quantity, label="", cb_orientation="vertical"):
+        """Plots contours of given quantity."""
         plt.figure(figsize=(10,5))
-        cs = plt.contourf(self.y_R, self.z_H, self.mean_u, 20,
+        cs = plt.contourf(self.y_R, self.z_H, quantity, 20,
                           cmap=plt.cm.coolwarm)
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
-        cb = plt.colorbar(cs, shrink=1, extend="both", 
-                          orientation="horizontal", pad=0.3)
-        cb.set_label(r"$U/U_{\infty}$")
+        if cb_orientation == "horizontal":
+            cb = plt.colorbar(cs, shrink=1, extend="both", 
+                              orientation="horizontal", pad=0.3)
+        elif cb_orientation == "vertical":
+            cb = plt.colorbar(cs, shrink=0.401, extend="both", 
+                              orientation="vertical", pad=0.02)
+        cb.set_label(label)
         self.turb_lines()
+        plt.ylim((0, 0.63))
         ax = plt.axes()
         ax.set_aspect(2)
         plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
         plt.tight_layout()
+        
+    def plot_mean_u(self, save=False, show=False, savedir="Figures", 
+                    savetype=".pdf"):
+        """Plot contours of mean streamwise velocity."""
+        self.plot_contours(self.df.mean_u/self.U_infty, 
+                           label=r"$U/U_\infty$")
         if save:
             plt.savefig(savedir+"/mean_u_cont"+savetype)
         if show:
             self.show()
+            
+    def plot_k(self, save=False, savetype=".pdf", show=False):
+        """Plots contours of turbulence kinetic energy."""
+        self.plot_contours(self.df.k/(0.5*self.U_infty**2), 
+                           label=r"$k/\frac{1}{2}U_\infty^2$")
+        if save:
+            plt.savefig("Figures/k_contours_{}{}".format(self.U_infty, savetype))
+        if show:
+            plt.show()
     
     def plot_meancontquiv(self, save=False, show=False, savedir="Figures",
                           savetype=".pdf", cb_orientation="vertical"):
