@@ -151,8 +151,8 @@ class WakeMap(object):
     def __init__(self, U_infty):
         self.U_infty = U_infty
         self.z_H = np.array([0.0, 0.125, 0.25, 0.375, 0.5, 0.625])
-        self.loaded = False
         self.load()
+        self.calc_transport()
         
     def load(self):
         self.df = pd.DataFrame() 
@@ -160,76 +160,109 @@ class WakeMap(object):
         for z_H in self.z_H:
             wp = WakeProfile(self.U_infty, z_H, "mean_u")
             self.df = self.df.append(wp.df, ignore_index=True)
-        self.df = self.df.pivot(index="z_H", columns="y_R")
         self.mean_u = self.df.mean_u
         self.mean_v = self.df.mean_v
         self.mean_w = self.df.mean_w
+        self.df["mean_k"] = \
+                0.5*(self.df.mean_u**2 + self.df.mean_v**2 + self.df.mean_w**2)
+        self.mean_k = self.df.mean_k
         self.grdims = (len(self.z_H), len(self.y_R))
-        self.loaded = True
+        self.df = self.df.pivot(index="z_H", columns="y_R")
         
-    def calc_wake_transport(self):
+    def calc_transport(self):
         """
         Calculates wake tranport terms similar to Bachant and Wosnik (2015)
         "Characterising the near wake of a cross-flow turbine."
         """
-        pass
+        self.calc_mom_transport()
+        self.calc_mean_k_grad()
+        self.calc_k_prod_mean_diss()
+        self.calc_mean_k_turb_trans()
     
-    def calc_meankturbtrans(self):
+    def calc_mean_k_turb_trans(self):
         """Calculates the transport of $K$ by turbulent fluctuations."""
-        ddy_uvU = np.zeros(grdims)
-        ddz_uwU = np.zeros(grdims)
-        ddy_vvV = np.zeros(grdims)
-        ddz_vwV = np.zeros(grdims)
-        ddy_vwW = np.zeros(grdims)
-        ddz_wwW = np.zeros(grdims)
+        y, z  = self.y_R*R, self.z_H*H
+        self.ddy_uvU = np.zeros(self.grdims)
+        self.ddz_uwU = np.zeros(self.grdims)
+        self.ddy_vvV = np.zeros(self.grdims)
+        self.ddz_vwV = np.zeros(self.grdims)
+        self.ddy_vwW = np.zeros(self.grdims)
+        self.ddz_wwW = np.zeros(self.grdims)
         for n in range(len(z)):
-            ddy_uvU[n,:] = fdiff.second_order_diff((uv*meanu).iloc[n,:], y)
-            ddy_vvV[n,:] = fdiff.second_order_diff((vv*meanv).iloc[n,:], y)
-            ddy_vwW[n,:] = fdiff.second_order_diff((vw*meanw).iloc[n,:], y)
+            self.ddy_uvU[n,:] = \
+                fdiff.second_order_diff((self.df.mean_upvp*self.df.mean_u)\
+                .iloc[n,:], y)
+            self.ddy_vvV[n,:] = \
+                fdiff.second_order_diff((self.df.mean_vpvp*self.df.mean_v)\
+                .iloc[n,:], y)
+            self.ddy_vwW[n,:] = \
+                fdiff.second_order_diff((self.df.mean_vpwp*self.df.mean_w)\
+                .iloc[n,:], y)
         for n in range(len(y)):
-            ddz_uwU[:,n] = fdiff.second_order_diff((uw*meanu).iloc[:,n], z)
-            ddz_vwV[:,n] = fdiff.second_order_diff((vw*meanv).iloc[:,n], z)
-            ddz_wwW[:,n] = fdiff.second_order_diff((ww*meanw).iloc[:,n], z)
-        tt = -0.5*(ddy_uvU + ddz_uwU + ddy_vvV + ddz_vwV + ddy_vwW + ddz_wwW)
-        tty = -0.5*(ddy_uvU + ddy_vvV + ddy_vwW) # Only ddy terms
-        ttz = -0.5*(ddz_uwU + ddz_vwV + ddz_wwW) # Only ddz terms
-        return tt, tty, ttz
+            self.ddz_uwU[:,n] = \
+                fdiff.second_order_diff((self.df.mean_upwp*self.df.mean_u)\
+                .iloc[:,n], z)
+            self.ddz_vwV[:,n] = \
+                fdiff.second_order_diff((self.df.mean_vpwp*self.df.mean_v)\
+                .iloc[:,n], z)
+            self.ddz_wwW[:,n] = \
+                fdiff.second_order_diff((self.df.mean_wpwp*self.df.mean_w)\
+                .iloc[:,n], z)
+        self.mean_k_turb_trans = -0.5*(self.ddy_uvU + \
+                                       self.ddz_uwU + \
+                                       self.ddy_vvV + \
+                                       self.ddz_vwV + \
+                                       self.ddy_vwW + \
+                                       self.ddz_wwW)
+        self.mean_k_turb_trans_y = -0.5*(self.ddy_uvU + \
+                                         self.ddy_vvV + \
+                                         self.ddy_vwW) # Only ddy terms
+        self.mean_k_turb_trans_z = -0.5*(self.ddz_uwU + \
+                                         self.ddz_vwV + \
+                                         self.ddz_wwW) # Only ddz terms
         
-    def calc_kprod_meandiss(self):
+    def calc_k_prod_mean_diss(self):
         """
         Calculates the production of turbulent kinetic energy and dissipation
-        from mean shear.
+        from mean shear. Note that the mean streamwise velocity derivatives
+        have already been calculated by this point.
         """
-        dUdy = np.zeros(grdims)
-        dUdz = np.zeros(grdims)
-        dVdy = np.zeros(grdims)
-        dVdz = np.zeros(grdims)
-        dWdy = np.zeros(grdims)
-        dWdz = np.zeros(grdims)
+        y, z = self.y_R*R, self.z_H*H
+        self.dVdy = np.zeros(self.grdims)
+        self.dVdz = np.zeros(self.grdims)
+        self.dWdy = np.zeros(self.grdims)
+        self.dWdz = np.zeros(self.grdims)
         for n in range(len(z)):
-            dUdy[n,:] = fdiff.second_order_diff(meanu.iloc[n,:], y)
-            dVdy[n,:] = fdiff.second_order_diff(meanv.iloc[n,:], y)
-            dWdy[n,:] = fdiff.second_order_diff(meanw.iloc[n,:], y)
+            self.dVdy[n,:] = \
+                fdiff.second_order_diff(self.df.mean_v.iloc[n,:], y)
+            self.dWdy[n,:] = \
+                fdiff.second_order_diff(self.df.mean_w.iloc[n,:], y)
         for n in range(len(y)):
-            dUdz[:,n] = fdiff.second_order_diff(meanu.iloc[:,n], z)
-            dVdz[:,n] = fdiff.second_order_diff(meanv.iloc[:,n], z)
-            dWdz[:,n] = fdiff.second_order_diff(meanw.iloc[:,n], z)
-        kprod = uv*dUdy + uw*dUdz + vw*dVdz + vw*dWdy\
-                + vv*dVdy + ww*dWdz
-        meandiss = -2.0*nu*(dUdy**2 + dUdz**2 + dVdy**2 + dVdz**2 + dWdy**2 + dWdz**2)
-        return kprod, meandiss
+            self.dVdz[:,n] = \
+                fdiff.second_order_diff(self.df.mean_v.iloc[:,n], z)
+            self.dWdz[:,n] = \
+                fdiff.second_order_diff(self.df.mean_w.iloc[:,n], z)
+        self.k_prod = self.df.mean_upvp*self.dUdy + \
+                      self.df.mean_upwp*self.dUdz + \
+                      self.df.mean_vpwp*self.dVdz + \
+                      self.df.mean_vpwp*self.dWdy + \
+                      self.df.mean_vpvp*self.dVdy + \
+                      self.df.mean_wpwp*self.dWdz
+        self.mean_diss = -2.0*nu*(self.dUdy**2 + self.dUdz**2 + self.dVdy**2 +\
+                                  self.dVdz**2 + self.dWdy**2 + self.dWdz**2)
         
-    def calc_meankgrad(self):
+    def calc_mean_k_grad(self):
         """Calulates $y$- and $z$-derivatives of $K$."""
-        z = H*z_H
-        y = R*y_R
-        dKdy = np.zeros(np.shape(meanu))
-        dKdz = np.zeros(np.shape(meanu))
+        z = self.z_H*H
+        y = self.y_R*R
+        self.dKdy = np.zeros(self.grdims)
+        self.dKdz = np.zeros(self.grdims)
         for n in range(len(z)):
-            dKdy[n,:] = fdiff.second_order_diff(grdata.meank.iloc[n,:], y)
+            self.dKdy[n,:] = \
+                fdiff.second_order_diff(self.df.mean_k.iloc[n,:], y)
         for n in range(len(y)):
-            dKdz[:,n] = fdiff.second_order_diff(grdata.meank.iloc[:,n], z)
-        return dKdy, dKdz
+            self.dKdz[:,n] = \
+                fdiff.second_order_diff(self.df.mean_k.iloc[:,n], z)
 
     def calc_mom_transport(self):
         """
