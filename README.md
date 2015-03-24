@@ -35,7 +35,7 @@ Documents and other resources
 Please cite 
 
 ```bibtex
-@Misc{Bachant2014_Re-dep-data,
+@Misc{Bachant2014-Re-dep-data,
   Title                    = {UNH-RVAT Reynolds number dependence experiment: Reduced dataset and processing code, rev1},
   Author                   = {Peter Bachant and Martin Wosnik},
   HowPublished             = {fig\textbf{share}. http://dx.doi.org/10.6084/m9.figshare.1286960,
@@ -51,13 +51,14 @@ Publications
 These data were used in the following publications:
 
 ```bibtex
-@INPROCEEDINGS{Bachant2014
+@INPROCEEDINGS{Bachant2014-METS
   Author                   = {Bachant, P. and Wosnik, M.},
   Title                    = {Reynolds Number Dependence of Cross-Flow Turbine Performance and Near-Wake Characteristics},
   Booktitle                = {Proceedings of the 2nd Marine Energy Technology Symposium METS2014},
   Month                    = {April},
   Year                     = {2014},
   Address                  = {Seattle, WA}
+  Url                      = {http://hdl.handle.net/10919/49210}
 }
 ```
 
