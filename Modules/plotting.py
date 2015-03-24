@@ -328,7 +328,7 @@ class WakeMap(object):
         print("Plotting mean velocity at U_infty = {} m/s".format(self.U_infty))
         plt.figure(figsize=(10,6))
         # Add contours of mean velocity
-        cs = plt.contourf(self.y_R, self.z_H, self.mean_u/self.U_infty,
+        cs = plt.contourf(self.y_R, self.z_H, self.df.mean_u/self.U_infty,
                           np.arange(0.15, 1.25, 0.05), cmap=plt.cm.coolwarm)
         if cb_orientation == "horizontal":
             cb = plt.colorbar(cs, shrink=1, extend="both",
@@ -339,8 +339,8 @@ class WakeMap(object):
         cb.set_label(r"$U/U_{\infty}$")
         plt.hold(True)
         # Make quiver plot of v and w velocities
-        Q = plt.quiver(self.y_R, self.z_H, self.mean_v/self.U_infty, 
-                       self.mean_w/self.U_infty, width=0.0022,
+        Q = plt.quiver(self.y_R, self.z_H, self.df.mean_v/self.U_infty, 
+                       self.df.mean_w/self.U_infty, width=0.0022,
                        edgecolor="none")
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
