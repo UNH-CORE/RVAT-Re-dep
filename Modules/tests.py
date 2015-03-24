@@ -117,6 +117,12 @@ def test_plot_settling():
     plot_settling(1.0)
     print("PASS")
     
+def test_calc_mom_transport():
+    print("Testing WakeMap.calc_mom_transport")
+    wm = WakeMap(1.0)
+    wm.calc_mom_transport()
+    print("PASS")
+    
 def test_all():
     test_run()
     test_section()
@@ -145,6 +151,7 @@ def test_all():
     plt.show()
     test_download_raw()
     test_plot_settling()
+    test_calc_mom_transport()
     print("All tests passed")
     
 if __name__ == "__main__":
