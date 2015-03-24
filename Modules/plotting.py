@@ -427,7 +427,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
-        plt.text(1.27e6, 1.11, r"$\times 10^5$", color=r"#555555")
+        plt.text(1.31e6, 1.11, "1e5", color=r"#555555")
         ax2 = ax.twiny()
         ax.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
@@ -436,7 +436,6 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
         ax2.set_xticks(ax.xaxis.get_ticklocs())
         ax2.set_xlim((0.2e6, 1.4e6))
         ax2.set_xticklabels(ticklabs)
-#        ax2.xaxis.major.formatter.set_powerlimits((0,0)) 
         ax2.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
     if cfd:
         plt.legend(loc=4)
@@ -455,6 +454,18 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
         plt.ylabel(r"$C_D/C_{D0}$")
     else:
         plt.ylabel(r"$C_D$")
+    ax = plt.gca()
+    if dual_xaxes:
+        plt.text(1.31e6, 1.035, "1e5", color=r"#555555")
+        ax2 = ax.twiny()
+        ax.xaxis.get_majorticklocs()
+        ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
+        ticklabs = ticklabs/D*1.9*0.14/1e5
+        ticklabs = [str(np.round(ticklab, decimals=1)) for ticklab in ticklabs]
+        ax2.set_xticks(ax.xaxis.get_ticklocs())
+        ax2.set_xlim((0.2e6, 1.4e6))
+        ax2.set_xticklabels(ticklabs)
+        ax2.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
     plt.hold(True)
     if cfd:
         plot_cfd_perf("cd", normalize_by=norm_cfd)
@@ -462,7 +473,6 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     plt.grid(True)
     if cfd:
         plt.legend(loc=4)
-    ax = plt.gca()
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.tight_layout()
     if save:
