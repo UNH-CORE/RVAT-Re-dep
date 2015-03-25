@@ -339,13 +339,15 @@ class WakeMap(object):
             plt.show()
     
     def plot_meancontquiv(self, save=False, show=False, savedir="Figures",
-                          savetype=".pdf", cb_orientation="vertical"):
+                          savetype=".pdf", cb_orientation="vertical",
+                          newfig=True):
         """
         Plot contours of mean velocity and vector arrows showing mean
         cross-stream and vertical velocity.
         """
         print("Plotting mean velocity at U_infty = {} m/s".format(self.U_infty))
-        plt.figure(figsize=(10,6))
+        if newfig:
+            plt.figure(figsize=(10,6))
         # Add contours of mean velocity
         cs = plt.contourf(self.y_R, self.z_H, self.df.mean_u/self.U_infty,
                           np.arange(0.15, 1.25, 0.05), cmap=plt.cm.coolwarm)
@@ -739,6 +741,17 @@ def plot_meancontquiv(U_infty=1.0, save=False, savetype=".pdf", show=False,
     wm.plot_meancontquiv(show=False, cb_orientation=cb_orientation)
     if save:
         plt.savefig("Figures/meancontquiv_{}{}".format(U_infty, savetype))
+    if show:
+        plt.show()
+        
+def plot_all_meancontquiv(save=False, savetype=".pdf", show=False):
+    """Plot all mean velocity contours/quivers in a single figure."""
+    plt.figure(figsize=(10, 20))
+    for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
+        plt.subplot(5, 1, n+1)
+        WakeMap(U).plot_meancontquiv(newfig=False)
+    if save:
+        plt.savefig("Figures/meancontquiv_all" + savetype)
     if show:
         plt.show()
         
