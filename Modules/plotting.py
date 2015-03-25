@@ -783,6 +783,58 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
         plt.savefig("Figures/K_trans_bar_graph" + savetype)
     if show:
         plt.show()
+        
+def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
+                       print_analysis=True):
+    """Make a bar graph of terms contributing to dU/dx:
+      * Cross-stream advection
+      * Vertical advection
+      * Cross-stream Re stress gradient
+      * Vertical Re stress gradient
+      * Cross-steam diffusion
+      * Vertical diffusion
+    """
+    names = [r"$-V \frac{\partial U}{\partial y}$", 
+             r"$-W \frac{\partial U}{\partial z}$", 
+             r"$-\frac{\partial}{\partial y} \overline{u'v'}$", 
+             r"$-\frac{\partial}{\partial z} \overline{u'w'}$",
+             r"$\nu \frac{\partial^2 U}{\partial y^2}$", 
+             r"$\nu \frac{\partial^2 U}{\partial z^2}$"]
+    plt.figure(figsize=(10,5))
+    cm = plt.cm.coolwarm
+    for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
+        wm = WakeMap(U)
+        dUdy = wm.dUdy
+        dUdz = wm.dUdz
+        tty = wm.ddy_upvp
+        ttz = wm.ddz_upwp
+        d2Udy2 = wm.d2Udy2
+        d2Udz2 = wm.d2Udz2
+        meanu, meanv, meanw = wm.df.mean_u, wm.df.mean_v, wm.df.mean_w
+        y_R, z_H = wm.y_R, wm.z_H
+        quantities = [ts.average_over_area(-2*meanv*dUdy/meanu/U*D, y_R, z_H), 
+                      ts.average_over_area(-2*meanw*dUdz/meanu/U*D, y_R, z_H),
+                      ts.average_over_area(-2*tty/meanu/U*D, y_R, z_H),
+                      ts.average_over_area(-2*ttz/meanu/U*D, y_R, z_H),
+                      ts.average_over_area(2*nu*d2Udy2/meanu/U*D, y_R, z_H),
+                      ts.average_over_area(2*nu*d2Udz2/meanu/U*D, y_R, z_H)]
+        ax = plt.gca()
+        color = cm(n)
+        ax.bar(np.arange(len(names)) + n*.15, quantities, color=color, 
+               width=0.15, edgecolor="black", 
+               label=r"$Re_D={:.1f}\times 10^6$".format(U*D/nu/1e6))
+        if print_analysis:
+            print("U recovery rate (%/D) =", np.sum(quantities)*100)
+    ax.set_xticks(np.arange(len(names)) + 5*.15/2)
+    ax.set_xticklabels(names)
+    plt.hlines(0, 0, len(names), color="gray")
+    plt.ylabel(r"$\frac{U \, \mathrm{ transport}}{UU_\infty D^{-1}}$")
+    plt.legend(loc="upper right")
+    plt.tight_layout()
+    if save:
+        plt.savefig("Figures/mom_bar_graph"+savetype)
+    if show:
+        plt.show()
 
 if __name__ == "__main__":
     pass
