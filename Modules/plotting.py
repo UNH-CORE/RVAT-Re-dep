@@ -741,6 +741,48 @@ def plot_meancontquiv(U_infty=1.0, save=False, savetype=".pdf", show=False,
         plt.savefig("Figures/meancontquiv_{}{}".format(U_infty, savetype))
     if show:
         plt.show()
+        
+def make_k_bar_graph(save=False, savetype=".pdf", show=False,
+                     print_analysis=True):
+    """
+    Makes a bar graph from the mean kinetic energy transport terms for four
+    Reynolds numbers.
+    """
+    names = [r"$y$-adv.", r"$z$-adv.", r"$y$-turb.", r"$z$-turb.",
+             r"$k$-prod.", "Mean diss."]
+    plt.figure(figsize=(10, 5))
+    cm = plt.cm.coolwarm
+    for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
+        Re_D = U*D/nu
+        wm = WakeMap(U)
+        tty, ttz = wm.mean_k_turb_trans_y, wm.mean_k_turb_trans_z
+        kprod, meandiss = wm.k_prod, wm.mean_diss
+        dKdy, dKdz = wm.dKdy, wm.dKdz
+        y_R, z_H = wm.y_R, wm.z_H
+        meanu, meanv, meanw = wm.df.mean_u, wm.df.mean_v, wm.df.mean_w
+        quantities = [ts.average_over_area(-2*meanv/meanu*dKdy/(0.5*U**2)*D, y_R, z_H), 
+                      ts.average_over_area(-2*meanw/meanu*dKdz/(0.5*U**2)*D, y_R, z_H),
+                      ts.average_over_area(2*tty/meanu/(0.5*U**2)*D, y_R, z_H),
+                      ts.average_over_area(2*ttz/meanu/(0.5*U**2)*D, y_R, z_H),
+                      ts.average_over_area(2*kprod/meanu/(0.5*U**2)*D, y_R, z_H),
+                      ts.average_over_area(2*meandiss/meanu/(0.5*U**2)*D, y_R, z_H)]
+        ax = plt.gca()
+        color = cm(n)
+        ax.bar(np.arange(len(names))+n*0.15, quantities, color=color, edgecolor="black", 
+               hatch=None, width=0.15, 
+               label=r"$Re_D={:.1f}\times 10^6$".format(Re_D/1e6))
+    ax.set_xticks(np.arange(len(names)) + 5*.15/2)
+    ax.set_xticklabels(names)
+    plt.hlines(0, 0, len(names), color="gray")
+    plt.ylabel(r"$\frac{K \, \mathrm{ transport}}{UK_\infty D^{-1}}$")
+    plt.legend(loc="upper right")
+    plt.tight_layout()
+    if print_analysis:
+        print("K recovery rate (%/D) =", np.sum(quantities)*100)
+    if save:
+        plt.savefig("Figures/K_trans_bar_graph" + savetype)
+    if show:
+        plt.show()
 
 if __name__ == "__main__":
     pass
