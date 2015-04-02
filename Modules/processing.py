@@ -160,6 +160,7 @@ class Run(object):
         with open(os.path.join(self.raw_dir, "metadata.json")) as f:
             self.metadata = json.load(f)
         self.tow_speed_nom = np.round(self.metadata["Tow speed (m/s)"], decimals=1)
+        self.tsr_nom = self.metadata["Tip speed ratio"]
         self.y_R = self.metadata["Vectrino y/R"]
         self.z_H = self.metadata["Vectrino z/H"]
         
