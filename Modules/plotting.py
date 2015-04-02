@@ -858,8 +858,9 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
 def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
                   show=False, newfig=True):
     """
-    Plots the cross-stream velocity spectrum for a single run. Any NaNs in the 
-    Velocity data are replaced with the mean.
+    Plots the cross-stream velocity spectrum (normalized by the free stream
+    velocity) for a single run. Any NaNs in the velocity data are replaced with
+    the mean.
     
     Bachant and Wosnik (2015, JoT) used locations y/R = (-1, 1.5) and
     z/H = 0.25 to compare spectra with high and low levels of turbulence,
