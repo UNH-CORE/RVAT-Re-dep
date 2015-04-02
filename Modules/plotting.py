@@ -301,9 +301,11 @@ class WakeMap(object):
         plt.vlines(1, -0.2, 0.5, linestyles=linestyles, colors="gray",
                    linewidth=linewidth)
                    
-    def plot_contours(self, quantity, label="", cb_orientation="vertical"):
+    def plot_contours(self, quantity, label="", cb_orientation="vertical",
+                      newfig=True):
         """Plots contours of given quantity."""
-        plt.figure(figsize=(10,5))
+        if newfig:
+            plt.figure(figsize=(10,5))
         cs = plt.contourf(self.y_R, self.z_H, quantity, 20,
                           cmap=plt.cm.coolwarm)
         plt.xlabel(r"$y/R$")
@@ -323,10 +325,10 @@ class WakeMap(object):
         plt.tight_layout()
         
     def plot_mean_u(self, save=False, show=False, savedir="Figures", 
-                    savetype=".pdf"):
+                    savetype=".pdf", newfig=True):
         """Plot contours of mean streamwise velocity."""
         self.plot_contours(self.df.mean_u/self.U_infty, 
-                           label=r"$U/U_\infty$")
+                           label=r"$U/U_\infty$", newfig=newfig)
         if save:
             plt.savefig(savedir+"/mean_u_cont"+savetype)
         if show:
@@ -752,7 +754,8 @@ def plot_all_meancontquiv(save=False, savetype=".pdf", show=False):
     plt.figure(figsize=(10, 20))
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
         plt.subplot(5, 1, n+1)
-        WakeMap(U).plot_meancontquiv(newfig=False)
+        WakeMap(U).plot_mean_u(newfig=False)
+        plt.hold(False)
     if save:
         plt.savefig("Figures/meancontquiv_all" + savetype)
     if show:
