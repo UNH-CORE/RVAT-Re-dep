@@ -431,9 +431,9 @@ class Run(object):
         mean_v = self.v.mean()
         mean_w = self.w.mean()
         # Create new unfiltered arrays
-        self.u_unf = self.u*1
-        self.v_unf = self.v*1
-        self.w_unf = self.w*1
+        self.u_unf = self.u.copy()
+        self.v_unf = self.v.copy()
+        self.w_unf = self.w.copy()
         if stdfilt:
         # Do standard deviation filters
             self.u = ts.sigmafilter(self.u, std, passes)
@@ -443,21 +443,15 @@ class Run(object):
             # Do threshold filter on u
             ibad = np.where(self.u > mean_u + fthresh)[0]
             ibad = np.append(ibad, np.where(self.u < mean_u - fthresh)[0])
-            i = np.where(np.logical_and(ibad > self.t1*200, 
-                                        ibad < self.t2*200))[0]
-            self.u[ibad[i]] = np.nan
+            self.u[ibad] = np.nan
             # Do threshold filter on v
             ibad = np.where(self.v > mean_v + fthresh)[0]
             ibad = np.append(ibad, np.where(self.v < mean_v - fthresh)[0])
-            i = np.where(np.logical_and(ibad > self.t1*200, 
-                                        ibad < self.t2*200))[0]
-            self.v[ibad[i]] = np.nan
+            self.v[ibad] = np.nan
             # Do threshold filter on w
             ibad = np.where(self.w > mean_w + fthresh)[0]
             ibad = np.append(ibad, np.where(self.w < mean_w - fthresh)[0])
-            i = np.where(np.logical_and(ibad > self.t1*200, 
-                                        ibad < self.t2*200))[0]
-            self.w[ibad[i]] = np.nan
+            self.w[ibad] = np.nan
         # Count up bad datapoints
         self.nbadu = len(np.where(np.isnan(self.u)==True)[0])
         self.nbadv = len(np.where(np.isnan(self.v)==True)[0])
@@ -617,7 +611,6 @@ class Run(object):
         if not self.loaded:
             self.load()
         plt.figure()
-        self.filter_wake()
         plt.plot(self.time_vec, self.u, 'k')
         plt.xlabel("Time (s)")
         plt.ylabel("$u$ (m/s)")
@@ -656,12 +649,12 @@ class Section(object):
     @property
     def mean_cp(self):
         return self.data.mean_cp
-    def process(self, nproc=4, save=True):
+    def process(self, nproc=8, save=True):
         """To-do: Process an entire section of data."""
         self.process_parallel(nproc=nproc)
         if save:
             self.data.to_csv(self.processed_path, na_rep="NaN", index=False)
-    def process_parallel(self, nproc=4, nruns="all"):
+    def process_parallel(self, nproc=8, nruns="all"):
         s = self.name
         runs = self.test_plan["Run"]
         if nruns != "all":
