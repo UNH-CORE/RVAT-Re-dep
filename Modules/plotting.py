@@ -786,7 +786,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
                       ts.average_over_area(2*kprod/meanu/(0.5*U**2)*D, y_R, z_H),
                       ts.average_over_area(2*meandiss/meanu/(0.5*U**2)*D, y_R, z_H)]
         ax = plt.gca()
-        color = cm(n)
+        color = cm(int(n/4*256))
         ax.bar(np.arange(len(names))+n*0.15, quantities, color=color, edgecolor="black", 
                hatch=None, width=0.15, 
                label=r"$Re_D={:.1f}\times 10^6$".format(Re_D/1e6))
