@@ -768,7 +768,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
     Reynolds numbers.
     """
     names = [r"$y$-adv.", r"$z$-adv.", r"$y$-turb.", r"$z$-turb.",
-             r"$k$-prod.", "Mean diss."]
+             r"$k$-prod.", r"Mean diss. $(\times 10^3)$"]
     plt.figure(figsize=(10, 5))
     cm = plt.cm.coolwarm
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
@@ -784,7 +784,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
                       ts.average_over_area(2*tty/meanu/(0.5*U**2)*D, y_R, z_H),
                       ts.average_over_area(2*ttz/meanu/(0.5*U**2)*D, y_R, z_H),
                       ts.average_over_area(2*kprod/meanu/(0.5*U**2)*D, y_R, z_H),
-                      ts.average_over_area(2*meandiss/meanu/(0.5*U**2)*D, y_R, z_H)]
+                      ts.average_over_area(2*meandiss/meanu/(0.5*U**2)*D*1e3, y_R, z_H)]
         ax = plt.gca()
         color = cm(int(n/4*256))
         ax.bar(np.arange(len(names))+n*0.15, quantities, color=color, edgecolor="black", 
@@ -794,7 +794,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
     ax.set_xticklabels(names)
     plt.hlines(0, 0, len(names), color="gray")
     plt.ylabel(r"$\frac{K \, \mathrm{ transport}}{UK_\infty D^{-1}}$")
-    plt.legend(loc="upper right")
+    plt.legend(loc="upper right", ncol=2)
     plt.tight_layout()
     if print_analysis:
         print("K recovery rate (%/D) =", np.sum(quantities)*100)
@@ -817,8 +817,8 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
              r"$-W \frac{\partial U}{\partial z}$", 
              r"$-\frac{\partial}{\partial y} \overline{u^\prime v^\prime}$", 
              r"$-\frac{\partial}{\partial z} \overline{u^\prime w^\prime}$",
-             r"$\nu \frac{\partial^2 U}{\partial y^2}$", 
-             r"$\nu \frac{\partial^2 U}{\partial z^2}$"]
+             r"$\nu \frac{\partial^2 U}{\partial y^2} \times 10^3$", 
+             r"$\nu \frac{\partial^2 U}{\partial z^2} \times 10^3$"]
     plt.figure(figsize=(10,5))
     cm = plt.cm.coolwarm
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
@@ -835,8 +835,8 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
                       ts.average_over_area(-2*meanw*dUdz/meanu/U*D, y_R, z_H),
                       ts.average_over_area(-2*tty/meanu/U*D, y_R, z_H),
                       ts.average_over_area(-2*ttz/meanu/U*D, y_R, z_H),
-                      ts.average_over_area(2*nu*d2Udy2/meanu/U*D, y_R, z_H),
-                      ts.average_over_area(2*nu*d2Udz2/meanu/U*D, y_R, z_H)]
+                      ts.average_over_area(2*nu*d2Udy2/meanu/U*D*1e3, y_R, z_H),
+                      ts.average_over_area(2*nu*d2Udz2/meanu/U*D*1e3, y_R, z_H)]
         ax = plt.gca()
         color = cm(int(n/4*256))
         ax.bar(np.arange(len(names)) + n*.15, quantities, color=color, 
@@ -848,7 +848,7 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
     ax.set_xticklabels(names)
     plt.hlines(0, 0, len(names), color="gray")
     plt.ylabel(r"$\frac{U \, \mathrm{ transport}}{UU_\infty D^{-1}}$")
-    plt.legend(loc="upper right")
+    plt.legend(loc="upper right", ncol=2)
     plt.tight_layout()
     if save:
         plt.savefig("Figures/mom_bar_graph"+savetype)
