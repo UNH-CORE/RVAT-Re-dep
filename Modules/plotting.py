@@ -518,8 +518,8 @@ def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir=
     plt.tight_layout()
     
 def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf", 
-                     errorbars=False, cfd=False, normalize_by="default", 
-                     dual_xaxes=False, show=False):
+                     errorbars=False, subplots=True, normalize_by=1.0, 
+                     dual_xaxes=True, show=False):
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
     std_cp = np.zeros(len(speeds))
@@ -551,32 +551,32 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
             cd[n], std_cd[n] = np.mean(cd_s), np.std(cd_s)
             exp_unc_cp[n] = np.mean(dcp_s)
             exp_unc_cd[n] = np.mean(dcd_s)
-    plt.figure()
-    if normalize_by == "default":
+    if subplots:
+        plt.figure(figsize=(12,5))
+        plt.subplot(121)
+    else:
+        plt.figure()
+    if normalize_by == "C_P_0":
         norm_cp = cp[-4]
         norm_cd = cd[-4]
-        norm_cfd = "CFD"
     else:
         norm_cp = normalize_by
         norm_cd = normalize_by
-        norm_cfd = normalize_by
     if errorbars:    
-        plt.errorbar(Re_D, cp/norm_cp, yerr=exp_unc_cp/2/cp[-4], fmt="-ok",
+        plt.errorbar(Re_D, cp/norm_cp, yerr=exp_unc_cp/norm_cp, fmt="-ok",
                      markerfacecolor="none", label="Experiment")
     else:
         plt.plot(Re_D, cp/norm_cp, '-ok', markerfacecolor="none", label="Experiment")
-    if cfd:
-        plot_cfd_perf("cp", normalize_by=norm_cfd)
     plt.xlabel(r"$Re_D$")
     if normalize_by == "default":
         plt.ylabel(r"$C_P/C_{P_0}$")
     else:
         plt.ylabel(r"$C_P$")
-#    plt.ylim((0.4, 1.2))
+    plt.ylim((0.17/normalize_by, 0.26/normalize_by))
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
-        plt.text(1.31e6, 1.11, "1e5", color=r"#555555")
+        plt.text(1.325e6, 0.269/norm_cp, "1e5")
         ax2 = ax.twiny()
         ax.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
@@ -586,15 +586,16 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
         ax2.set_xlim((0.2e6, 1.4e6))
         ax2.set_xticklabels(ticklabs)
         ax2.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
-    if cfd:
-        plt.legend(loc=4)
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.tight_layout()
     if save:
         plt.savefig(savedir + "/re_dep_cp" + savetype)
-    plt.figure()
+    if subplots:
+        plt.subplot(122)
+    else:
+        plt.figure()
     if errorbars:
-        plt.errorbar(Re_D, cd/norm_cd, yerr=exp_unc_cd/cd[-4]/2, fmt="-ok",
+        plt.errorbar(Re_D, cd/norm_cd, yerr=exp_unc_cd/norm_cd, fmt="-ok",
                      markerfacecolor="none", label="Experiment")
     else:
         plt.plot(Re_D, cd/cd[-4], '-ok', markerfacecolor="none", label="Experiment")
@@ -606,7 +607,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
-        plt.text(1.31e6, 1.035, "1e5", color=r"#555555")
+        plt.text(1.325e6, 1.03/norm_cd, "1e5")
         ax2 = ax.twiny()
         ax.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
@@ -617,11 +618,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
         ax2.set_xticklabels(ticklabs)
         ax2.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
     plt.hold(True)
-    if cfd:
-        plot_cfd_perf("cd", normalize_by=norm_cfd)
-    plt.ylim((0.9,1.04))
-    if cfd:
-        plt.legend(loc=4)
+    plt.ylim((0.92/norm_cd, 1.02/norm_cd))
     ax.xaxis.major.formatter.set_powerlimits((0,0))
     plt.tight_layout()
     if save:

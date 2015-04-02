@@ -15,8 +15,7 @@ savetype = ".pdf"
 def main():
     plot_cp_curve(1.0, save=save, savetype=savetype)
     plot_perf_curves(save=save, savetype=savetype)
-    plot_perf_re_dep(save=save, savetype=savetype, normalize_by="default", 
-                     dual_xaxes=True)
+    plot_perf_re_dep(save=save, savetype=savetype)
     plot_wake_profiles(z_H=0.0, save=save, savetype=savetype)
     wm = WakeMap(0.4)
     wm.plot_meancontquiv(save=save, savetype=savetype)
