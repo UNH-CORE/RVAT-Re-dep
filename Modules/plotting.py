@@ -6,7 +6,10 @@ This module contains classes and functions for plotting data.
 from Modules.processing import *
 import os
 
-plt.style.use("Config/plotstyle.mplstyle")
+def set_mplstyle(style):
+    if not style.split(".")[-1] == "mplstyle":
+        style += ".mplstyle"
+    plt.style.use("Config/mplstyles/" + style)
 
 ylabels = {"mean_u" : r"$U/U_\infty$",
            "std_u" : r"$\sigma_u/U_\infty$",

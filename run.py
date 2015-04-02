@@ -7,6 +7,7 @@ stores them in the `Figures` directory.
 
 from Modules.plotting import *
 
+set_mplstyle("arial")
 show = True
 save = True
 savetype = ".pdf"
