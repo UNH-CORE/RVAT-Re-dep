@@ -348,7 +348,6 @@ class WakeMap(object):
         Plot contours of mean velocity and vector arrows showing mean
         cross-stream and vertical velocity.
         """
-        print("Plotting mean velocity at U_infty = {} m/s".format(self.U_infty))
         if newfig:
             plt.figure(figsize=(10,6))
         # Add contours of mean velocity
