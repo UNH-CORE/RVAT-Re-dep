@@ -5,6 +5,7 @@ This module contains classes and functions for plotting data.
 """
 from Modules.processing import *
 import os
+from scipy.optimize import curve_fit
 
 def set_mplstyle(style):
     if not style.split(".")[-1] == "mplstyle":
@@ -526,7 +527,7 @@ def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir=
     
 def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf", 
                      errorbars=False, subplots=True, normalize_by=1.0, 
-                     dual_xaxes=True, show=False):
+                     dual_xaxes=True, show=False, power_law=False):
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
     std_cp = np.zeros(len(speeds))
@@ -535,6 +536,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     std_cd = np.zeros(len(speeds))
     exp_unc_cd = np.zeros(len(speeds))
     Re_D = speeds*D/1e-6
+    Re_c = Re_D/D*chord*1.9
     for n in range(len(speeds)):
         if speeds[n] in [0.3, 0.5, 0.7, 0.9, 1.1, 1.3]:
             section = "Perf-"+str(speeds[n])
@@ -579,7 +581,6 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
         plt.ylabel(r"$C_P/C_{P_0}$")
     else:
         plt.ylabel(r"$C_P$")
-    plt.ylim((0.17/normalize_by, 0.26/normalize_by))
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
@@ -593,6 +594,21 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
         ax2.set_xlim((0.2e6, 1.4e6))
         ax2.set_xticklabels(ticklabs)
         ax2.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
+    if power_law:
+        # Calculate power law fits for quantities
+        def func(x, a, b): 
+            return a*x**b
+        coeffs_cd, covar_cd = curve_fit(func, Re_c, cd)
+        coeffs_cp, covar_cp = curve_fit(func, Re_c, cp)
+        print("Power law fits:")
+        print("C_P = {:.3f}*Re_c**{:.3f}".format(coeffs_cp[0], coeffs_cp[1]))
+        print("C_D = {:.3f}*Re_c**{:.3f}".format(coeffs_cd[0], coeffs_cd[1]))
+        Re_D_curve = np.linspace(0.3e6, 1.3e6)
+        cp_power_law = coeffs_cp[0]*(Re_D_curve/D*chord*1.9)**coeffs_cp[1]
+        plt.plot(Re_D_curve, cp_power_law, "--k", 
+                 label=r"${:.3f}Re_c^{{ {:.3f} }}$".format(coeffs_cp[0], coeffs_cp[1]))
+        plt.legend(loc="lower right")
+    plt.ylim((0.17/normalize_by, 0.26/normalize_by))
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.tight_layout()
     if save:
@@ -627,6 +643,11 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     plt.hold(True)
     plt.ylim((0.92/norm_cd, 1.02/norm_cd))
     ax.xaxis.major.formatter.set_powerlimits((0,0))
+    if power_law:
+        cd_power_law = coeffs_cd[0]*(Re_D_curve/D*chord*1.9)**coeffs_cd[1]
+        plt.plot(Re_D_curve, cd_power_law, "--k", 
+                 label=r"${:.3f}Re_c^{{ {:.3f} }}$".format(coeffs_cd[0], coeffs_cd[1]))
+        plt.legend(loc="lower right")
     plt.tight_layout()
     if save:
         plt.savefig(savedir + "/re_dep_cd" + savetype)
