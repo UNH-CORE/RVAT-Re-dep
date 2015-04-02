@@ -9,7 +9,11 @@ import os
 def set_mplstyle(style):
     if not style.split(".")[-1] == "mplstyle":
         style += ".mplstyle"
-    plt.style.use("Config/mplstyles/" + style)
+    try:
+        plt.style.use("Config/mplstyles/" + style)
+    except ValueError:
+        os.system("git submodule update --init --recursive")
+        plt.style.use("Config/mplstyles/" + style)
 
 ylabels = {"mean_u" : r"$U/U_\infty$",
            "std_u" : r"$\sigma_u/U_\infty$",
