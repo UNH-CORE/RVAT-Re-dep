@@ -854,6 +854,68 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
         plt.savefig("Figures/mom_bar_graph"+savetype)
     if show:
         plt.show()
+        
+def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
+                  show=False, newfig=True):
+    """
+    Plots the cross-stream velocity spectrum for a single run. Any NaNs in the 
+    Velocity data are replaced with the mean.
+    
+    Bachant and Wosnik (2015, JoT) used locations y/R = (-1, 1.5) and
+    z/H = 0.25 to compare spectra with high and low levels of turbulence,
+    respectively.
+    """
+    print("Plotting cross-stream velocity spectrum at ({}, {})".format(y_R, z_H))
+    # Find index for the desired parameters
+    s_name = "Wake-{:.1f}".format(U_infty)
+    tp = Section(s_name).test_plan
+    tp = tp[tp["y/R"] == y_R]
+    n = int(tp[tp["z/H"] == z_H].iloc[0]["Run"])
+    r = Run(s_name, n)
+    v = r.v
+    print("Replacing {} datapoints with mean".format(r.nbadv))
+    v[np.isnan(v)] = r.mean_v
+    f, spec = ts.psd(r.time_vec, v/U_infty, window="Hanning", 
+                     n_band_average=n_band_ave)
+    f_turbine = r.mean_tsr*U_infty/R/(2*np.pi)
+    # Find maximum frequency and its relative strength
+    f_max = f[spec==spec.max()][0]
+    strength = np.max(spec)/r.std_v**2*(f[1] - f[0])
+    print("Strongest frequency f/f_turbine: {:.3f}".format(f_max/f_turbine))
+    print("Spectral concentration: {:.3f}".format(strength))
+    if newfig:
+        plt.figure()
+    plt.loglog(f/f_turbine, spec, "k")
+    plt.xlim((0, 50))
+    plt.xlabel(r"$f/f_{\mathrm{turbine}}$")
+    plt.ylabel(r"Spectral density")
+    # Should the spectrum be normalized?
+    f_line = np.linspace(10,40)
+    spec_line = f_line**(-5./3)*0.5*1e-2
+    plt.hold(True)
+    plt.loglog(f_line, spec_line, "gray")
+    plt.ylim((1e-7, 1e-2))
+    plot_vertical_lines([1, 3, 6, 9])
+    if plot_conf_int:
+        dof = n_band_average*2
+        chi2 = scipy.stats.chi2.interval(alpha=0.95, df=dof)
+        y1 = dof*spec/chi2[1]
+        y2 = dof*spec/chi2[0]
+        plt.fill_between(f/f_turbine, y1, y2, facecolor="lightgray", alpha=0.2)
+    plt.grid(True)
+    plt.tight_layout()
+    if show:
+        plt.show()
+        
+def plot_vertical_lines(xlist, ymaxscale=1, color="gray"):
+    if not isinstance(xlist, list):
+        x = [x]
+    ymin = plt.axis()[2]
+    ymax = plt.axis()[3]*ymaxscale
+    for x in xlist:
+        plt.vlines(x, ymin, ymax,
+                   color=color, linestyles="dashed")
+    plt.ylim((ymin, ymax))
 
 if __name__ == "__main__":
     pass
