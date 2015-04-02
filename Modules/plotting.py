@@ -815,8 +815,8 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
     """
     names = [r"$-V \frac{\partial U}{\partial y}$", 
              r"$-W \frac{\partial U}{\partial z}$", 
-             r"$-\frac{\partial}{\partial y} \overline{u'v'}$", 
-             r"$-\frac{\partial}{\partial z} \overline{u'w'}$",
+             r"$-\frac{\partial}{\partial y} \overline{u^\prime v^\prime}$", 
+             r"$-\frac{\partial}{\partial z} \overline{u^\prime w^\prime}$",
              r"$\nu \frac{\partial^2 U}{\partial y^2}$", 
              r"$\nu \frac{\partial^2 U}{\partial z^2}$"]
     plt.figure(figsize=(10,5))
@@ -838,7 +838,7 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
                       ts.average_over_area(2*nu*d2Udy2/meanu/U*D, y_R, z_H),
                       ts.average_over_area(2*nu*d2Udz2/meanu/U*D, y_R, z_H)]
         ax = plt.gca()
-        color = cm(n)
+        color = cm(int(n/4*256))
         ax.bar(np.arange(len(names)) + n*.15, quantities, color=color, 
                width=0.15, edgecolor="black", 
                label=r"$Re_D={:.1f}\times 10^6$".format(U*D/nu/1e6))
