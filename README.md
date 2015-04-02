@@ -10,7 +10,13 @@ for use.
 Getting started
 ---------------
 
-We recommend the 
+Clone this repository with
+
+    git clone https://github.com/UNH-CORE/RVAT-Re-dep.git
+    cd RVAT-Re-dep
+    git submodule update --init --recursive
+
+To run the processing/plotting code we recommend the 
 [Anaconda Python distribution](https://store.continuum.io/cshop/anaconda/)
 (Python 3.4) since it includes most dependencies. The remaining 
 can be installed by executing
