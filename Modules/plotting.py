@@ -12,7 +12,7 @@ ylabels = {"mean_u" : r"$U/U_\infty$",
            "std_u" : r"$\sigma_u/U_\infty$",
            "mean_v" : r"$V/U_\infty$",
            "mean_w" : r"$W/U_\infty$",
-           "mean_upvp" : r"$\overline{u'v'}/U_\infty^2$",
+           "mean_upvp" : r"$\overline{u^\prime v^\prime}/U_\infty^2$",
            "mean_u_diff" : r"$\Delta U$ (\%)",
            "mean_v_diff" : r"$\Delta V$ (\%)",
            "mean_w_diff" : r"$\Delta W$ (\%)"}
@@ -510,6 +510,7 @@ def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir=
     plt.plot(y_R, q/unorm, marker, markerfacecolor=fill, label=label)
     plt.xlabel(r"$y/R$")
     plt.ylabel(ylabels[quantity])
+    plt.grid(True)
     plt.tight_layout()
     
 def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf", 
@@ -564,7 +565,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
         plot_cfd_perf("cp", normalize_by=norm_cfd)
     plt.xlabel(r"$Re_D$")
     if normalize_by == "default":
-        plt.ylabel(r"$C_P/C_{P0}$")
+        plt.ylabel(r"$C_P/C_{P_0}$")
     else:
         plt.ylabel(r"$C_P$")
 #    plt.ylim((0.4, 1.2))
@@ -595,10 +596,11 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
         plt.plot(Re_D, cd/cd[-4], '-ok', markerfacecolor="none", label="Experiment")
     plt.xlabel(r"$Re_D$")
     if normalize_by == "default":
-        plt.ylabel(r"$C_D/C_{D0}$")
+        plt.ylabel(r"$C_D/C_{D_0}$")
     else:
         plt.ylabel(r"$C_D$")
     ax = plt.gca()
+    plt.grid(True)
     if dual_xaxes:
         plt.text(1.31e6, 1.035, "1e5", color=r"#555555")
         ax2 = ax.twiny()
@@ -613,11 +615,10 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     plt.hold(True)
     if cfd:
         plot_cfd_perf("cd", normalize_by=norm_cfd)
-#    plt.ylim((0.5,1.1))
-    plt.grid(True)
+    plt.ylim((0.9,1.04))
     if cfd:
         plt.legend(loc=4)
-    ax.xaxis.major.formatter.set_powerlimits((0,0)) 
+    ax.xaxis.major.formatter.set_powerlimits((0,0))
     plt.tight_layout()
     if save:
         plt.savefig(savedir + "/re_dep_cd" + savetype)
