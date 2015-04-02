@@ -363,7 +363,7 @@ class WakeMap(object):
         plt.hold(True)
         # Make quiver plot of v and w velocities
         Q = plt.quiver(self.y_R, self.z_H, self.df.mean_v/self.U_infty, 
-                       self.df.mean_w/self.U_infty, width=0.0022, scale=2.6,
+                       self.df.mean_w/self.U_infty, width=0.0022, scale=3,
                        edgecolor="none")
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
