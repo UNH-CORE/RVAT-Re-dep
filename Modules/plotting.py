@@ -856,7 +856,7 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
         plt.show()
         
 def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
-                  show=False, newfig=True):
+                  show=False, newfig=True, plot_lines=True, fmt="k"):
     """
     Plots the cross-stream velocity spectrum (normalized by the free stream
     velocity) for a single run. Any NaNs in the velocity data are replaced with
@@ -886,17 +886,18 @@ def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
     print("Spectral concentration: {:.3f}".format(strength))
     if newfig:
         plt.figure()
-    plt.loglog(f/f_turbine, spec, "k")
+    plt.loglog(f/f_turbine, spec, fmt, label="{:.1f}e6".format(U_infty))
     plt.xlim((0, 50))
     plt.xlabel(r"$f/f_{\mathrm{turbine}}$")
     plt.ylabel(r"Spectral density")
     # Should the spectrum be normalized?
-    f_line = np.linspace(10,40)
-    spec_line = f_line**(-5./3)*0.5*1e-2
-    plt.hold(True)
-    plt.loglog(f_line, spec_line, "gray")
-    plt.ylim((1e-7, 1e-2))
-    plot_vertical_lines([1, 3, 6, 9])
+    if plot_lines:
+        f_line = np.linspace(10,40)
+        spec_line = f_line**(-5./3)*0.5*1e-2
+        plt.hold(True)
+        plt.loglog(f_line, spec_line, "gray")
+        plt.ylim((1e-8, 1e-1))
+        plot_vertical_lines([1, 3, 6, 9])
     if plot_conf_int:
         dof = n_band_average*2
         chi2 = scipy.stats.chi2.interval(alpha=0.95, df=dof)
@@ -907,6 +908,30 @@ def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
     plt.tight_layout()
     if show:
         plt.show()
+        
+def plot_multi_spec(n_band_ave=4, plot_conf_int=False, show=False):
+    """
+    Plots the cross-stream velocity spectra for two cross-stream locations at
+    all Reynolds numbers.
+    """
+    u_list = [0.4, 0.6, 0.8, 1.0, 1.2]
+    fmts = ["b", "g", "c", "orange", "r"]
+    y_R_a = -1.0
+    y_R_b = 1.5
+    z_H = 0.25
+    plt.figure(figsize=(11,5))
+    plt.subplot(1, 2, 1)
+    for u, f in zip(u_list, fmts):
+        plot_vel_spec(u, y_R_a, z_H, n_band_ave=n_band_ave, newfig=False,
+                      plot_lines=(u==1.2), fmt=f)
+    plt.legend(loc="best")
+    plt.subplot(1, 2, 2)
+    for u, f in zip(u_list, fmts):
+        plot_vel_spec(u, y_R_b, z_H, n_band_ave=n_band_ave, newfig=False,
+                      plot_lines=(u==1.2), fmt=f)
+    if show:
+        plt.show()
+    
         
 def plot_vertical_lines(xlist, ymaxscale=1, color="gray"):
     if not isinstance(xlist, list):
