@@ -12,8 +12,11 @@ def set_mplstyle(style):
     try:
         plt.style.use("Config/mplstyles/" + style)
     except ValueError:
-        os.system("git submodule update --init --recursive")
-        plt.style.use("Config/mplstyles/" + style)
+        if style.replace(".mplstyle", "") in plt.style.available:
+            plt.style.use(style.replace(".mplstyle", ""))
+        else:
+            os.system("git submodule update --init --recursive")
+            plt.style.use("Config/mplstyles/" + style)
 
 ylabels = {"mean_u" : r"$U/U_\infty$",
            "std_u" : r"$\sigma_u/U_\infty$",
