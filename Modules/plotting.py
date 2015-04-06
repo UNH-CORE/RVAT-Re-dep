@@ -6,6 +6,7 @@ This module contains classes and functions for plotting data.
 from Modules.processing import *
 import os
 from scipy.optimize import curve_fit
+import seaborn as sns
 
 def set_mplstyle(style):
     if not style.split(".")[-1] == "mplstyle":
@@ -313,7 +314,7 @@ class WakeMap(object):
                       newfig=True):
         """Plots contours of given quantity."""
         if newfig:
-            plt.figure(figsize=(10,5))
+            plt.figure(figsize=(10, 2.5))
         cs = plt.contourf(self.y_R, self.z_H, quantity, 20,
                           cmap=plt.cm.coolwarm)
         plt.xlabel(r"$y/R$")
@@ -322,7 +323,7 @@ class WakeMap(object):
             cb = plt.colorbar(cs, shrink=1, extend="both", 
                               orientation="horizontal", pad=0.3)
         elif cb_orientation == "vertical":
-            cb = plt.colorbar(cs, shrink=0.401, extend="both", 
+            cb = plt.colorbar(cs, shrink=1, extend="both", 
                               orientation="vertical", pad=0.02)
         cb.set_label(label)
         self.turb_lines()
@@ -359,7 +360,7 @@ class WakeMap(object):
         cross-stream and vertical velocity.
         """
         if newfig:
-            plt.figure(figsize=(10,6))
+            plt.figure(figsize=(10, 3.5))
         # Add contours of mean velocity
         cs = plt.contourf(self.y_R, self.z_H, self.df.mean_u/self.U_infty,
                           np.arange(0.15, 1.25, 0.05), cmap=plt.cm.coolwarm)
@@ -367,7 +368,7 @@ class WakeMap(object):
             cb = plt.colorbar(cs, shrink=1, extend="both",
                               orientation="horizontal", pad=0.14)
         elif cb_orientation == "vertical":
-            cb = plt.colorbar(cs, shrink=0.401, extend="both", 
+            cb = plt.colorbar(cs, shrink=0.77, extend="both", 
                               orientation="vertical", pad=0.02)
         cb.set_label(r"$U/U_{\infty}$")
         plt.hold(True)
@@ -382,13 +383,11 @@ class WakeMap(object):
         if cb_orientation == "horizontal":
             plt.quiverkey(Q, 0.65, 0.26, 0.1, r"$0.1 U_\infty$",
                           labelpos="E",
-                          coordinates="figure",
-                          fontproperties={"size": "small"})
+                          coordinates="figure")
         elif cb_orientation == "vertical":
-            plt.quiverkey(Q, 0.65, 0.23, 0.1, r"$0.1 U_\infty$",
+            plt.quiverkey(Q, 0.65, 0.07, 0.1, r"$0.1 U_\infty$",
                           labelpos="E",
-                          coordinates="figure",
-                          fontproperties={"size": "small"})
+                          coordinates="figure")
         self.turb_lines()
         ax = plt.axes()
         ax.set_aspect(2)
@@ -398,7 +397,7 @@ class WakeMap(object):
         if show:
             self.show()
         if save:
-            plt.savefig(savedir+"/meancontquiv"+savetype)
+            plt.savefig(savedir+"/meancontquiv_{}{}".format(self.U_infty, savetype))
     
     def plot_xvorticity(self):
         pass
@@ -584,7 +583,8 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
-        plt.text(1.325e6, 0.269/norm_cp, "1e5")
+        plt.text(1.325e6, 0.269/norm_cp, "1e5", fontdict={"size": 14,
+                                                          "color": ".15"})
         ax2 = ax.twiny()
         ax.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
@@ -630,7 +630,8 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
-        plt.text(1.325e6, 1.03/norm_cd, "1e5")
+        plt.text(1.325e6, 1.03/norm_cd, "1e5", fontdict={"size": 14,
+                                                         "color": ".15"})
         ax2 = ax.twiny()
         ax.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
