@@ -8,17 +8,10 @@ import os
 from scipy.optimize import curve_fit
 import seaborn as sns
 
-def set_mplstyle(style):
-    if not style.split(".")[-1] == "mplstyle":
-        style += ".mplstyle"
-    try:
-        plt.style.use("Config/mplstyles/" + style)
-    except ValueError:
-        if style.replace(".mplstyle", "") in plt.style.available:
-            plt.style.use(style.replace(".mplstyle", ""))
-        else:
-            os.system("git submodule update --init --recursive")
-            plt.style.use("Config/mplstyles/" + style)
+def set_sns():
+    sns.set(style="white", context="paper", font_scale=1.75,
+            rc={"lines.markersize": 9, "lines.markeredgewidth": 1.25,
+            "legend.fontsize": 12})
 
 ylabels = {"mean_u" : r"$U/U_\infty$",
            "std_u" : r"$\sigma_u/U_\infty$",

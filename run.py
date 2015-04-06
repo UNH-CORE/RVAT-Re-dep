@@ -7,9 +7,7 @@ stores them in the `Figures` directory.
 
 from Modules.plotting import *
 
-sns.set(style="white", context="paper", font_scale=1.75,
-        rc={"lines.markersize": 9, "lines.markeredgewidth": 1.25,
-            "legend.fontsize": 12})
+set_sns()
 show = True
 save = True
 savetype = ".pdf"
