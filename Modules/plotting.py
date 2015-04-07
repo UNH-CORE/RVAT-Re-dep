@@ -606,7 +606,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     plt.ylim((0.17/normalize_by, 0.26/normalize_by))
     ax.xaxis.major.formatter.set_powerlimits((0,0)) 
     plt.tight_layout()
-    if save:
+    if save and not subplots:
         plt.savefig(savedir + "/re_dep_cp" + savetype)
     if subplots:
         plt.subplot(122)
@@ -645,7 +645,10 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
         plt.legend(loc="lower right")
     plt.tight_layout()
     if save:
-        plt.savefig(savedir + "/re_dep_cd" + savetype)
+        if subplots:
+            plt.savefig(savedir + "/perf_re_dep" + savetype)
+        else:
+            plt.savefig(savedir + "/re_dep_cd" + savetype)
     if show:
         plt.show()
     
