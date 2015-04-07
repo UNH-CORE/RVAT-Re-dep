@@ -11,7 +11,7 @@ import seaborn as sns
 def set_sns():
     sns.set(style="white", context="paper", font_scale=1.75,
             rc={"lines.markersize": 9, "lines.markeredgewidth": 1.25,
-            "legend.fontsize": 12})
+            "legend.fontsize": "small", "font.size": 14})
 
 ylabels = {"mean_u" : r"$U/U_\infty$",
            "std_u" : r"$\sigma_u/U_\infty$",
@@ -361,7 +361,7 @@ class WakeMap(object):
             cb = plt.colorbar(cs, shrink=1, extend="both",
                               orientation="horizontal", pad=0.14)
         elif cb_orientation == "vertical":
-            cb = plt.colorbar(cs, shrink=0.77, extend="both", 
+            cb = plt.colorbar(cs, shrink=0.785, extend="both", 
                               orientation="vertical", pad=0.02)
         cb.set_label(r"$U/U_{\infty}$")
         plt.hold(True)
@@ -375,12 +375,10 @@ class WakeMap(object):
         plt.xlim(-3.2, 3.2)
         if cb_orientation == "horizontal":
             plt.quiverkey(Q, 0.65, 0.26, 0.1, r"$0.1 U_\infty$",
-                          labelpos="E",
-                          coordinates="figure")
+                          labelpos="E", coordinates="figure")
         elif cb_orientation == "vertical":
-            plt.quiverkey(Q, 0.65, 0.07, 0.1, r"$0.1 U_\infty$",
-                          labelpos="E",
-                          coordinates="figure")
+            plt.quiverkey(Q, 0.65, 0.08, 0.1, r"$0.1 U_\infty$",
+                          labelpos="E", coordinates="figure")
         self.turb_lines()
         ax = plt.axes()
         ax.set_aspect(2)
@@ -576,8 +574,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
-        plt.text(1.325e6, 0.269/norm_cp, "1e5", fontdict={"size": 14,
-                                                          "color": ".15"})
+        plt.text(1.325e6, 0.269/norm_cp, "1e5")
         ax2 = ax.twiny()
         ax.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
@@ -623,8 +620,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
-        plt.text(1.325e6, 1.03/norm_cd, "1e5", fontdict={"size": 14,
-                                                         "color": ".15"})
+        plt.text(1.325e6, 1.03/norm_cd, "1e5")
         ax2 = ax.twiny()
         ax.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
