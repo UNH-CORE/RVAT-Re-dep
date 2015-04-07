@@ -550,6 +550,12 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
             cd[n], std_cd[n] = np.mean(cd_s), np.std(cd_s)
             exp_unc_cp[n] = np.mean(dcp_s)
             exp_unc_cd[n] = np.mean(dcd_s)
+    df = pd.DataFrame()
+    df["Re_D"] = Re_D
+    df["Re_c_ave"] = Re_c
+    df["mean_cp"] = cp
+    df["mean_cd"] = cd
+    df.to_csv("Data/Processed/Perf-tsr_0.csv", index=False)
     if subplots:
         plt.figure(figsize=(12,5))
         plt.subplot(121)
