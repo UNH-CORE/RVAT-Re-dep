@@ -840,8 +840,8 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
              r"$-W \frac{\partial U}{\partial z}$", 
              r"$-\frac{\partial}{\partial y} \overline{u^\prime v^\prime}$", 
              r"$-\frac{\partial}{\partial z} \overline{u^\prime w^\prime}$",
-             r"$\nu \frac{\partial^2 U}{\partial y^2} \times 10^3$", 
-             r"$\nu \frac{\partial^2 U}{\partial z^2} \times 10^3$"]
+             r"$\nu \frac{\partial^2 U}{\partial y^2} (\times 10^3)$", 
+             r"$\nu \frac{\partial^2 U}{\partial z^2} (\times 10^3)$"]
     plt.figure(figsize=(10,5))
     cm = plt.cm.coolwarm
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
