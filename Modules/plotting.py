@@ -965,7 +965,7 @@ def plot_vertical_lines(xlist, ymaxscale=1, color="gray"):
                    color=color, linestyles="dashed")
     plt.ylim((ymin, ymax))
     
-def plot_wake_re_dep(save=False):
+def plot_wake_re_dep(y_R=0.0, z_H=0.25, save=False):
     """
     Plots the Reynolds number dependence of the streamwise mean velocity and 
     turbulence intensity at y/R = 0, z/H = 0.25. Averages are taken from two
@@ -973,31 +973,43 @@ def plot_wake_re_dep(save=False):
     """
     mean_u = []
     std_u = []
-    speeds = np.arange(0.3, 1.4, 0.1)
     wake_speeds = np.arange(0.4, 1.4, 0.2)
+    if y_R == 0.0 and z_H == 0.25:
+        speeds = np.arange(0.3, 1.4, 0.1)
+    else:
+        speeds = wake_speeds
     for speed in speeds:
-        s = Section("Perf-{:.1f}".format(speed))
-        df = s.data
-        df = df[np.round(df.mean_tsr, decimals=1)==1.9]
-        df = df[df.y_R == 0.0]
-        df = df[df.z_H == 0.25]
-        mean_u.append(df.mean_u.mean())
-        std_u.append(df.std_u.mean())
-        if speed in wake_speeds:
+        if y_R == 0.0 and z_H == 0.25:
+            s = Section("Perf-{:.1f}".format(speed))
+            df = s.data
+            df = df[np.round(df.mean_tsr, decimals=1)==1.9]
+            df = df[df.y_R == y_R]
+            df = df[df.z_H == z_H]
+            mean_u.append(df.mean_u.mean())
+            std_u.append(df.std_u.mean())
+            if speed in wake_speeds:
+                s = Section("Wake-{:.1f}".format(speed))
+                df = s.data
+                df = df[np.round(df.mean_tsr, decimals=1)==1.9]
+                df = df[df.y_R == y_R]
+                df = df[df.z_H == z_H]
+                mean_u[-1] = (mean_u[-1] + df.mean_u.mean())/2
+                std_u[-1] = (std_u[-1] + df.std_u.mean())/2
+        else:
             s = Section("Wake-{:.1f}".format(speed))
             df = s.data
             df = df[np.round(df.mean_tsr, decimals=1)==1.9]
-            df = df[df.y_R == 0.0]
-            df = df[df.z_H == 0.25]
-            mean_u[-1] = (mean_u[-1] + df.mean_u.mean())/2
-            std_u[-1] = (std_u[-1] + df.std_u.mean())/2
+            df = df[df.y_R == y_R]
+            df = df[df.z_H == z_H]
+            mean_u.append(df.mean_u.mean())
+            std_u.append(df.std_u.mean())
     mean_u = np.asarray(mean_u)
     std_u = np.asarray(std_u)
     plt.plot(speeds, mean_u/speeds, "-o")
-    plt.ylim((0.15, 0.35))
+#    plt.ylim((0.15, 0.35))
     plt.figure()
     plt.plot(speeds, std_u/speeds, "-o")
-    plt.ylim((0.05, 0.2))
+#    plt.ylim((0.05, 0.2))
 
 
 if __name__ == "__main__":
