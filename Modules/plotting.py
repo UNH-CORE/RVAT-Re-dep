@@ -486,7 +486,7 @@ class WakeMap(object):
            
 def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir="Figures", 
                             savetype=".pdf", newfig=True, marker="-ok",
-                            fill="none", oldwake=False, figsize=(10, 5)):
+                            fill="none", oldwake=False, figsize=(8, 4)):
     """Plots the transverse wake profile of some quantity. These can be
       * mean_u
       * mean_v
@@ -744,7 +744,7 @@ def plot_perf_curves(subplots=True, save=False, savedir="Figures",
     if show:
         plt.show()
     
-def plot_wake_profiles(z_H=0.25, save=False, show=False, savedir="Figures", 
+def plot_wake_profiles(z_H=0.0, save=False, show=False, savedir="Figures", 
                        savetype=".pdf"):
     """Plots all wake profiles of interest."""
     legendlocs = {"mean_u" : 4,
