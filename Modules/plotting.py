@@ -556,7 +556,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     df["mean_cd"] = cd
     df.to_csv("Data/Processed/Perf-tsr_0.csv", index=False)
     if subplots:
-        plt.figure(figsize=(12,5))
+        plt.figure(figsize=(11, 4.5))
         plt.subplot(121)
     else:
         plt.figure()
@@ -579,7 +579,10 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
-        plt.text(1.325e6, 0.269/norm_cp, "1e5")
+        x, y = 1.335e6, 0.27/norm_cp
+        if subplots:
+            x, y = x*0.995, y*1.0
+        plt.text(x, y, "1e5")
         ax2 = ax.twiny()
         ax.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
@@ -625,7 +628,10 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
-        plt.text(1.325e6, 1.03/norm_cd, "1e5")
+        x, y = 1.335e6, 1.0305/norm_cd
+        if subplots:
+            x, y = x*0.995, y*1.0
+        plt.text(x, y, "1e5")
         ax2 = ax.twiny()
         ax.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
@@ -715,7 +721,7 @@ def plot_perf_curves(subplots=True, save=False, savedir="Figures",
                      show=False, savetype=".pdf"):
     """Plots all performance curves."""
     if subplots:
-        plt.figure(figsize=(12, 5))
+        plt.figure(figsize=(11, 4.5))
         plt.subplot(121)
     PerfCurve(0.4).plotcp(newfig=not subplots, show=False, marker=">")
     PerfCurve(0.6).plotcp(newfig=False, show=False, marker="s")
