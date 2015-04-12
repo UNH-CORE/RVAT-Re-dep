@@ -751,16 +751,16 @@ def plot_wake_profiles(z_H=0.0, save=False, show=False, savedir="Figures",
                   "std_u" : 1,
                   "mean_upvp" : 1}
     for q in ["mean_u", "std_u", "mean_upvp"]:
-        plot_trans_wake_profile(q, U_infty=0.4, z_H=z_H, newfig=True, marker="--vb",
-                                fill="blue")
-        plot_trans_wake_profile(q, U_infty=0.6, z_H=z_H, newfig=False, marker="sk",
-                                fill="lightblue")
-        plot_trans_wake_profile(q, U_infty=0.8, z_H=z_H, newfig=False, marker="<k",
-                                fill="gray")
-        plot_trans_wake_profile(q, U_infty=1.0, z_H=z_H, newfig=False, marker="-ok",
-                                fill="orange")
-        plot_trans_wake_profile(q, U_infty=1.2, z_H=z_H, newfig=False, marker="^k",
-                                fill="red")
+        plot_trans_wake_profile(q, U_infty=0.4, z_H=z_H, newfig=True, marker="--v",
+                                fill=None)
+        plot_trans_wake_profile(q, U_infty=0.6, z_H=z_H, newfig=False, marker="s",
+                                fill=None)
+        plot_trans_wake_profile(q, U_infty=0.8, z_H=z_H, newfig=False, marker="<",
+                                fill=None)
+        plot_trans_wake_profile(q, U_infty=1.0, z_H=z_H, newfig=False, marker="-o",
+                                fill=None)
+        plot_trans_wake_profile(q, U_infty=1.2, z_H=z_H, newfig=False, marker="^",
+                                fill=None)
         plt.legend(loc=legendlocs[q])
         if q == "mean_upvp":
             plt.ylim((-0.015, 0.025))
@@ -798,7 +798,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
     """
     names = [r"$y$-adv.", r"$z$-adv.", r"$y$-turb.", r"$z$-turb.",
              r"$k$-prod.", r"Mean diss. $(\times 10^3)$"]
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(9, 5))
     cm = plt.cm.coolwarm
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
         Re_D = U*D/nu
@@ -848,7 +848,7 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
              r"$-\frac{\partial}{\partial z} \overline{u^\prime w^\prime}$",
              r"$\nu \frac{\partial^2 U}{\partial y^2} (\times 10^3)$", 
              r"$\nu \frac{\partial^2 U}{\partial z^2} (\times 10^3)$"]
-    plt.figure(figsize=(10,5))
+    plt.figure(figsize=(9, 5))
     cm = plt.cm.coolwarm
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
         wm = WakeMap(U)
