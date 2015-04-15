@@ -821,7 +821,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
                label=r"$Re_D={:.1f}\times 10^6$".format(Re_D/1e6))
     ax.set_xticks(np.arange(len(names)) + 5*.15/2)
     ax.set_xticklabels(names)
-    plt.hlines(0, 0, len(names), color="gray")
+    plt.hlines(0, 0, len(names), color="black")
     plt.ylabel(r"$\frac{K \, \mathrm{ transport}}{UK_\infty D^{-1}}$")
     plt.legend(loc="upper right", ncol=2)
     plt.tight_layout()
@@ -875,7 +875,7 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
             print("U recovery rate (%/D) =", np.sum(quantities)*100)
     ax.set_xticks(np.arange(len(names)) + 5*.15/2)
     ax.set_xticklabels(names)
-    plt.hlines(0, 0, len(names), color="gray")
+    plt.hlines(0, 0, len(names), color="black")
     plt.ylabel(r"$\frac{U \, \mathrm{ transport}}{UU_\infty D^{-1}}$")
     plt.legend(loc="upper right", ncol=2)
     plt.tight_layout()
@@ -885,7 +885,7 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
         plt.show()
         
 def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
-                  show=False, newfig=True, plot_lines=True, fmt="k"):
+                  show=False, newfig=True, plot_lines=True, color="black"):
     """
     Plots the cross-stream velocity spectrum (normalized by the free stream
     velocity) for a single run. Any NaNs in the velocity data are replaced with
@@ -915,7 +915,8 @@ def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
     print("Spectral concentration: {:.3f}".format(strength))
     if newfig:
         plt.figure()
-    plt.loglog(f/f_turbine, spec, fmt, label="{:.1f}e6".format(U_infty))
+    plt.loglog(f/f_turbine, spec, color=color, 
+               label=r"$Re_D = {:.1f} \times 10^6$".format(U_infty))
     plt.xlim((0, 50))
     plt.xlabel(r"$f/f_{\mathrm{turbine}}$")
     plt.ylabel(r"Spectral density")
@@ -924,9 +925,9 @@ def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
         f_line = np.linspace(10,40)
         spec_line = f_line**(-5./3)*0.5*1e-2
         plt.hold(True)
-        plt.loglog(f_line, spec_line, "gray")
+        plt.loglog(f_line, spec_line, "black")
         plt.ylim((1e-8, 1e-1))
-        plot_vertical_lines([1, 3, 6, 9])
+        plot_vertical_lines([1, 3, 6, 9], color="lightgray")
     if plot_conf_int:
         dof = n_band_average*2
         chi2 = scipy.stats.chi2.interval(alpha=0.95, df=dof)
@@ -938,26 +939,29 @@ def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
     if show:
         plt.show()
         
-def plot_multi_spec(n_band_ave=4, plot_conf_int=False, show=False):
+def plot_multi_spec(n_band_ave=4, plot_conf_int=False, save=False, show=False,
+                    savetype=".pdf"):
     """
     Plots the cross-stream velocity spectra for two cross-stream locations at
     all Reynolds numbers.
     """
     u_list = [0.4, 0.6, 0.8, 1.0, 1.2]
-    fmts = ["b", "g", "c", "orange", "r"]
+    cm = plt.cm.coolwarm
     y_R_a = -1.0
     y_R_b = 1.5
     z_H = 0.25
-    plt.figure(figsize=(11,5))
+    plt.figure(figsize=(11, 4.5))
     plt.subplot(1, 2, 1)
-    for u, f in zip(u_list, fmts):
+    for n, u in enumerate(u_list):
         plot_vel_spec(u, y_R_a, z_H, n_band_ave=n_band_ave, newfig=False,
-                      plot_lines=(u==1.2), fmt=f)
+                      plot_lines=(u==1.2), color=cm(int(n/4*256)))
     plt.legend(loc="best")
     plt.subplot(1, 2, 2)
-    for u, f in zip(u_list, fmts):
+    for n, u in enumerate(u_list):
         plot_vel_spec(u, y_R_b, z_H, n_band_ave=n_band_ave, newfig=False,
-                      plot_lines=(u==1.2), fmt=f)
+                      plot_lines=(u==1.2), color=cm(int(n/4*256)))
+    if save:
+        plt.savefig("Figures/wake_spectra" + savetype)
     if show:
         plt.show()
         
