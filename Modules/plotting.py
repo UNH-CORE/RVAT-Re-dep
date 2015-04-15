@@ -819,14 +819,16 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
         ax.bar(np.arange(len(names))+n*0.15, quantities, color=color, edgecolor="black", 
                hatch=None, width=0.15, 
                label=r"$Re_D={:.1f}\times 10^6$".format(Re_D/1e6))
+        if print_analysis:
+            quantities[-1] /= 1e3
+            print("K recovery rate at {:.1f} m/s: {:.2f} (%/D)".format(U, 
+                  np.sum(quantities)*100))
     ax.set_xticks(np.arange(len(names)) + 5*.15/2)
     ax.set_xticklabels(names)
     plt.hlines(0, 0, len(names), color="black")
     plt.ylabel(r"$\frac{K \, \mathrm{ transport}}{UK_\infty D^{-1}}$")
     plt.legend(loc="upper right", ncol=2)
     plt.tight_layout()
-    if print_analysis:
-        print("K recovery rate (%/D) =", np.sum(quantities)*100)
     if save:
         plt.savefig("Figures/K_trans_bar_graph" + savetype)
     if show:
@@ -872,7 +874,10 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
                width=0.15, edgecolor="black", 
                label=r"$Re_D={:.1f}\times 10^6$".format(U*D/nu/1e6))
         if print_analysis:
-            print("U recovery rate (%/D) =", np.sum(quantities)*100)
+            quantities[4] /= 1e3
+            quantities[5] /= 1e3
+            print("U recovery rate at {:.1f} m/s: {:.2f} (%/D)".format(U, 
+                  np.sum(quantities)*100))
     ax.set_xticks(np.arange(len(names)) + 5*.15/2)
     ax.set_xticklabels(names)
     plt.hlines(0, 0, len(names), color="black")
