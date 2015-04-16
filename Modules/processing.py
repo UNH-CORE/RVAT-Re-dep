@@ -65,7 +65,7 @@ times = {0.3 : (20.0, 80.0),
          0.9 : (16.0, 32.0),
          1.0 : (15.0, 30.0),
          1.1 : (15.0, 28.0),
-         1.2 : (14.0, 25.0),
+         1.2 : (14.0, 27.0),
          1.3 : (13.0, 23.0),
          1.4 : (12.0, 20.0)}
 
@@ -264,6 +264,11 @@ class Run(object):
         the '_all' suffix."""
         # Put in some guesses for t1 and t2
         self.t1, self.t2 = times[self.tow_speed_nom]
+        if self.tow_speed_nom == 1.2:
+            if self.tsr_nom == 2.9:
+                self.t1 = 19
+            elif self.tsr_nom > 2.9:
+                self.t1 = 23
         self.find_t2()
         # Trim performance quantities
         self.time_ni_all = self.time_ni
@@ -584,10 +589,12 @@ class Run(object):
         s["k"] = self.k
         return s
         
-    def plot_perf(self, quantity="power coefficient"):
-        """Plots the run's data"""
-        if not self.loaded:
-            self.load()
+    def plot_perf(self, quantity="power coefficient", verbose=True):
+        """Plot the run's performance data."""
+        qname = quantity
+        if verbose:
+            print("Plotting {} from {} run {}".format(quantity, self.section, 
+                  self.nrun))
         if quantity == "drag":
             quantity = self.drag
             ylabel = "Drag (N)"
@@ -599,7 +606,12 @@ class Run(object):
         elif quantity.lower == "power coefficient" or "cp" or "c_p":
             quantity = self.cp
             ylabel = "$C_P$"
-            ylim = (-1, 1)
+            ylim = None
+        if verbose:
+            print("Mean TSR: {:.3f}".format(self.mean_tsr))
+            print(qname.capitalize(), "statistics:")
+            print("Min: {:.3f}, Max: {:.3f}, Mean: {:.3f}".format(np.min(quantity),
+                  np.max(quantity), nanmean(quantity)))
         plt.figure()
         plt.plot(self.time_ni, quantity, 'k')
         plt.xlabel("Time (s)")
@@ -651,8 +663,12 @@ class Section(object):
     def mean_cp(self):
         return self.data.mean_cp
     def process(self, nproc=8, save=True):
-        """To-do: Process an entire section of data."""
-        self.process_parallel(nproc=nproc)
+        """Process an entire section of data."""
+        if nproc > 1:
+            self.process_parallel(nproc=nproc)
+        else:
+            self.process_serial()
+        self.data.run = [int(run) for run in self.data.run]
         if save:
             self.data.to_csv(self.processed_path, na_rep="NaN", index=False)
     def process_parallel(self, nproc=8, nruns="all"):
@@ -664,8 +680,15 @@ class Section(object):
         results = [pool.apply_async(process_run, args=(s,n)) for n in runs]
         output = [p.get() for p in results]
         self.data = pd.DataFrame(output)
-        self.data.run = [int(run) for run in self.data.run]
         pool.close()
+    def process_serial(self):
+        s = self.name
+        runs = self.test_plan["Run"]
+        summaries = []
+        for nrun in runs:
+            r = Run(s, int(nrun))
+            summaries.append(r.summary)
+        self.data = pd.DataFrame(summaries)
         
 
 def process_run(section, nrun):
@@ -698,7 +721,7 @@ def load_test_plan_section(section):
         df["Run"] = df["Run"].astype(int)
     return df               
 
-def batch_process_section(name):
+def process_section(name):
     s = Section(name)
     s.process()
     
@@ -712,7 +735,7 @@ def batch_process_all():
                 "Wake-1.2"]
     for section in sections:
         print("Processing {}".format(section))
-        batch_process_section(section)
+        process_section(section)
     
 def process_tare_drag(nrun, plot=False):
     """Processes a single tare drag run."""
