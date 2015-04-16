@@ -340,7 +340,7 @@ class WakeMap(object):
         """Plots contours of turbulence kinetic energy."""
         self.plot_contours(self.df.k/(0.5*self.U_infty**2), 
                            newfig=newfig,
-                           label=r"$k/(\frac{1}{2}U_\infty^2)$",
+                           label=r"$k/\left(\frac{1}{2}U_\infty^2\right)$",
                            levels=np.linspace(0, 0.18, num=19))
         if save:
             plt.savefig("Figures/k_contours_{}{}".format(self.U_infty, savetype))
