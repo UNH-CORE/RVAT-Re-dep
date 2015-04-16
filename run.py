@@ -19,12 +19,10 @@ def main():
     plot_wake_profiles(save=save, savetype=savetype)
     make_k_bar_graph(save=save, savetype=savetype)
     make_mom_bar_graph(save=save, savetype=savetype)
-    wm = WakeMap(0.4)
-    wm.plot_meancontquiv(save=save, savetype=savetype)
-    wm.plot_k(save=save, savetype=savetype)
-    wm = WakeMap(1.2)
-    wm.plot_meancontquiv(save=save, savetype=savetype)
-    wm.plot_k(save=save, savetype=savetype)
+    plot_all_meancontquiv(save=save, savetype=savetype)
+    plot_all_kcont(save=save, savetype=savetype)
+    plot_multi_spec(save=save, savetype=savetype)
+    plot_wake_trans_totals(save=save, savetype=savetype)
     if show:
         plt.show()
 
