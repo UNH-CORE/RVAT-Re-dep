@@ -11,7 +11,8 @@ import seaborn as sns
 def set_sns():
     sns.set(style="white", context="paper", font_scale=1.75,
             rc={"lines.markersize": 9, "lines.markeredgewidth": 1.25,
-            "legend.fontsize": "small", "font.size": 14})
+            "legend.fontsize": "small", "font.size": 14, 
+            "axes.formatter.limits": (-5, 5)})
 
 ylabels = {"mean_u" : r"$U/U_\infty$",
            "std_u" : r"$\sigma_u/U_\infty$",
@@ -836,7 +837,8 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
         
 def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
                        print_analysis=True):
-    """Make a bar graph of terms contributing to dU/dx:
+    """
+    Creates a bar graph of terms contributing to dU/dx:
       * Cross-stream advection
       * Vertical advection
       * Cross-stream Re stress gradient
@@ -888,6 +890,57 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
         plt.savefig("Figures/mom_bar_graph"+savetype)
     if show:
         plt.show()
+        
+def plot_wake_trans_totals(save=False, savetype=".pdf"):
+    """
+    Plots totals for wake transport quantities for all Reynolds numbers
+    tested, both for the momentum and kinetic energy.
+    """
+    momentum_totals = []
+    energy_totals = []
+    speeds = [0.4, 0.6, 0.8, 1.0, 1.2]
+    Re_D = np.array(speeds)*D/nu
+    for U in speeds:
+        wm = WakeMap(U)
+        dUdy = wm.dUdy
+        dUdz = wm.dUdz
+        tty = wm.ddy_upvp
+        ttz = wm.ddz_upwp
+        d2Udy2 = wm.d2Udy2
+        d2Udz2 = wm.d2Udz2
+        meanu, meanv, meanw = wm.df.mean_u, wm.df.mean_v, wm.df.mean_w
+        y_R, z_H = wm.y_R, wm.z_H
+        quantities = [ts.average_over_area(-2*meanv*dUdy/meanu/U*D, y_R, z_H), 
+                      ts.average_over_area(-2*meanw*dUdz/meanu/U*D, y_R, z_H),
+                      ts.average_over_area(-2*tty/meanu/U*D, y_R, z_H),
+                      ts.average_over_area(-2*ttz/meanu/U*D, y_R, z_H),
+                      ts.average_over_area(2*nu*d2Udy2/meanu/U*D, y_R, z_H),
+                      ts.average_over_area(2*nu*d2Udz2/meanu/U*D, y_R, z_H)]
+        momentum_totals.append(np.sum(quantities))
+        tty, ttz = wm.mean_k_turb_trans_y, wm.mean_k_turb_trans_z
+        kprod, meandiss = wm.k_prod, wm.mean_diss
+        dKdy, dKdz = wm.dKdy, wm.dKdz
+        y_R, z_H = wm.y_R, wm.z_H
+        meanu, meanv, meanw = wm.df.mean_u, wm.df.mean_v, wm.df.mean_w
+        quantities = [ts.average_over_area(-2*meanv/meanu*dKdy/(0.5*U**2)*D, y_R, z_H), 
+                      ts.average_over_area(-2*meanw/meanu*dKdz/(0.5*U**2)*D, y_R, z_H),
+                      ts.average_over_area(2*tty/meanu/(0.5*U**2)*D, y_R, z_H),
+                      ts.average_over_area(2*ttz/meanu/(0.5*U**2)*D, y_R, z_H),
+                      ts.average_over_area(2*kprod/meanu/(0.5*U**2)*D, y_R, z_H),
+                      ts.average_over_area(2*meandiss/meanu/(0.5*U**2)*D, y_R, z_H)]
+        energy_totals.append(np.sum(quantities))
+    plt.figure()
+    plt.plot(Re_D, momentum_totals, "-o", color="black", label="$U$",
+             markerfacecolor="none")
+    plt.plot(Re_D, energy_totals, "--s", color="black", label="$K$",
+             markerfacecolor="none")
+    plt.xlabel("$Re_D$")
+    plt.ylabel("Normalized total transport")
+    plt.legend(loc="best")
+    plt.grid(True)
+    plt.tight_layout()
+    if save:
+        plt.savefig("Figures/wake_trans_totals" + savetype)
         
 def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
                   show=False, newfig=True, plot_lines=True, color="black"):
