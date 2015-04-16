@@ -424,40 +424,43 @@ class WakeMap(object):
             plt.savefig(savedir+"/"+quantity+"_diff"+savetype)
     
     def plot_meancontquiv_diff(self, U_infty_diff, save=False, show=False,
-                               savedir="Figures", savetype="", percent=True):
+                               savedir="Figures", savetype="", percent=True,
+                               cb_orientation="vertical"):
         wm_diff = WakeMap(U_infty_diff)
-        mean_u_diff = (self.mean_u/self.U_infty - \
-                wm_diff.mean_u/wm_diff.U_infty)
-        mean_v_diff = (self.mean_v/self.U_infty - \
-                wm_diff.mean_v/wm_diff.U_infty)
-        mean_w_diff = (self.mean_w/self.U_infty - \
-                wm_diff.mean_w/wm_diff.U_infty)
+        mean_u_diff = (self.df.mean_u/self.U_infty - \
+                wm_diff.df.mean_u/wm_diff.U_infty)
+        mean_v_diff = (self.df.mean_v/self.U_infty - \
+                wm_diff.df.mean_v/wm_diff.U_infty)
+        mean_w_diff = (self.df.mean_w/self.U_infty - \
+                wm_diff.df.mean_w/wm_diff.U_infty)
         if percent:
-            mean_u_diff = mean_u_diff/self.mean_u/self.U_infty*100
-            mean_v_diff = mean_v_diff/self.mean_v/self.U_infty*100
-            mean_w_diff = mean_w_diff/self.mean_w/self.U_infty*100
-        plt.figure(figsize=(12,4))
+            mean_u_diff = mean_u_diff/self.df.mean_u/self.U_infty*100
+            mean_v_diff = mean_v_diff/self.df.mean_v/self.U_infty*100
+            mean_w_diff = mean_w_diff/self.df.mean_w/self.U_infty*100
+        plt.figure(figsize=(10, 3.5))
         cs = plt.contourf(self.y_R, self.z_H, mean_u_diff, 20,
                           cmap=plt.cm.coolwarm)
-        cb = plt.colorbar(cs, shrink=1, fraction=0.15,
-                          orientation="vertical", pad=0.05)
+        if cb_orientation == "horizontal":
+            cb = plt.colorbar(cs, shrink=1, extend="both",
+                              orientation="horizontal", pad=0.14)
+        elif cb_orientation == "vertical":
+            cb = plt.colorbar(cs, shrink=0.785, extend="both", 
+                              orientation="vertical", pad=0.02)
         cb.set_label(r"$\Delta U$ (\%)")
         plt.hold(True)
         # Make quiver plot of v and w velocities
         Q = plt.quiver(self.y_R, self.z_H, mean_v_diff, 
-                       mean_w_diff, width=0.0022)
+                       mean_w_diff, width=0.0022, edgecolor="none", scale=3)
+        if cb_orientation == "horizontal":
+            plt.quiverkey(Q, 0.65, 0.26, 0.1, r"$0.1 U_\infty$",
+                          labelpos="E", coordinates="figure")
+        elif cb_orientation == "vertical":
+            plt.quiverkey(Q, 0.65, 0.08, 0.1, r"$0.1 U_\infty$",
+                          labelpos="E", coordinates="figure")
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
         plt.xlim(-3.2, 3.2)
-        if percent:
-            keylen = 100
-        else:
-            keylen = 0.05
-        plt.quiverkey(Q, 0.75, 0.05, keylen, str(keylen),
-                      labelpos="E",
-                      coordinates="figure",
-                      fontproperties={"size": "small"})
         plt.axes().set_aspect(2)
         plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
         plt.tight_layout()
@@ -483,6 +486,25 @@ class WakeMap(object):
         
     def show(self):
         plt.show()
+        
+        
+class WakeMapDiff(WakeMap):
+    """
+    Object representing the difference between two wake maps. Quantities are 
+    calculated as `wm1 - wm2`. 
+    """
+    def __init__(self, U1, U2):
+        WakeMap.__init__(self, 1.0)
+        self.U1 = U1
+        self.U2 = U2
+        self.wm1 = WakeMap(U1)
+        self.wm2 = WakeMap(U2)
+        self.df = self.wm1.df - self.wm2.df
+        self.mean_u = self.wm1.df.mean_u/self.wm1.U_infty \
+                    - self.wm2.df.mean_u/self.wm2.U_infty
+                    
+    def plot_mean_u(self):
+        self.plot_contours(self.mean_u, label="$U_{\mathrm{diff}}$")
 
            
 def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir="Figures", 
