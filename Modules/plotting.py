@@ -802,14 +802,9 @@ def plot_meancontquiv(U_infty=1.0, save=False, savetype=".pdf", show=False,
         plt.show()
         
 def plot_all_meancontquiv(save=False, savetype=".pdf", show=False):
-    """Plot all mean velocity contours/quivers in a single figure."""
-    plt.figure(figsize=(10, 20))
+    """Plot all mean velocity contours/quivers."""
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
-        plt.subplot(5, 1, n+1)
-        WakeMap(U).plot_meancontquiv(newfig=False)
-        plt.hold(False)
-    if save:
-        plt.savefig("Figures/meancontquiv_all" + savetype)
+        WakeMap(U).plot_meancontquiv(newfig=True, save=save, savetype=savetype)
     if show:
         plt.show()
         
