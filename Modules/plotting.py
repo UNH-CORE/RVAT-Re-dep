@@ -295,21 +295,21 @@ class WakeMap(object):
                 fdiff.second_order_diff(self.df.mean_u.iloc[:, n], z)
             self.d2Udz2[:, n] = fdiff.second_order_diff(self.dUdz[:, n], z)
         
-    def turb_lines(self, linestyles="solid", linewidth=3, colors="gray"):
-        plt.hlines(0.5, -1, 1, linestyles=linestyles, colors="gray",
+    def turb_lines(self, linestyles="solid", linewidth=3, color="gray"):
+        plt.hlines(0.5, -1, 1, linestyles=linestyles, colors=color,
                    linewidth=linewidth)
-        plt.vlines(-1, -0.2, 0.5, linestyles=linestyles, colors="gray",
+        plt.vlines(-1, -0.2, 0.5, linestyles=linestyles, colors=color,
                    linewidth=linewidth)
-        plt.vlines(1, -0.2, 0.5, linestyles=linestyles, colors="gray",
+        plt.vlines(1, -0.2, 0.5, linestyles=linestyles, colors=color,
                    linewidth=linewidth)
                    
     def plot_contours(self, quantity, label="", cb_orientation="vertical",
-                      newfig=True):
+                      newfig=True, levels=None):
         """Plots contours of given quantity."""
         if newfig:
             plt.figure(figsize=(10, 2.5))
         cs = plt.contourf(self.y_R, self.z_H, quantity, 20,
-                          cmap=plt.cm.coolwarm)
+                          cmap=plt.cm.coolwarm, levels=levels)
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
         if cb_orientation == "horizontal":
@@ -319,7 +319,7 @@ class WakeMap(object):
             cb = plt.colorbar(cs, shrink=1, extend="both", 
                               orientation="vertical", pad=0.02)
         cb.set_label(label)
-        self.turb_lines()
+        self.turb_lines(color="black")
         plt.ylim((0, 0.63))
         ax = plt.axes()
         ax.set_aspect(2)
@@ -339,7 +339,8 @@ class WakeMap(object):
     def plot_k(self, save=False, savetype=".pdf", show=False):
         """Plots contours of turbulence kinetic energy."""
         self.plot_contours(self.df.k/(0.5*self.U_infty**2), 
-                           label=r"$k/\frac{1}{2}U_\infty^2$")
+                           label=r"$k/(\frac{1}{2}U_\infty^2)$",
+                           levels=np.linspace(0, 0.18, num=19))
         if save:
             plt.savefig("Figures/k_contours_{}{}".format(self.U_infty, savetype))
         if show:
@@ -807,6 +808,14 @@ def plot_all_meancontquiv(save=False, savetype=".pdf", show=False):
         WakeMap(U).plot_meancontquiv(newfig=True, save=save, savetype=savetype)
     if show:
         plt.show()
+        
+def plot_all_kcont(save=False, savetype=".pdf"):
+    """
+    Plots contours of turbulence kinetic energy for all Reynolds numbers
+    tested.
+    """
+    for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
+        WakeMap(U).plot_k(save=save, savetype=savetype)
         
 def make_k_bar_graph(save=False, savetype=".pdf", show=False,
                      print_analysis=True):
