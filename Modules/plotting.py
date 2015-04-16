@@ -336,9 +336,10 @@ class WakeMap(object):
         if show:
             self.show()
             
-    def plot_k(self, save=False, savetype=".pdf", show=False):
+    def plot_k(self, newfig=True, save=False, savetype=".pdf", show=False):
         """Plots contours of turbulence kinetic energy."""
         self.plot_contours(self.df.k/(0.5*self.U_infty**2), 
+                           newfig=newfig,
                            label=r"$k/(\frac{1}{2}U_\infty^2)$",
                            levels=np.linspace(0, 0.18, num=19))
         if save:
