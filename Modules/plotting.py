@@ -343,7 +343,8 @@ class WakeMap(object):
                            label=r"$k/\left(\frac{1}{2}U_\infty^2\right)$",
                            levels=np.linspace(0, 0.18, num=19))
         if save:
-            plt.savefig("Figures/k_contours_{}{}".format(self.U_infty, savetype))
+            label = str(self.U_infty).replace(".", "")
+            plt.savefig("Figures/k_contours_{}{}".format(label, savetype))
         if show:
             plt.show()
     
@@ -387,10 +388,11 @@ class WakeMap(object):
         plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
         plt.grid(True)
         plt.tight_layout()
+        if save:
+            label = str(self.U_infty).replace(".", "")
+            plt.savefig(savedir+"/meancontquiv_{}{}".format(label, savetype))
         if show:
             self.show()
-        if save:
-            plt.savefig(savedir+"/meancontquiv_{}{}".format(self.U_infty, savetype))
     
     def plot_xvorticity(self):
         pass
@@ -797,11 +799,8 @@ def plot_wake_profiles(z_H=0.0, save=False, show=False, savedir="Figures",
 def plot_meancontquiv(U_infty=1.0, save=False, savetype=".pdf", show=False, 
                       cb_orientation="vertical"):
     wm = WakeMap(U_infty)
-    wm.plot_meancontquiv(show=False, cb_orientation=cb_orientation)
-    if save:
-        plt.savefig("Figures/meancontquiv_{}{}".format(U_infty, savetype))
-    if show:
-        plt.show()
+    wm.plot_meancontquiv(save=save, show=show, savetype=savetype,
+                         cb_orientation=cb_orientation)
         
 def plot_all_meancontquiv(save=False, savetype=".pdf", show=False):
     """Plot all mean velocity contours/quivers."""
