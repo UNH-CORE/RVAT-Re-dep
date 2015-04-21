@@ -40,7 +40,7 @@ Please cite
 
 ```bibtex
 @Misc{Bachant2014-Re-dep-data,
-  Title                    = {UNH-RVAT Reynolds number dependence experiment: Reduced dataset and processing code, rev1},
+  Title                    = {UNH-RVAT Reynolds number dependence experiment: Reduced dataset and processing code},
   Author                   = {Peter Bachant and Martin Wosnik},
   HowPublished             = {fig\textbf{share}. http://dx.doi.org/10.6084/m9.figshare.1286960,
   Month                    = {January},
