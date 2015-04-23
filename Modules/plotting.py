@@ -247,6 +247,7 @@ class WakeMap(object):
                 fdiff.second_order_diff(self.df.mean_v.iloc[:,n], z)
             self.dWdz[:,n] = \
                 fdiff.second_order_diff(self.df.mean_w.iloc[:,n], z)
+        self.dUdx = -self.dVdy - self.dWdz
         self.k_prod = self.df.mean_upvp*self.dUdy + \
                       self.df.mean_upwp*self.dUdz + \
                       self.df.mean_vpwp*self.dVdz + \
@@ -896,6 +897,7 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
                       ts.average_over_area(-2*ttz/meanu/U*D, y_R, z_H),
                       ts.average_over_area(2*nu*d2Udy2/meanu/U*D*1e3, y_R, z_H),
                       ts.average_over_area(2*nu*d2Udz2/meanu/U*D*1e3, y_R, z_H)]
+        dUdx = ts.average_over_area(2*wm.dUdx/U*D, y_R, z_H)
         ax = plt.gca()
         color = cm(int(n/4*256))
         ax.bar(np.arange(len(names)) + n*.15, quantities, color=color, 
