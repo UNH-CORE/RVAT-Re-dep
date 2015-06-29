@@ -375,7 +375,7 @@ class WakeMap(object):
             plt.quiverkey(Q, 0.65, 0.26, 0.1, r"$0.1 U_\infty$",
                           labelpos="E", coordinates="figure")
         elif cb_orientation == "vertical":
-            plt.quiverkey(Q, 0.65, 0.08, 0.1, r"$0.1 U_\infty$",
+            plt.quiverkey(Q, 0.65, 0.088, 0.1, r"$0.1 U_\infty$",
                           labelpos="E", coordinates="figure",
                           fontproperties={"size": "small"})
         self.turb_lines()
