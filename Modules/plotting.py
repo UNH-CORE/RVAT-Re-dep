@@ -359,7 +359,7 @@ class WakeMap(object):
             cb = plt.colorbar(cs, shrink=1, extend="both",
                               orientation="horizontal", pad=0.14)
         elif cb_orientation == "vertical":
-            cb = plt.colorbar(cs, shrink=0.785, extend="both", 
+            cb = plt.colorbar(cs, shrink=0.83, extend="both", 
                               orientation="vertical", pad=0.02)
         cb.set_label(r"$U/U_{\infty}$")
         plt.hold(True)
@@ -376,7 +376,8 @@ class WakeMap(object):
                           labelpos="E", coordinates="figure")
         elif cb_orientation == "vertical":
             plt.quiverkey(Q, 0.65, 0.08, 0.1, r"$0.1 U_\infty$",
-                          labelpos="E", coordinates="figure")
+                          labelpos="E", coordinates="figure",
+                          fontproperties={"size": "small"})
         self.turb_lines()
         ax = plt.axes()
         ax.set_aspect(2)
@@ -820,7 +821,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
     """
     names = [r"$y$-adv.", r"$z$-adv.", r"$y$-turb.", r"$z$-turb.",
              r"$k$-prod.", r"Mean diss. $(\times 10^3)$"]
-    plt.figure(figsize=(7, 3))
+    plt.figure(figsize=(7.5, 3.2))
     cm = plt.cm.coolwarm
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
         Re_D = U*D/nu
@@ -873,7 +874,7 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
              r"$-\frac{\partial}{\partial z} \overline{u^\prime w^\prime}$",
              r"$\nu \frac{\partial^2 U}{\partial y^2} (\times 10^3)$", 
              r"$\nu \frac{\partial^2 U}{\partial z^2} (\times 10^3)$"]
-    plt.figure(figsize=(7, 3))
+    plt.figure(figsize=(7.5, 3.2))
     cm = plt.cm.coolwarm
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
         wm = WakeMap(U)
