@@ -752,6 +752,9 @@ def plot_perf_curves(subplots=False, save=False, savedir="Figures",
     PerfCurve(1.0).plotcp(newfig=False, show=False, marker="o")
     PerfCurve(1.2).plotcp(newfig=False, show=False, marker="^")
     plt.legend(loc="best", ncol=2)
+    plt.tight_layout()
+    if save and not subplots:
+        plt.savefig(os.path.join(savedir, "cp_curves" + savetype))
     if subplots:
         plt.subplot(122)
     PerfCurve(0.4).plotcd(newfig=not subplots, show=False, marker=">")
@@ -760,10 +763,12 @@ def plot_perf_curves(subplots=False, save=False, savedir="Figures",
     PerfCurve(1.0).plotcd(newfig=False, show=False, marker="o")
     PerfCurve(1.2).plotcd(newfig=False, show=False, marker="^")
     plt.legend(loc="lower right", ncol=2)
+    plt.tight_layout()
     if save:
-        if savedir != "":
-            savedir += "/"
-        plt.savefig(savedir + "perf_curves" + savetype)
+        if subplots:
+            plt.savefig(os.path.join(savedir, "perf_curves" + savetype))
+        else:
+            plt.savefig(os.path.join(savedir, "cd_curves" + savetype))
     if show:
         plt.show()
     
