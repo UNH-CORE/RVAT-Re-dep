@@ -740,7 +740,7 @@ def plot_cp_curve(u_infty, save=False, show=False, savedir="Figures",
     if show:
         plt.show()
     
-def plot_perf_curves(subplots=True, save=False, savedir="Figures", 
+def plot_perf_curves(subplots=False, save=False, savedir="Figures", 
                      show=False, savetype=".pdf"):
     """Plots all performance curves."""
     if subplots:
@@ -759,7 +759,7 @@ def plot_perf_curves(subplots=True, save=False, savedir="Figures",
     PerfCurve(0.8).plotcd(newfig=False, show=False, marker="<")
     PerfCurve(1.0).plotcd(newfig=False, show=False, marker="o")
     PerfCurve(1.2).plotcd(newfig=False, show=False, marker="^")
-    plt.legend(loc="best", ncol=2)
+    plt.legend(loc="lower right", ncol=2)
     if save:
         if savedir != "":
             savedir += "/"
