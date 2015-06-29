@@ -604,7 +604,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     if dual_xaxes:
         x, y = 1.345e6, 0.268/norm_cp
         if subplots:
-            x, y = x*0.995, y*1.0
+            x, y = x*0.96, y*1.01
         plt.text(x, y, "1e5")
         ax2 = ax.twiny()
         ax.xaxis.get_majorticklocs()
@@ -653,7 +653,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     if dual_xaxes:
         x, y = 1.345e6, 1.029/norm_cd
         if subplots:
-            x, y = x*0.995, y*1.0
+            x, y = x*0.96, y*1.003
         plt.text(x, y, "1e5")
         ax2 = ax.twiny()
         ax.xaxis.get_majorticklocs()
