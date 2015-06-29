@@ -302,7 +302,7 @@ class WakeMap(object):
                       newfig=True, levels=None):
         """Plots contours of given quantity."""
         if newfig:
-            plt.figure(figsize=(7.5, 1.875))
+            plt.figure(figsize=(7.5, 1.9))
         cs = plt.contourf(self.y_R, self.z_H, quantity, 20,
                           cmap=plt.cm.coolwarm, levels=levels)
         plt.xlabel(r"$y/R$")
@@ -335,7 +335,7 @@ class WakeMap(object):
         """Plots contours of turbulence kinetic energy."""
         self.plot_contours(self.df.k/(self.U_infty**2), 
                            newfig=newfig,
-                           label=r"$k/\left(\frac{1}{2}U_\infty^2\right)$",
+                           label=r"$k/U_\infty^2$",
                            levels=np.linspace(0, 0.09, num=19))
         if save:
             label = str(self.U_infty).replace(".", "")
