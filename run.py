@@ -30,4 +30,3 @@ if __name__ == "__main__":
     if not os.path.isdir("Figures"):
         os.makedirs("Figures")
     main()
-    
