@@ -1031,7 +1031,7 @@ def plot_multi_spec(n_band_ave=4, plot_conf_int=False, save=False, show=False,
     y_R_a = -1.0
     y_R_b = 1.5
     z_H = 0.25
-    plt.figure(figsize=(7.5, 3.07))
+    plt.figure(figsize=(7.5, 3.75))
     plt.subplot(1, 2, 1)
     plt.title("(a)")
     for n, u in enumerate(u_list):
