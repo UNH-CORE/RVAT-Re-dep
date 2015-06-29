@@ -6,13 +6,7 @@ This module contains classes and functions for plotting data.
 from Modules.processing import *
 import os
 from scipy.optimize import curve_fit
-import seaborn as sns
-
-def set_sns():
-    sns.set(style="white", context="paper", font_scale=1.75,
-            rc={"lines.markersize": 9, "lines.markeredgewidth": 1.25,
-            "legend.fontsize": "small", "font.size": 14, 
-            "axes.formatter.limits": (-5, 5)})
+from pxl.styleplot import set_sns
 
 ylabels = {"mean_u" : r"$U/U_\infty$",
            "std_u" : r"$\sigma_u/U_\infty$",
@@ -140,7 +134,7 @@ class WakeProfile(object):
             ylab = r"$\overline{u'v'}/U_\infty^2$" 
         if newfig:
             if quantity == "mean_u":
-                plt.figure(figsize=(10,5))
+                plt.figure(figsize=(7.5, 3.75))
             else: plt.figure()
             plt.ylabel(ylab)
             plt.xlabel(r"$y/R$")
@@ -308,7 +302,7 @@ class WakeMap(object):
                       newfig=True, levels=None):
         """Plots contours of given quantity."""
         if newfig:
-            plt.figure(figsize=(10, 2.5))
+            plt.figure(figsize=(7.5, 1.875))
         cs = plt.contourf(self.y_R, self.z_H, quantity, 20,
                           cmap=plt.cm.coolwarm, levels=levels)
         plt.xlabel(r"$y/R$")
@@ -357,7 +351,7 @@ class WakeMap(object):
         cross-stream and vertical velocity.
         """
         if newfig:
-            plt.figure(figsize=(10, 3.5))
+            plt.figure(figsize=(7.5, 2.625))
         # Add contours of mean velocity
         cs = plt.contourf(self.y_R, self.z_H, self.df.mean_u/self.U_infty,
                           np.arange(0.15, 1.25, 0.05), cmap=plt.cm.coolwarm)
@@ -411,7 +405,7 @@ class WakeMap(object):
             return None
         a_diff = (q_ref/self.U_infty - \
                   q_diff/wm_diff.U_infty)#/q_ref/self.U_infty*100
-        plt.figure(figsize=(12,3.75))
+        plt.figure(figsize=(7.5, 2.34))
         cs = plt.contourf(self.y_R, self.z_H, a_diff, 20,
                           cmap=plt.cm.coolwarm)
         cb = plt.colorbar(cs, shrink=1, fraction=0.15,
@@ -442,7 +436,7 @@ class WakeMap(object):
             mean_u_diff = mean_u_diff/self.df.mean_u/self.U_infty*100
             mean_v_diff = mean_v_diff/self.df.mean_v/self.U_infty*100
             mean_w_diff = mean_w_diff/self.df.mean_w/self.U_infty*100
-        plt.figure(figsize=(10, 3.5))
+        plt.figure(figsize=(7.5, 2.625))
         cs = plt.contourf(self.y_R, self.z_H, mean_u_diff, 20,
                           cmap=plt.cm.coolwarm)
         if cb_orientation == "horizontal":
@@ -514,7 +508,7 @@ class WakeMapDiff(WakeMap):
            
 def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir="Figures", 
                             savetype=".pdf", newfig=True, marker="-ok",
-                            fill="none", oldwake=False, figsize=(8, 4)):
+                            fill="none", oldwake=False, figsize=(7.5, 3.75)):
     """Plots the transverse wake profile of some quantity. These can be
       * mean_u
       * mean_v
@@ -584,7 +578,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     df["mean_cd"] = cd
     df.to_csv("Data/Processed/Perf-tsr_0.csv", index=False)
     if subplots:
-        plt.figure(figsize=(11, 4.5))
+        plt.figure(figsize=(7.5, 3.07))
         plt.subplot(121)
     else:
         plt.figure()
@@ -749,7 +743,7 @@ def plot_perf_curves(subplots=True, save=False, savedir="Figures",
                      show=False, savetype=".pdf"):
     """Plots all performance curves."""
     if subplots:
-        plt.figure(figsize=(11, 4.5))
+        plt.figure(figsize=(7.5, 3.07))
         plt.subplot(121)
     PerfCurve(0.4).plotcp(newfig=not subplots, show=False, marker=">")
     PerfCurve(0.6).plotcp(newfig=False, show=False, marker="s")
@@ -826,7 +820,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
     """
     names = [r"$y$-adv.", r"$z$-adv.", r"$y$-turb.", r"$z$-turb.",
              r"$k$-prod.", r"Mean diss. $(\times 10^3)$"]
-    plt.figure(figsize=(9, 5))
+    plt.figure(figsize=(7, 3))
     cm = plt.cm.coolwarm
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
         Re_D = U*D/nu
@@ -879,7 +873,7 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
              r"$-\frac{\partial}{\partial z} \overline{u^\prime w^\prime}$",
              r"$\nu \frac{\partial^2 U}{\partial y^2} (\times 10^3)$", 
              r"$\nu \frac{\partial^2 U}{\partial z^2} (\times 10^3)$"]
-    plt.figure(figsize=(9, 5))
+    plt.figure(figsize=(7, 3))
     cm = plt.cm.coolwarm
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
         wm = WakeMap(U)
@@ -1036,7 +1030,7 @@ def plot_multi_spec(n_band_ave=4, plot_conf_int=False, save=False, show=False,
     y_R_a = -1.0
     y_R_b = 1.5
     z_H = 0.25
-    plt.figure(figsize=(11, 4.5))
+    plt.figure(figsize=(7.5, 3.07))
     plt.subplot(1, 2, 1)
     plt.title("(a)")
     for n, u in enumerate(u_list):
