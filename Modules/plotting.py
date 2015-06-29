@@ -579,7 +579,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     df["mean_cd"] = cd
     df.to_csv("Data/Processed/Perf-tsr_0.csv", index=False)
     if subplots:
-        plt.figure(figsize=(7.5, 3.07))
+        plt.figure(figsize=(7.5, 3.5))
         plt.subplot(121)
     else:
         plt.figure()
@@ -602,7 +602,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
-        x, y = 1.335e6, 0.27/norm_cp
+        x, y = 1.345e6, 0.268/norm_cp
         if subplots:
             x, y = x*0.995, y*1.0
         plt.text(x, y, "1e5")
@@ -651,7 +651,7 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     ax = plt.gca()
     plt.grid(True)
     if dual_xaxes:
-        x, y = 1.335e6, 1.0305/norm_cd
+        x, y = 1.345e6, 1.029/norm_cd
         if subplots:
             x, y = x*0.995, y*1.0
         plt.text(x, y, "1e5")
