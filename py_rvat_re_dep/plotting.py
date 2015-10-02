@@ -872,7 +872,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
     if show:
         plt.show()
 
-def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
+def make_mom_bar_graph(ax=None, save=False, savetype=".pdf",
                        print_analysis=True):
     """
     Creates a bar graph of terms contributing to dU/dx:
@@ -889,7 +889,8 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
              r"$-\frac{\partial}{\partial z} \overline{u^\prime w^\prime}$",
              r"$\nu \frac{\partial^2 U}{\partial y^2} (\times 10^3)$",
              r"$\nu \frac{\partial^2 U}{\partial z^2} (\times 10^3)$"]
-    plt.figure(figsize=(7.5, 3.2))
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(7.5, 3.2))
     cm = plt.cm.coolwarm
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
         wm = WakeMap(U)
@@ -908,7 +909,6 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
                       ts.average_over_area(2*nu*d2Udy2/meanu/U*D*1e3, y_R, z_H),
                       ts.average_over_area(2*nu*d2Udz2/meanu/U*D*1e3, y_R, z_H)]
         dUdx = ts.average_over_area(2*wm.dUdx/U*D, y_R, z_H)
-        ax = plt.gca()
         color = cm(int(n/4*256))
         ax.bar(np.arange(len(names)) + n*.15, quantities, color=color,
                width=0.15, edgecolor="black",
@@ -920,16 +920,19 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
                   np.sum(quantities)*100))
     ax.set_xticks(np.arange(len(names)) + 5*.15/2)
     ax.set_xticklabels(names)
-    plt.hlines(0, 0, len(names), color="black")
-    plt.ylabel(r"$\frac{U \, \mathrm{ transport}}{UU_\infty D^{-1}}$")
-    plt.legend(loc="upper right", ncol=2)
-    plt.tight_layout()
+    ax.hlines(0, 0, len(names), color="black")
+    ax.set_ylabel(r"$\frac{U \, \mathrm{ transport}}{UU_\infty D^{-1}}$")
+    ax.legend(loc="upper right", ncol=2)
+    try:
+        fig.tight_layout()
+    except UnboundLocalError:
+        pass
     if save:
         plt.savefig("Figures/mom_bar_graph"+savetype)
-    if show:
-        plt.show()
 
-def plot_wake_trans_totals(save=False, savetype=".pdf"):
+
+def plot_wake_trans_totals(ax=None, save=False, savetype=".pdf", ucolor="black",
+                           kcolor="black", emptymarkers=True, **kwargs):
     """
     Plots totals for wake transport quantities for all Reynolds numbers
     tested, both for the momentum and kinetic energy.
@@ -967,16 +970,20 @@ def plot_wake_trans_totals(save=False, savetype=".pdf"):
                       ts.average_over_area(2*kprod/meanu/(0.5*U**2)*D, y_R, z_H),
                       ts.average_over_area(2*meandiss/meanu/(0.5*U**2)*D, y_R, z_H)]
         energy_totals.append(np.sum(quantities))
-    plt.figure()
-    plt.plot(Re_D, momentum_totals, "-o", color="black", label="$U$",
-             markerfacecolor="none")
-    plt.plot(Re_D, energy_totals, "--s", color="black", label="$K$",
-             markerfacecolor="none")
-    plt.xlabel("$Re_D$")
-    plt.ylabel("Normalized total transport")
-    plt.legend(loc="best")
-    plt.grid(True)
-    plt.tight_layout()
+    if emptymarkers:
+        kwargs["markerfacecolor"] = "none"
+    if ax is None:
+        fig, ax = plt.subplots()
+    ax.plot(Re_D, momentum_totals, "-o", color=ucolor, label="$U$", **kwargs)
+    ax.plot(Re_D, energy_totals, "--s", color=kcolor, label="$K$", **kwargs)
+    ax.set_xlabel("$Re_D$")
+    ax.set_ylabel("Normalized total transport")
+    ax.legend(loc="best")
+    ax.grid(True)
+    try:
+        fig.tight_layout()
+    except UnboundLocalError:
+        pass
     if save:
         plt.savefig("Figures/wake_trans_totals" + savetype)
 
