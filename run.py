@@ -5,17 +5,20 @@ stores them in the `Figures` directory.
 
 """
 
-from Modules.plotting import *
+from py_rvat_re_dep.plotting import *
 
 set_sns()
 show = True
 save = True
 savetype = ".pdf"
 
+kwargs = {"markerfacecolor": "none",
+          "color": "black"}
+
 def main():
-    plot_perf_curves(save=save, savetype=savetype)
-    plot_perf_re_dep(save=save, savetype=savetype)
-    plot_perf_re_dep(subplots=False, save=save, savetype=savetype)
+    plot_perf_curves(save=save, savetype=savetype, **kwargs)
+    plot_perf_re_dep(save=save, savetype=savetype, **kwargs)
+    plot_perf_re_dep(subplots=False, save=save, savetype=savetype, **kwargs)
     plot_wake_profiles(save=save, savetype=savetype)
     make_k_bar_graph(save=save, savetype=savetype)
     make_mom_bar_graph(save=save, savetype=savetype)

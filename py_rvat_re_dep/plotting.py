@@ -3,7 +3,7 @@
 This module contains classes and functions for plotting data.
 
 """
-from Modules.processing import *
+from .processing import *
 import os
 from scipy.optimize import curve_fit
 from pxl.styleplot import set_sns
@@ -16,8 +16,8 @@ ylabels = {"mean_u" : r"$U/U_\infty$",
            "mean_u_diff" : r"$\Delta U$ (\%)",
            "mean_v_diff" : r"$\Delta V$ (\%)",
            "mean_w_diff" : r"$\Delta W$ (\%)"}
-           
-           
+
+
 class PerfCurve(object):
     """Object that represents a performance curve."""
     def __init__(self, tow_speed):
@@ -28,87 +28,80 @@ class PerfCurve(object):
         self.df = pd.read_csv(os.path.join("Data", "Processed", self.section+".csv"))
         self.testplan = pd.read_csv(os.path.join("Config", "Test plan", self.section+".csv"))
         self.label = r"$Re_D = {:.1f} \times 10^6$".format(self.Re_D/1e6)
-        
-    def plotcp(self, newfig=True, show=True, save=False, savedir="Figures",
-               savetype=".pdf", splinefit=False, marker="o"):
-        """Generates power coefficient curve plot."""
+
+    def plotcp(self, ax=None, fig=None, save=False, savedir="Figures",
+               savetype=".pdf", splinefit=False, **kwargs):
+        """Plot mean power coefficient versus tip speed ratio."""
         label = self.label
         self.tsr = self.df.mean_tsr
         self.cp = self.df.mean_cp
-        if newfig:
-            plt.figure()
+        if ax is None:
+            fig, ax = plt.subplots()
+        if not "marker" in kwargs.keys():
+            kwargs["marker"] = "o"
         if splinefit and not True in np.isnan(self.tsr):
-            plt.plot(self.tsr, self.cp, marker+"k", markerfacecolor="None", 
-                     label=label)
-            plt.hold(True)
+            ax.plot(self.tsr, self.cp, label=label, **kwargs)
             tsr_fit = np.linspace(np.min(self.tsr), np.max(self.tsr), 200)
             tck = interpolate.splrep(self.tsr[::-1], self.cp[::-1], s=1e-3)
             cp_fit = interpolate.splev(tsr_fit, tck)
-            plt.plot(tsr_fit, cp_fit, "k")
+            ax.plot(tsr_fit, cp_fit, color=kwargs["color"])
         else:
             if splinefit:
                 print("Cannot fit spline. NaN present in array.")
-            plt.plot(self.tsr, self.cp, "-"+marker+"k", markerfacecolor="None",
-                     label=label)
-        plt.xlabel(r"$\lambda$")
-        plt.ylabel(r"$C_P$")
-        plt.grid(True)
-        plt.tight_layout()
+            ax.plot(self.tsr, self.cp, label=label, **kwargs)
+        ax.set_xlabel(r"$\lambda$")
+        ax.set_ylabel(r"$C_P$")
+        if fig is not None:
+            fig.tight_layout()
         if save:
             plt.savefig(os.path.join(savedir, "cp_vs_tsr" + savetype))
-        if show:
-            plt.show()
-            
-    def plotcd(self, newfig=True, show=True, save=False, savedir="Figures",
-               savetype=".pdf", splinefit=False, marker="o"):
-        """Generates power coefficient curve plot."""
+
+    def plotcd(self, ax=None, fig=None, save=False, savedir="Figures",
+               savetype=".pdf", splinefit=False, **kwargs):
+        """Plot mean power coefficient versus tip speed ratio."""
         label = self.label
         self.tsr = self.df.mean_tsr
         self.cd = self.df.mean_cd
-        if newfig:
-            plt.figure()
+        if ax is None:
+            fig, ax = plt.subplots()
+        if not "marker" in kwargs.keys():
+            kwargs["marker"] = "o"
         if splinefit and not True in np.isnan(self.tsr):
-            plt.plot(self.tsr, self.cd, marker+"k", markerfacecolor="None", 
-                     label=label)
-            plt.hold(True)
+            ax.plot(self.tsr, self.cd, label=label, **kwargs)
             tsr_fit = np.linspace(np.min(self.tsr), np.max(self.tsr), 200)
             tck = interpolate.splrep(self.tsr[::-1], self.cd[::-1], s=1e-3)
             cd_fit = interpolate.splev(tsr_fit, tck)
-            plt.plot(tsr_fit, cd_fit, "k")
+            ax.plot(tsr_fit, cd_fit, color=kwargs["color"])
         else:
             if splinefit:
                 print("Cannot fit spline. NaN present in array.")
-            plt.plot(self.tsr, self.cd, "-"+marker+"k", markerfacecolor="None",
-                     label=label)
-        plt.xlabel(r"$\lambda$")
-        plt.ylabel(r"$C_D$")
-        plt.ylim((0, 1.2))
-        plt.grid(True)
-        plt.tight_layout()
+            ax.plot(self.tsr, self.cd, label=label, **kwargs)
+        ax.set_xlabel(r"$\lambda$")
+        ax.set_ylabel(r"$C_D$")
+        if fig is not None:
+            fig.tight_layout()
         if save:
             plt.savefig(os.path.join(savedir, "cd_vs_tsr" + savetype))
-        if show:
-            plt.show()
-        
+
 class WakeProfile(object):
     def __init__(self, tow_speed, z_H, quantity, orientation="horizontal"):
         self.tow_speed = tow_speed
         self.z_H = z_H
         self.section = "Wake-" + str(tow_speed)
-        self.testplan = pd.read_csv(os.path.join("Config", "Test plan", 
+        self.testplan = pd.read_csv(os.path.join("Config", "Test plan",
                                                  self.section+".csv"))
         self.runs = self.testplan.Run[self.testplan["z/H"]==z_H]
         self.quantity = quantity
         self.load()
-        
+
     def load(self):
         """Loads the processed data"""
-        self.df = pd.read_csv(os.path.join(processed_data_dir, 
+        self.df = pd.read_csv(os.path.join(processed_data_dir,
                                            self.section+".csv"))
         self.df = self.df[self.df.z_H==self.z_H]
         self.y_R = self.df["y_R"]
-        
-    def plot(self, quantity, newfig=True, show=True, save=False, 
+
+    def plot(self, quantity, newfig=True, show=True, save=False,
              savedir="Figures", savetype=".pdf", linetype='--ok'):
         """Plots some quantity"""
         y_R = self.df["y_R"]
@@ -131,7 +124,7 @@ class WakeProfile(object):
             ylab = r"$\sigma_u/U_\infty$"
         if quantity is "mean_upvp":
             q = q/(self.tow_speed**2)
-            ylab = r"$\overline{u'v'}/U_\infty^2$" 
+            ylab = r"$\overline{u'v'}/U_\infty^2$"
         if newfig:
             if quantity == "mean_u":
                 plt.figure(figsize=(7.5, 3.75))
@@ -145,16 +138,16 @@ class WakeProfile(object):
             plt.show()
         if save:
             plt.savefig(savedir+quantity+"_Re_dep_exp"+savetype)
-    
+
 class WakeMap(object):
     def __init__(self, U_infty):
         self.U_infty = U_infty
         self.z_H = np.array([0.0, 0.125, 0.25, 0.375, 0.5, 0.625])
         self.load()
         self.calc_transport()
-        
+
     def load(self):
-        self.df = pd.DataFrame() 
+        self.df = pd.DataFrame()
         self.y_R = WakeProfile(self.U_infty, 0, "mean_u").y_R.values
         for z_H in self.z_H:
             wp = WakeProfile(self.U_infty, z_H, "mean_u")
@@ -167,7 +160,7 @@ class WakeMap(object):
         self.mean_k = self.df.mean_k
         self.grdims = (len(self.z_H), len(self.y_R))
         self.df = self.df.pivot(index="z_H", columns="y_R")
-        
+
     def calc_transport(self):
         """
         Calculates wake tranport terms similar to Bachant and Wosnik (2015)
@@ -177,7 +170,7 @@ class WakeMap(object):
         self.calc_mean_k_grad()
         self.calc_k_prod_mean_diss()
         self.calc_mean_k_turb_trans()
-    
+
     def calc_mean_k_turb_trans(self):
         """Calculates the transport of $K$ by turbulent fluctuations."""
         y, z  = self.y_R*R, self.z_H*H
@@ -219,7 +212,7 @@ class WakeMap(object):
         self.mean_k_turb_trans_z = -0.5*(self.ddz_uwU + \
                                          self.ddz_vwV + \
                                          self.ddz_wwW) # Only ddz terms
-        
+
     def calc_k_prod_mean_diss(self):
         """
         Calculates the production of turbulent kinetic energy and dissipation
@@ -250,7 +243,7 @@ class WakeMap(object):
                       self.df.mean_wpwp*self.dWdz
         self.mean_diss = -2.0*nu*(self.dUdy**2 + self.dUdz**2 + self.dVdy**2 +\
                                   self.dVdz**2 + self.dWdy**2 + self.dWdz**2)
-        
+
     def calc_mean_k_grad(self):
         """Calulates $y$- and $z$-derivatives of $K$."""
         z = self.z_H*H
@@ -266,7 +259,7 @@ class WakeMap(object):
 
     def calc_mom_transport(self):
         """
-        Calculates relevant (and available) momentum transport terms in the 
+        Calculates relevant (and available) momentum transport terms in the
         RANS equations.
         """
         y = self.y_R*R
@@ -289,7 +282,7 @@ class WakeMap(object):
             self.dUdz[:, n] = \
                 fdiff.second_order_diff(self.df.mean_u.iloc[:, n], z)
             self.d2Udz2[:, n] = fdiff.second_order_diff(self.dUdz[:, n], z)
-        
+
     def turb_lines(self, linestyles="solid", linewidth=3, color="gray"):
         plt.hlines(0.5, -1, 1, linestyles=linestyles, colors=color,
                    linewidth=linewidth)
@@ -297,7 +290,7 @@ class WakeMap(object):
                    linewidth=linewidth)
         plt.vlines(1, -0.2, 0.5, linestyles=linestyles, colors=color,
                    linewidth=linewidth)
-                   
+
     def plot_contours(self, quantity, label="", cb_orientation="vertical",
                       newfig=True, levels=None):
         """Plots contours of given quantity."""
@@ -308,10 +301,10 @@ class WakeMap(object):
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
         if cb_orientation == "horizontal":
-            cb = plt.colorbar(cs, shrink=1, extend="both", 
+            cb = plt.colorbar(cs, shrink=1, extend="both",
                               orientation="horizontal", pad=0.3)
         elif cb_orientation == "vertical":
-            cb = plt.colorbar(cs, shrink=1, extend="both", 
+            cb = plt.colorbar(cs, shrink=1, extend="both",
                               orientation="vertical", pad=0.02)
         cb.set_label(label)
         self.turb_lines(color="black")
@@ -320,20 +313,20 @@ class WakeMap(object):
         ax.set_aspect(2)
         plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
         plt.tight_layout()
-        
-    def plot_mean_u(self, save=False, show=False, savedir="Figures", 
+
+    def plot_mean_u(self, save=False, show=False, savedir="Figures",
                     savetype=".pdf", newfig=True):
         """Plot contours of mean streamwise velocity."""
-        self.plot_contours(self.df.mean_u/self.U_infty, 
+        self.plot_contours(self.df.mean_u/self.U_infty,
                            label=r"$U/U_\infty$", newfig=newfig)
         if save:
             plt.savefig(savedir+"/mean_u_cont"+savetype)
         if show:
             self.show()
-            
+
     def plot_k(self, newfig=True, save=False, savetype=".pdf", show=False):
         """Plots contours of turbulence kinetic energy."""
-        self.plot_contours(self.df.k/(self.U_infty**2), 
+        self.plot_contours(self.df.k/(self.U_infty**2),
                            newfig=newfig,
                            label=r"$k/U_\infty^2$",
                            levels=np.linspace(0, 0.09, num=19))
@@ -342,7 +335,7 @@ class WakeMap(object):
             plt.savefig("Figures/k_contours_{}{}".format(label, savetype))
         if show:
             plt.show()
-    
+
     def plot_meancontquiv(self, save=False, show=False, savedir="Figures",
                           savetype=".pdf", cb_orientation="vertical",
                           newfig=True):
@@ -359,12 +352,12 @@ class WakeMap(object):
             cb = plt.colorbar(cs, shrink=1, extend="both",
                               orientation="horizontal", pad=0.14)
         elif cb_orientation == "vertical":
-            cb = plt.colorbar(cs, shrink=0.83, extend="both", 
+            cb = plt.colorbar(cs, shrink=0.83, extend="both",
                               orientation="vertical", pad=0.02)
         cb.set_label(r"$U/U_{\infty}$")
         plt.hold(True)
         # Make quiver plot of v and w velocities
-        Q = plt.quiver(self.y_R, self.z_H, self.df.mean_v/self.U_infty, 
+        Q = plt.quiver(self.y_R, self.z_H, self.df.mean_v/self.U_infty,
                        self.df.mean_w/self.U_infty, width=0.0022, scale=3,
                        edgecolor="none")
         plt.xlabel(r"$y/R$")
@@ -389,11 +382,11 @@ class WakeMap(object):
             plt.savefig(savedir+"/meancontquiv_{}{}".format(label, savetype))
         if show:
             self.show()
-    
+
     def plot_xvorticity(self):
         pass
-    
-    def plot_diff(self, quantity="mean_u", U_infty_diff=1.0, save=False, 
+
+    def plot_diff(self, quantity="mean_u", U_infty_diff=1.0, save=False,
                   show=False, savedir="Figures", savetype=""):
         wm_diff = WakeMap(U_infty_diff)
         q_ref, q_diff = None, None
@@ -422,7 +415,7 @@ class WakeMap(object):
         if save:
             if savedir: savedir += "/"
             plt.savefig(savedir+"/"+quantity+"_diff"+savetype)
-    
+
     def plot_meancontquiv_diff(self, U_infty_diff, save=False, show=False,
                                savedir="Figures", savetype="", percent=True,
                                cb_orientation="vertical"):
@@ -444,12 +437,12 @@ class WakeMap(object):
             cb = plt.colorbar(cs, shrink=1, extend="both",
                               orientation="horizontal", pad=0.14)
         elif cb_orientation == "vertical":
-            cb = plt.colorbar(cs, shrink=0.785, extend="both", 
+            cb = plt.colorbar(cs, shrink=0.785, extend="both",
                               orientation="vertical", pad=0.02)
         cb.set_label(r"$\Delta U$ (\%)")
         plt.hold(True)
         # Make quiver plot of v and w velocities
-        Q = plt.quiver(self.y_R, self.z_H, mean_v_diff, 
+        Q = plt.quiver(self.y_R, self.z_H, mean_v_diff,
                        mean_w_diff, width=0.0022, edgecolor="none", scale=3)
         if cb_orientation == "horizontal":
             plt.quiverkey(Q, 0.65, 0.26, 0.1, r"$0.1 U_\infty$",
@@ -469,7 +462,7 @@ class WakeMap(object):
         if save:
             if savedir: savedir += "/"
             plt.savefig(savedir+"/meancontquiv_diff"+savetype)
-            
+
     def plot_mean_u_diff_std(self):
         u_ref = 1.0
         mean_u_ref = WakeMap(u_ref).mean_u/u_ref
@@ -483,15 +476,15 @@ class WakeMap(object):
         plt.figure()
         plt.plot(u_array, std)
         plt.show()
-        
+
     def show(self):
         plt.show()
-        
-        
+
+
 class WakeMapDiff(WakeMap):
     """
-    Object representing the difference between two wake maps. Quantities are 
-    calculated as `wm1 - wm2`. 
+    Object representing the difference between two wake maps. Quantities are
+    calculated as `wm1 - wm2`.
     """
     def __init__(self, U1, U2):
         WakeMap.__init__(self, 1.0)
@@ -502,12 +495,12 @@ class WakeMapDiff(WakeMap):
         self.df = self.wm1.df - self.wm2.df
         self.mean_u = self.wm1.df.mean_u/self.wm1.U_infty \
                     - self.wm2.df.mean_u/self.wm2.U_infty
-                    
+
     def plot_mean_u(self):
         self.plot_contours(self.mean_u, label="$U_{\mathrm{diff}}$")
 
-           
-def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir="Figures", 
+
+def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir="Figures",
                             savetype=".pdf", newfig=True, marker="-ok",
                             fill="none", oldwake=False, figsize=(7.5, 3.75)):
     """Plots the transverse wake profile of some quantity. These can be
@@ -536,10 +529,14 @@ def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir=
     plt.ylabel(ylabels[quantity])
     plt.grid(True)
     plt.tight_layout()
-    
-def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf", 
-                     errorbars=False, subplots=True, normalize_by=1.0, 
-                     dual_xaxes=True, show=False, power_law=False):
+
+def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
+                     savetype=".pdf", errorbars=False, subplots=True,
+                     normalize_by=1.0, dual_xaxes=True, power_law=False,
+                     **kwargs):
+    """Plot the Reynolds number dependence of power and drag coefficients."""
+    if not "marker" in kwargs.keys():
+        kwargs["marker"] = "o"
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
     cp = np.zeros(len(speeds))
     std_cp = np.zeros(len(speeds))
@@ -578,46 +575,45 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
     df["mean_cp"] = cp
     df["mean_cd"] = cd
     df.to_csv("Data/Processed/Perf-tsr_0.csv", index=False)
-    if subplots:
-        plt.figure(figsize=(7.5, 3.5))
-        plt.subplot(121)
-    else:
-        plt.figure()
+    if ax1 is None and ax2 is None and subplots:
+        fig1, (ax1, ax2) = plt.subplots(figsize=(7.5, 3.5), nrows=1, ncols=2)
+    elif ax1 is None and ax2 is None and not subplots:
+        fig1, ax1 = plt.subplots()
+        fig2, ax2 = plt.subplots()
     if normalize_by == "C_P_0":
         norm_cp = cp[-4]
         norm_cd = cd[-4]
     else:
         norm_cp = normalize_by
         norm_cd = normalize_by
-    if errorbars:    
-        plt.errorbar(Re_D, cp/norm_cp, yerr=exp_unc_cp/norm_cp, fmt="-ok",
-                     markerfacecolor="none", label="Experiment")
+    if errorbars:
+        ax1.errorbar(Re_D, cp/norm_cp, yerr=exp_unc_cp/norm_cp,
+                     label="Experiment", **kwargs)
     else:
-        plt.plot(Re_D, cp/norm_cp, '-ok', markerfacecolor="none", label="Experiment")
-    plt.xlabel(r"$Re_D$")
+        ax1.plot(Re_D, cp/norm_cp, label="Experiment", **kwargs)
+    ax1.set_xlabel(r"$Re_D$")
     if normalize_by == "default":
-        plt.ylabel(r"$C_P/C_{P_0}$")
+        ax1.set_ylabel(r"$C_P/C_{P_0}$")
     else:
-        plt.ylabel(r"$C_P$")
-    ax = plt.gca()
-    plt.grid(True)
+        ax1.set_ylabel(r"$C_P$")
     if dual_xaxes:
         x, y = 1.345e6, 0.268/norm_cp
         if subplots:
             x, y = x*0.96, y*1.01
-        plt.text(x, y, "1e5")
-        ax2 = ax.twiny()
-        ax.xaxis.get_majorticklocs()
+        ax1.text(x, y, "1e5")
+        ax12 = ax1.twiny()
+        ax1.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
         ticklabs = ticklabs/D*1.9*0.14/1e5
         ticklabs = [str(np.round(ticklab, decimals=1)) for ticklab in ticklabs]
-        ax2.set_xticks(ax.xaxis.get_ticklocs())
-        ax2.set_xlim((0.2e6, 1.4e6))
-        ax2.set_xticklabels(ticklabs)
-        ax2.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
+        ax12.set_xticks(ax1.xaxis.get_ticklocs())
+        ax12.set_xlim((0.2e6, 1.4e6))
+        ax12.set_xticklabels(ticklabs)
+        ax12.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
+        ax12.grid(False)
     if power_law:
         # Calculate power law fits for quantities
-        def func(x, a, b): 
+        def func(x, a, b):
             return a*x**b
         coeffs_cd, covar_cd = curve_fit(func, Re_c, cd)
         coeffs_cp, covar_cp = curve_fit(func, Re_c, cp)
@@ -626,70 +622,74 @@ def plot_perf_re_dep(save=False, savedir="Figures", savetype=".pdf",
         print("C_D = {:.3f}*Re_c**{:.3f}".format(coeffs_cd[0], coeffs_cd[1]))
         Re_D_curve = np.linspace(0.3e6, 1.3e6)
         cp_power_law = coeffs_cp[0]*(Re_D_curve/D*chord*1.9)**coeffs_cp[1]
-        plt.plot(Re_D_curve, cp_power_law, "--k", 
-                 label=r"${:.3f}Re_c^{{ {:.3f} }}$".format(coeffs_cp[0], coeffs_cp[1]))
-        plt.legend(loc="lower right")
-    plt.ylim((0.17/normalize_by, 0.26/normalize_by))
-    ax.xaxis.major.formatter.set_powerlimits((0,0)) 
-    plt.tight_layout()
+        ax1.plot(Re_D_curve, cp_power_law, "--k",
+                 label=r"${:.3f}Re_c^{{ {:.3f} }}$".format(coeffs_cp[0],
+                 coeffs_cp[1]))
+        ax1.legend(loc="lower right")
+    ax1.set_ylim((0.17/normalize_by, 0.26/normalize_by))
+    ax1.xaxis.major.formatter.set_powerlimits((0, 0))
+    ax1.grid(True)
+    try:
+        fig1.tight_layout()
+    except UnboundLocalError:
+        pass
     if save and not subplots:
-        plt.savefig(savedir + "/re_dep_cp" + savetype)
-    if subplots:
-        plt.subplot(122)
-    else:
-        plt.figure()
+        fig1.savefig(savedir + "/re_dep_cp" + savetype)
     if errorbars:
-        plt.errorbar(Re_D, cd/norm_cd, yerr=exp_unc_cd/norm_cd, fmt="-ok",
-                     markerfacecolor="none", label="Experiment")
+        ax2.errorbar(Re_D, cd/norm_cd, yerr=exp_unc_cd/norm_cd,
+                     label="Experiment", **kwargs)
     else:
-        plt.plot(Re_D, cd/cd[-4], '-ok', markerfacecolor="none", label="Experiment")
-    plt.xlabel(r"$Re_D$")
+        ax2.plot(Re_D, cd/cd[-4], label="Experiment", **kwargs)
+    ax2.set_xlabel(r"$Re_D$")
     if normalize_by == "default":
-        plt.ylabel(r"$C_D/C_{D_0}$")
+        ax2.set_ylabel(r"$C_D/C_{D_0}$")
     else:
-        plt.ylabel(r"$C_D$")
-    ax = plt.gca()
-    plt.grid(True)
+        ax2.set_ylabel(r"$C_D$")
     if dual_xaxes:
         x, y = 1.345e6, 1.029/norm_cd
         if subplots:
             x, y = x*0.96, y*1.003
-        plt.text(x, y, "1e5")
-        ax2 = ax.twiny()
-        ax.xaxis.get_majorticklocs()
+        ax2.text(x, y, "1e5")
+        ax22 = ax2.twiny()
+        ax2.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
         ticklabs = ticklabs/D*1.9*0.14/1e5
         ticklabs = [str(np.round(ticklab, decimals=1)) for ticklab in ticklabs]
-        ax2.set_xticks(ax.xaxis.get_ticklocs())
-        ax2.set_xlim((0.2e6, 1.4e6))
-        ax2.set_xticklabels(ticklabs)
-        ax2.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
-    plt.hold(True)
-    plt.ylim((0.92/norm_cd, 1.02/norm_cd))
-    ax.xaxis.major.formatter.set_powerlimits((0,0))
+        ax22.set_xticks(ax2.xaxis.get_ticklocs())
+        ax22.set_xlim((0.2e6, 1.4e6))
+        ax22.set_xticklabels(ticklabs)
+        ax22.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
+        ax22.grid(False)
+    ax2.set_ylim((0.92/norm_cd, 1.02/norm_cd))
+    ax2.xaxis.major.formatter.set_powerlimits((0,0))
+    ax2.grid(True)
     if power_law:
         cd_power_law = coeffs_cd[0]*(Re_D_curve/D*chord*1.9)**coeffs_cd[1]
-        plt.plot(Re_D_curve, cd_power_law, "--k", 
-                 label=r"${:.3f}Re_c^{{ {:.3f} }}$".format(coeffs_cd[0], coeffs_cd[1]))
-        plt.legend(loc="lower right")
-    plt.tight_layout()
+        ax2.plot(Re_D_curve, cd_power_law, "--k",
+                 label=r"${:.3f}Re_c^{{ {:.3f} }}$".format(coeffs_cd[0],
+                 coeffs_cd[1]))
+        ax2.legend(loc="lower right")
+    try:
+        fig1.tight_layout()
+        fig2.tight_layout()
+    except UnboundLocalError:
+        pass
     if save:
         if subplots:
-            plt.savefig(savedir + "/perf_re_dep" + savetype)
+            fig1.savefig(savedir + "/perf_re_dep" + savetype)
         else:
-            plt.savefig(savedir + "/re_dep_cd" + savetype)
-    if show:
-        plt.show()
-    
+            fig2.savefig(savedir + "/re_dep_cd" + savetype)
+
+
 def plot_old_wake(quantity, y_R):
     plt.hold(True)
     runs = range(32, 77)
     ind = [run-1 for run in runs]
     f = "../2013.03 VAT/Processed/"+quantity+".npy"
     q = np.load(f)[ind]
-    plt.plot(y_R, q, 'xr', label=r"$Re_D=1.0 \times 10^6$", 
+    plt.plot(y_R, q, 'xr', label=r"$Re_D=1.0 \times 10^6$",
              markerfacecolor="none")
-             
+
 def plot_cfd_perf(quantity="cp", normalize_by="CFD"):
     Re_D = np.load(cfd_path + "/processed/Re_D.npy")
     q = np.load(cfd_path + "/processed/" + quantity + ".npy")
@@ -698,7 +698,7 @@ def plot_cfd_perf(quantity="cp", normalize_by="CFD"):
     else:
         normval = normalize_by
     plt.plot(Re_D, q/normval, "--^k", label="Simulation")
-    
+
 def plot_tare_drag():
     df = pd.read_csv("Data/Processed/Tare drag.csv")
     plt.figure()
@@ -706,7 +706,7 @@ def plot_tare_drag():
     plt.xlabel("Tow speed (m/s)")
     plt.ylabel("Tare drag (N)")
     plt.show()
-    
+
 def plot_settling(tow_speed):
     """Plot data from the settling experiments."""
     testplan = pd.read_csv("Config/Test plan/Settling.csv")
@@ -729,7 +729,7 @@ def plot_settling(tow_speed):
     plt.xlabel("t (s)")
     plt.ylabel(r"$\sigma_u$")
     plt.tight_layout()
-    
+
 def plot_cp_curve(u_infty, save=False, show=False, savedir="Figures",
                   savetype=".pdf"):
     pc = PerfCurve(u_infty)
@@ -739,40 +739,50 @@ def plot_cp_curve(u_infty, save=False, show=False, savedir="Figures",
         plt.savefig(savepath)
     if show:
         plt.show()
-    
-def plot_perf_curves(subplots=False, save=False, savedir="Figures", 
-                     show=False, savetype=".pdf"):
-    """Plots all performance curves."""
-    if subplots:
-        plt.figure(figsize=(7.5, 3.07))
-        plt.subplot(121)
-    PerfCurve(0.4).plotcp(newfig=not subplots, show=False, marker=">")
-    PerfCurve(0.6).plotcp(newfig=False, show=False, marker="s")
-    PerfCurve(0.8).plotcp(newfig=False, show=False, marker="<")
-    PerfCurve(1.0).plotcp(newfig=False, show=False, marker="o")
-    PerfCurve(1.2).plotcp(newfig=False, show=False, marker="^")
-    plt.legend(loc="best", ncol=2)
-    plt.tight_layout()
+
+def plot_perf_curves(ax1=None, ax2=None, subplots=True, save=False,
+                     savedir="Figures", savetype=".pdf", **kwargs):
+    """Plot all performance curves."""
+    if ax1 is None and ax2 is None and subplots:
+        fig1, (ax1, ax2) = plt.subplots(figsize=(7.5, 3.07), nrows=1, ncols=2)
+    elif ax1 is None and ax2 is None and not subplots:
+        fig1, ax1 = plt.subplots()
+        fig2, ax2 = plt.subplots()
+    PerfCurve(0.4).plotcp(ax=ax1, marker=">", **kwargs)
+    PerfCurve(0.6).plotcp(ax=ax1, marker="s", **kwargs)
+    PerfCurve(0.8).plotcp(ax=ax1, marker="<", **kwargs)
+    PerfCurve(1.0).plotcp(ax=ax1, marker="o", **kwargs)
+    PerfCurve(1.2).plotcp(ax=ax1, marker="^", **kwargs)
+    ax1.grid(True)
+    if not subplots:
+        ax1.legend(loc="best", ncol=2)
+    try:
+        fig1.tight_layout()
+    except UnboundLocalError:
+        pass
     if save and not subplots:
-        plt.savefig(os.path.join(savedir, "cp_curves" + savetype))
-    if subplots:
-        plt.subplot(122)
-    PerfCurve(0.4).plotcd(newfig=not subplots, show=False, marker=">")
-    PerfCurve(0.6).plotcd(newfig=False, show=False, marker="s")
-    PerfCurve(0.8).plotcd(newfig=False, show=False, marker="<")
-    PerfCurve(1.0).plotcd(newfig=False, show=False, marker="o")
-    PerfCurve(1.2).plotcd(newfig=False, show=False, marker="^")
-    plt.legend(loc="lower right", ncol=2)
-    plt.tight_layout()
+        fig1.savefig(os.path.join(savedir, "cp_curves" + savetype))
+    PerfCurve(0.4).plotcd(ax=ax2, marker=">", **kwargs)
+    PerfCurve(0.6).plotcd(ax=ax2, marker="s", **kwargs)
+    PerfCurve(0.8).plotcd(ax=ax2, marker="<", **kwargs)
+    PerfCurve(1.0).plotcd(ax=ax2, marker="o", **kwargs)
+    PerfCurve(1.2).plotcd(ax=ax2, marker="^", **kwargs)
+    ax2.legend(loc="lower right", ncol=2)
+    ax2.set_ylim((0, 1.2))
+    ax2.grid(True)
+    try:
+        fig1.tight_layout()
+        fig2.tight_layout()
+    except UnboundLocalError:
+        pass
     if save:
         if subplots:
-            plt.savefig(os.path.join(savedir, "perf_curves" + savetype))
+            fig1.savefig(os.path.join(savedir, "perf_curves" + savetype))
         else:
-            plt.savefig(os.path.join(savedir, "cd_curves" + savetype))
-    if show:
-        plt.show()
-    
-def plot_wake_profiles(z_H=0.0, save=False, show=False, savedir="Figures", 
+            fig2.savefig(os.path.join(savedir, "cd_curves" + savetype))
+
+
+def plot_wake_profiles(z_H=0.0, save=False, show=False, savedir="Figures",
                        savetype=".pdf"):
     """Plots all wake profiles of interest."""
     legendlocs = {"mean_u" : 4,
@@ -796,20 +806,20 @@ def plot_wake_profiles(z_H=0.0, save=False, show=False, savedir="Figures",
             plt.savefig(os.path.join(savedir, q+savetype))
     if show:
         plt.show()
-    
-def plot_meancontquiv(U_infty=1.0, save=False, savetype=".pdf", show=False, 
+
+def plot_meancontquiv(U_infty=1.0, save=False, savetype=".pdf", show=False,
                       cb_orientation="vertical"):
     wm = WakeMap(U_infty)
     wm.plot_meancontquiv(save=save, show=show, savetype=savetype,
                          cb_orientation=cb_orientation)
-        
+
 def plot_all_meancontquiv(save=False, savetype=".pdf", show=False):
     """Plot all mean velocity contours/quivers."""
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
         WakeMap(U).plot_meancontquiv(newfig=True, save=save, savetype=savetype)
     if show:
         plt.show()
-        
+
 def plot_all_kcont(save=False, savetype=".pdf"):
     """
     Plots contours of turbulence kinetic energy for all Reynolds numbers
@@ -817,7 +827,7 @@ def plot_all_kcont(save=False, savetype=".pdf"):
     """
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
         WakeMap(U).plot_k(save=save, savetype=savetype)
-        
+
 def make_k_bar_graph(save=False, savetype=".pdf", show=False,
                      print_analysis=True):
     """
@@ -836,7 +846,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
         dKdy, dKdz = wm.dKdy, wm.dKdz
         y_R, z_H = wm.y_R, wm.z_H
         meanu, meanv, meanw = wm.df.mean_u, wm.df.mean_v, wm.df.mean_w
-        quantities = [ts.average_over_area(-2*meanv/meanu*dKdy/(0.5*U**2)*D, y_R, z_H), 
+        quantities = [ts.average_over_area(-2*meanv/meanu*dKdy/(0.5*U**2)*D, y_R, z_H),
                       ts.average_over_area(-2*meanw/meanu*dKdz/(0.5*U**2)*D, y_R, z_H),
                       ts.average_over_area(2*tty/meanu/(0.5*U**2)*D, y_R, z_H),
                       ts.average_over_area(2*ttz/meanu/(0.5*U**2)*D, y_R, z_H),
@@ -844,12 +854,12 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
                       ts.average_over_area(2*meandiss/meanu/(0.5*U**2)*D*1e3, y_R, z_H)]
         ax = plt.gca()
         color = cm(int(n/4*256))
-        ax.bar(np.arange(len(names))+n*0.15, quantities, color=color, edgecolor="black", 
-               hatch=None, width=0.15, 
+        ax.bar(np.arange(len(names))+n*0.15, quantities, color=color, edgecolor="black",
+               hatch=None, width=0.15,
                label=r"$Re_D={:.1f}\times 10^6$".format(Re_D/1e6))
         if print_analysis:
             quantities[-1] /= 1e3
-            print("K recovery rate at {:.1f} m/s: {:.2f} (%/D)".format(U, 
+            print("K recovery rate at {:.1f} m/s: {:.2f} (%/D)".format(U,
                   np.sum(quantities)*100))
     ax.set_xticks(np.arange(len(names)) + 5*.15/2)
     ax.set_xticklabels(names)
@@ -861,7 +871,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
         plt.savefig("Figures/K_trans_bar_graph" + savetype)
     if show:
         plt.show()
-        
+
 def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
                        print_analysis=True):
     """
@@ -873,11 +883,11 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
       * Cross-steam diffusion
       * Vertical diffusion
     """
-    names = [r"$-V \frac{\partial U}{\partial y}$", 
-             r"$-W \frac{\partial U}{\partial z}$", 
-             r"$-\frac{\partial}{\partial y} \overline{u^\prime v^\prime}$", 
+    names = [r"$-V \frac{\partial U}{\partial y}$",
+             r"$-W \frac{\partial U}{\partial z}$",
+             r"$-\frac{\partial}{\partial y} \overline{u^\prime v^\prime}$",
              r"$-\frac{\partial}{\partial z} \overline{u^\prime w^\prime}$",
-             r"$\nu \frac{\partial^2 U}{\partial y^2} (\times 10^3)$", 
+             r"$\nu \frac{\partial^2 U}{\partial y^2} (\times 10^3)$",
              r"$\nu \frac{\partial^2 U}{\partial z^2} (\times 10^3)$"]
     plt.figure(figsize=(7.5, 3.2))
     cm = plt.cm.coolwarm
@@ -891,7 +901,7 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
         d2Udz2 = wm.d2Udz2
         meanu, meanv, meanw = wm.df.mean_u, wm.df.mean_v, wm.df.mean_w
         y_R, z_H = wm.y_R, wm.z_H
-        quantities = [ts.average_over_area(-2*meanv*dUdy/meanu/U*D, y_R, z_H), 
+        quantities = [ts.average_over_area(-2*meanv*dUdy/meanu/U*D, y_R, z_H),
                       ts.average_over_area(-2*meanw*dUdz/meanu/U*D, y_R, z_H),
                       ts.average_over_area(-2*tty/meanu/U*D, y_R, z_H),
                       ts.average_over_area(-2*ttz/meanu/U*D, y_R, z_H),
@@ -900,13 +910,13 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
         dUdx = ts.average_over_area(2*wm.dUdx/U*D, y_R, z_H)
         ax = plt.gca()
         color = cm(int(n/4*256))
-        ax.bar(np.arange(len(names)) + n*.15, quantities, color=color, 
-               width=0.15, edgecolor="black", 
+        ax.bar(np.arange(len(names)) + n*.15, quantities, color=color,
+               width=0.15, edgecolor="black",
                label=r"$Re_D={:.1f}\times 10^6$".format(U*D/nu/1e6))
         if print_analysis:
             quantities[4] /= 1e3
             quantities[5] /= 1e3
-            print("U recovery rate at {:.1f} m/s: {:.2f} (%/D)".format(U, 
+            print("U recovery rate at {:.1f} m/s: {:.2f} (%/D)".format(U,
                   np.sum(quantities)*100))
     ax.set_xticks(np.arange(len(names)) + 5*.15/2)
     ax.set_xticklabels(names)
@@ -918,7 +928,7 @@ def make_mom_bar_graph(save=False, savetype=".pdf", show=False,
         plt.savefig("Figures/mom_bar_graph"+savetype)
     if show:
         plt.show()
-        
+
 def plot_wake_trans_totals(save=False, savetype=".pdf"):
     """
     Plots totals for wake transport quantities for all Reynolds numbers
@@ -938,7 +948,7 @@ def plot_wake_trans_totals(save=False, savetype=".pdf"):
         d2Udz2 = wm.d2Udz2
         meanu, meanv, meanw = wm.df.mean_u, wm.df.mean_v, wm.df.mean_w
         y_R, z_H = wm.y_R, wm.z_H
-        quantities = [ts.average_over_area(-2*meanv*dUdy/meanu/U*D, y_R, z_H), 
+        quantities = [ts.average_over_area(-2*meanv*dUdy/meanu/U*D, y_R, z_H),
                       ts.average_over_area(-2*meanw*dUdz/meanu/U*D, y_R, z_H),
                       ts.average_over_area(-2*tty/meanu/U*D, y_R, z_H),
                       ts.average_over_area(-2*ttz/meanu/U*D, y_R, z_H),
@@ -950,7 +960,7 @@ def plot_wake_trans_totals(save=False, savetype=".pdf"):
         dKdy, dKdz = wm.dKdy, wm.dKdz
         y_R, z_H = wm.y_R, wm.z_H
         meanu, meanv, meanw = wm.df.mean_u, wm.df.mean_v, wm.df.mean_w
-        quantities = [ts.average_over_area(-2*meanv/meanu*dKdy/(0.5*U**2)*D, y_R, z_H), 
+        quantities = [ts.average_over_area(-2*meanv/meanu*dKdy/(0.5*U**2)*D, y_R, z_H),
                       ts.average_over_area(-2*meanw/meanu*dKdz/(0.5*U**2)*D, y_R, z_H),
                       ts.average_over_area(2*tty/meanu/(0.5*U**2)*D, y_R, z_H),
                       ts.average_over_area(2*ttz/meanu/(0.5*U**2)*D, y_R, z_H),
@@ -969,14 +979,14 @@ def plot_wake_trans_totals(save=False, savetype=".pdf"):
     plt.tight_layout()
     if save:
         plt.savefig("Figures/wake_trans_totals" + savetype)
-        
+
 def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
                   show=False, newfig=True, plot_lines=True, color="black"):
     """
     Plots the cross-stream velocity spectrum (normalized by the free stream
     velocity) for a single run. Any NaNs in the velocity data are replaced with
     the mean.
-    
+
     Bachant and Wosnik (2015, JoT) used locations y/R = (-1, 1.5) and
     z/H = 0.25 to compare spectra with high and low levels of turbulence,
     respectively.
@@ -991,7 +1001,7 @@ def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
     v = r.v
     print("Replacing {} datapoints with mean".format(r.nbadv))
     v[np.isnan(v)] = r.mean_v
-    f, spec = ts.psd(r.time_vec, v/U_infty, window="Hanning", 
+    f, spec = ts.psd(r.time_vec, v/U_infty, window="Hanning",
                      n_band_average=n_band_ave)
     f_turbine = r.mean_tsr*U_infty/R/(2*np.pi)
     # Find maximum frequency and its relative strength
@@ -1001,7 +1011,7 @@ def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
     print("Spectral concentration: {:.3f}".format(strength))
     if newfig:
         plt.figure()
-    plt.loglog(f/f_turbine, spec, color=color, 
+    plt.loglog(f/f_turbine, spec, color=color,
                label=r"$Re_D = {:.1f} \times 10^6$".format(U_infty))
     plt.xlim((0, 50))
     plt.xlabel(r"$f/f_{\mathrm{turbine}}$")
@@ -1024,7 +1034,7 @@ def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
     plt.tight_layout()
     if show:
         plt.show()
-        
+
 def plot_multi_spec(n_band_ave=4, plot_conf_int=False, save=False, show=False,
                     savetype=".pdf"):
     """
@@ -1052,7 +1062,7 @@ def plot_multi_spec(n_band_ave=4, plot_conf_int=False, save=False, show=False,
         plt.savefig("Figures/wake_spectra" + savetype)
     if show:
         plt.show()
-        
+
 def plot_vertical_lines(xlist, ymaxscale=1, color="gray"):
     if not isinstance(xlist, list):
         x = [x]
@@ -1062,10 +1072,10 @@ def plot_vertical_lines(xlist, ymaxscale=1, color="gray"):
         plt.vlines(x, ymin, ymax,
                    color=color, linestyles="dashed")
     plt.ylim((ymin, ymax))
-    
+
 def plot_wake_re_dep(y_R=0.0, z_H=0.25, save=False):
     """
-    Plots the Reynolds number dependence of the streamwise mean velocity and 
+    Plots the Reynolds number dependence of the streamwise mean velocity and
     turbulence intensity at y/R = 0, z/H = 0.25. Averages are taken from two
     runs for each speed.
     """
