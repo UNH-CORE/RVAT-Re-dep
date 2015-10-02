@@ -1,6 +1,6 @@
 # UNH-RVAT Reynolds number dependence experiment
 
-This repository contains the processing and plotting code, as well as the 
+This repository contains the processing and plotting code, as well as the
 derived dataset from the UNH-RVAT Reynolds number dependence experiment
 performed in Spring 2014.
 
@@ -14,15 +14,15 @@ Clone this repository with
 
     git clone https://github.com/UNH-CORE/RVAT-Re-dep.git
 
-To run the processing/plotting code we recommend the 
+To run the processing/plotting code we recommend the
 [Anaconda Python distribution](https://store.continuum.io/cshop/anaconda/)
-(Python 3.4) since it includes most dependencies. The remaining 
+(Python 3.4) since it includes most dependencies. The remaining
 can be installed by executing
 
     pip install -r requirements.txt
 
-After installing all dependencies, execute `python run.py` to generate
-figures from the experiment. 
+After installing all dependencies, execute `python plot.py` to generate
+figures from the experiment.
 
 Contributing
 ------------
@@ -36,7 +36,7 @@ Documents and other resources
   * [UNH-RVAT CAD models](http://figshare.com/articles/UNH_RVAT_CAD_models/1062009)
 
 ## How to cite
-Please cite 
+Please cite
 
 ```bibtex
 @Misc{Bachant2014-Re-dep-data,
