@@ -6,30 +6,62 @@ stores them in the `Figures` directory.
 """
 
 from py_rvat_re_dep.plotting import *
-
-set_sns()
-show = True
-save = True
-savetype = ".pdf"
+import argparse
 
 kwargs = {"markerfacecolor": "none",
           "color": "black"}
 
-def main():
-    plot_perf_curves(save=save, savetype=savetype, **kwargs)
-    plot_perf_re_dep(save=save, savetype=savetype, **kwargs)
-    plot_perf_re_dep(subplots=False, save=save, savetype=savetype, **kwargs)
-    plot_wake_profiles(save=save, savetype=savetype)
-    make_k_bar_graph(save=save, savetype=savetype)
-    make_mom_bar_graph(save=save, savetype=savetype)
-    plot_all_meancontquiv(save=save, savetype=savetype)
-    plot_all_kcont(save=save, savetype=savetype)
-    plot_multi_spec(save=save, savetype=savetype)
-    plot_wake_trans_totals(save=save, savetype=savetype)
-    if show:
-        plt.show()
 
 if __name__ == "__main__":
-    if not os.path.isdir("Figures"):
-        os.makedirs("Figures")
-    main()
+    parser = argparse.ArgumentParser(description="Create figures from the "
+                                     "UNH-RVAT Reynolds number dependence "
+                                     "experiment")
+    parser.add_argument("figures", nargs="?", help="Which figures to create",
+                        choices=["perf_curves", "perf_re_dep", "wake_profiles",
+                        "k_bar_graph", "mom_bar_graph", "all_meancontquiv",
+                        "all_kcont", "multi_spec", "wake_trans_totals"],
+                        default=[])
+    parser.add_argument("--all", "-A", help="Plot all figures",
+                        action="store_true", default=False)
+    parser.add_argument("--nosave", help="Do not save figures",
+                        action="store_true", default=False)
+    parser.add_argument("--savetype", help="Format to save figures",
+                        default=".pdf")
+    parser.add_argument("--style", help="Matplotlib stylesheet")
+    parser.add_argument("--noshow", help="Do not show figures",
+                        action="store_true", default=False)
+    args = parser.parse_args()
+
+    if args.style:
+        plt.style.use(args.style)
+    else:
+        set_sns()
+    savetype = args.savetype
+    save = not args.nosave
+    if save:
+        if not os.path.isdir("Figures"):
+            os.makedirs("Figures")
+
+    if "perf_curves" in args.figures or args.all:
+        plot_perf_curves(subplots=False, save=save, savetype=savetype, **kwargs)
+        plot_perf_curves(save=save, savetype=savetype, **kwargs)
+    if "perf_re_dep" in args.figures or args.all:
+        plot_perf_re_dep(save=save, savetype=savetype, **kwargs)
+        plot_perf_re_dep(subplots=False, save=save, savetype=savetype, **kwargs)
+    if "wake_profiles" in args.figures or args.all:
+        plot_wake_profiles(save=save, savetype=savetype)
+    if "k_bar_graph" in args.figures or args.all:
+        make_k_bar_graph(save=save, savetype=savetype)
+    if "mom_bar_graph" in args.figures or args.all:
+        make_mom_bar_graph(save=save, savetype=savetype)
+    if "all_meancontquiv" in args.figures:
+        plot_all_meancontquiv(save=save, savetype=savetype)
+    if "all_kcont" in args.figures:
+        plot_all_kcont(save=save, savetype=savetype)
+    if "multi_spec" in args.figures or args.all:
+        plot_multi_spec(save=save, savetype=savetype)
+    if "wake_trans_totals" in args.figures or args.all:
+        plot_wake_trans_totals(save=save, savetype=savetype)
+
+    if not args.noshow:
+        plt.show()
