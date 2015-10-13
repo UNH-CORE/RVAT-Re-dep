@@ -5,11 +5,8 @@ This module contains test functions.
 """
 import os
 import time
-if os.getcwd()[-7:] == "Modules":
-    print("Changing working directory to experiment root directory")
-    os.chdir("../")
-from Modules.processing import *
-from Modules.plotting import *
+from .processing import *
+from .plotting import *
 
 def test_run():
     print("Testing Run class")
@@ -22,12 +19,12 @@ def test_run():
     print(run.exp_unc_cp)
     run.print_perf_stats()
     print("PASS")
-    
+
 def test_section():
     print("Testing Section class")
     section = Section("Wake-1.0")
     print("PASS")
-    
+
 def test_batch_process_section():
     print("Testing batch_process_section")
     batch_process_section("Perf-1.0")
@@ -36,19 +33,19 @@ def test_batch_process_section():
     plt.figure()
     plt.plot(df.mean_tsr, df.mean_cp)
     plt.show()
-    
+
 def test_perf_curve():
     print("Testing PerfCurve class")
     pc = PerfCurve(0.6)
     pc.plotcp()
     print("PASS")
-    
+
 def test_wake_profile():
     print("Testing WakeProfile class")
     wp = WakeProfile(0.6, 0.25, "horizontal")
     wp.plot("mean_u")
     print("PASS")
-    
+
 def test_wake_map():
     print("Testing WakeMap class")
     wm = WakeMap(0.4)
@@ -58,7 +55,7 @@ def test_wake_map():
 #    wm.plot_diff(quantity="mean_w", U_infty_diff=0.6)
 #    wm.plot_meancontquiv_diff(0.8, percent=False)
     print("PASS")
-    
+
 def test_process_section_parallel():
     nproc = 4
     nruns = 32
@@ -76,7 +73,7 @@ def test_process_section_parallel():
     assert(np.all(s.data.mean_cp == df.mean_cp))
     assert(np.all(s.data.mean_cd == df.mean_cd))
     print("PASS")
-    
+
 def test_batch_process_section_vs_parallel():
     name = "Perf-1.0"
     t0 = time.time()
@@ -85,7 +82,7 @@ def test_batch_process_section_vs_parallel():
     t0 = time.time()
     Section(name).process()
     print(time.time() - t0)
-    
+
 def test_download_raw():
     """Tests the `processing.download_raw` function."""
     print("Testing processing.download_raw")
@@ -111,18 +108,18 @@ def test_download_raw():
     if exists:
         os.rename(fpath_temp, fpath)
     print("PASS")
-    
+
 def test_plot_settling():
     print("Testing plotting.plot_settling")
     plot_settling(1.0)
     print("PASS")
-    
+
 def test_calc_mom_transport():
     print("Testing WakeMap.calc_mom_transport")
     wm = WakeMap(1.0)
     wm.calc_mom_transport()
     print("PASS")
-    
+
 def test_all():
     test_run()
     test_section()
@@ -153,6 +150,6 @@ def test_all():
     test_plot_settling()
     test_calc_mom_transport()
     print("All tests passed")
-    
+
 if __name__ == "__main__":
     pass
