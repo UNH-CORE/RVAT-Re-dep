@@ -496,9 +496,11 @@ class Run(object):
         print(str(self.nbad)+"/"+str(ntotal), "data points omitted")
 
     def calc_wake_uncertainty(self):
-        """Computes delta values for wake measurements from Vectrino accuracy
-        specs, not statistical uncertainties."""
-        self.unc_mean_u = np.nan
+        """Compute uncertainty for wake measurements."""
+        # self.unc_mean_u = np.sqrt(self.std_u_per_rev**2 \
+        #                 + calc_b_vec(self.mean_u))
+        # Use only Vectrino specs
+        self.unc_mean_u = np.nanmean(calc_b_vec(self.u))
         self.unc_std_u = np.nan
 
     def calc_perf_per_rev(self):
@@ -546,7 +548,6 @@ class Run(object):
             mean_v[n] = np.nanmean(self.v[ind])
             mean_w[n] = np.nanmean(self.w[ind])
             start_angle += 360
-        print(mean_u)
         self.std_u_per_rev = mean_u.std()
         self.std_v_per_rev = mean_v.std()
         self.std_w_per_rev = mean_w.std()
