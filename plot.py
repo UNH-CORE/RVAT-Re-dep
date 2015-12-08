@@ -35,6 +35,7 @@ if __name__ == "__main__":
     if args.style:
         plt.style.use(args.style)
     else:
+        from pxl.styleplot import set_sns
         set_sns()
     savetype = args.savetype
     save = not args.nosave
