@@ -4,8 +4,6 @@ This repository contains the processing and plotting code, as well as the
 derived dataset from the UNH-RVAT Reynolds number dependence experiment
 performed in Spring 2014.
 
-**Note:** This repository is still in active development and is not ready
-for use.
 
 Getting started
 ---------------
@@ -16,18 +14,21 @@ Clone this repository with
 
 To run the processing/plotting code we recommend the
 [Anaconda Python distribution](https://store.continuum.io/cshop/anaconda/)
-(Python 3.4) since it includes most dependencies. The remaining
+(Python 3.5) since it includes most dependencies. The remaining
 can be installed by executing
 
-    pip install -r requirements.txt
+    pip install progressbar33 pxl>=0.0.6
 
 After installing all dependencies, execute `python plot.py` to generate
 figures from the experiment.
 
+
 Contributing
 ------------
 
-Pull requests welcome!
+To contribute to this repository, please create a fork, add changes on a
+descriptively-named branch, and submit a pull request.
+
 
 Documents and other resources
 -----------------------------
@@ -35,7 +36,10 @@ Documents and other resources
   * [Uncertainty calculations](http://nbviewer.ipython.org/github/UNH-CORE/RVAT-Re-dep/blob/master/Documents/IPython%20notebooks/uncertainty.ipynb)
   * [UNH-RVAT CAD models](http://figshare.com/articles/UNH_RVAT_CAD_models/1062009)
 
-## How to cite
+
+How to cite
+-----------
+
 Please cite
 
 ```bibtex
@@ -49,6 +53,7 @@ Please cite
   Url                      = {http://dx.doi.org/10.6084/m9.figshare.1286960}
 }
 ```
+
 
 Publications
 ------------
@@ -65,6 +70,7 @@ These data were used in the following publications:
   Url                      = {http://hdl.handle.net/10919/49210}
 }
 ```
+
 
 License
 -------
