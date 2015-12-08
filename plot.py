@@ -1,8 +1,8 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 This script generates all relevant figures from the experiment and
 stores them in the `Figures` directory.
-
 """
 
 from pyrvatrd.plotting import *
