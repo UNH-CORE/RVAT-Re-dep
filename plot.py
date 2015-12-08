@@ -23,7 +23,9 @@ if __name__ == "__main__":
                         default=[])
     parser.add_argument("--all", "-A", help="Plot all figures",
                         action="store_true", default=False)
-    parser.add_argument("--nosave", help="Do not save figures",
+    parser.add_argument("--errorbars", "-e", help="Plot error bars",
+                        action="store_true", default=False)
+    parser.add_argument("--save", "-s", help="Save figures",
                         action="store_true", default=False)
     parser.add_argument("--savetype", help="Format to save figures",
                         default=".pdf")
@@ -38,7 +40,8 @@ if __name__ == "__main__":
         from pxl.styleplot import set_sns
         set_sns()
     savetype = args.savetype
-    save = not args.nosave
+    save = args.save
+    errorbars = args.errorbars
     if save:
         if not os.path.isdir("Figures"):
             os.makedirs("Figures")
@@ -47,8 +50,10 @@ if __name__ == "__main__":
         plot_perf_curves(subplots=False, save=save, savetype=savetype, **kwargs)
         plot_perf_curves(save=save, savetype=savetype, **kwargs)
     if "perf_re_dep" in args.figures or args.all:
-        plot_perf_re_dep(save=save, savetype=savetype, **kwargs)
-        plot_perf_re_dep(subplots=False, save=save, savetype=savetype, **kwargs)
+        plot_perf_re_dep(errorbars=errorbars, save=save, savetype=savetype,
+                         **kwargs)
+        plot_perf_re_dep(subplots=False, errorbars=errorbars, save=save,
+                         savetype=savetype, **kwargs)
     if "wake_profiles" in args.figures or args.all:
         plot_wake_profiles(save=save, savetype=savetype)
     if "k_bar_graph" in args.figures or args.all:
@@ -60,7 +65,7 @@ if __name__ == "__main__":
     if "all_kcont" in args.figures:
         plot_all_kcont(save=save, savetype=savetype)
     if "multi_spec" in args.figures or args.all:
-        plot_multi_spec(save=save, savetype=savetype)
+        plot_multi_spec(plot_conf_int=errorbars, save=save, savetype=savetype)
     if "wake_trans_totals" in args.figures or args.all:
         plot_wake_trans_totals(save=save, savetype=savetype)
 

@@ -550,26 +550,17 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
     for n in range(len(speeds)):
         if speeds[n] in [0.3, 0.5, 0.7, 0.9, 1.1, 1.3]:
             section = "Perf-"+str(speeds[n])
-            df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
-            cp_s = df.mean_cp
-            dcp_s = df.exp_unc_cp
-            cd_s = df.mean_cd
-            dcd_s = df.exp_unc_cd
-            cp[n] = np.mean(cp_s)
-            exp_unc_cp[n] = np.mean(dcp_s)
-            cd[n] = np.mean(cd_s)
-            exp_unc_cd[n] = np.mean(dcd_s)
         else:
             section = "Wake-"+str(speeds[n])
-            df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
-            cp_s = df.mean_cp
-            dcp_s = df.exp_unc_cp
-            cd_s = df.mean_cd
-            dcd_s = df.exp_unc_cd
-            cp[n], std_cp[n] = np.mean(cp_s), np.std(cp_s)
-            cd[n], std_cd[n] = np.mean(cd_s), np.std(cd_s)
-            exp_unc_cp[n] = np.mean(dcp_s)
-            exp_unc_cd[n] = np.mean(dcd_s)
+        df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
+        cp[n] = df.mean_cp.mean()
+        exp_unc_cp[n] = combine_exp_unc(df.exp_unc_cp, df.n_revs,
+                                        df.mean_cp, df.std_cp_per_rev,
+                                        df.dof_cp)
+        cd[n] = df.mean_cd.mean()
+        exp_unc_cd[n] = combine_exp_unc(df.exp_unc_cd, df.n_revs,
+                                        df.mean_cd, df.std_cd_per_rev,
+                                        df.dof_cd)
     df = pd.DataFrame()
     df["Re_D"] = Re_D
     df["Re_c_ave"] = Re_c
@@ -1044,11 +1035,11 @@ def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
         plt.ylim((1e-8, 1e-1))
         plot_vertical_lines([1, 3, 6, 9], color="lightgray")
     if plot_conf_int:
-        dof = n_band_average*2
+        dof = n_band_ave*2
         chi2 = scipy.stats.chi2.interval(alpha=0.95, df=dof)
         y1 = dof*spec/chi2[1]
         y2 = dof*spec/chi2[0]
-        plt.fill_between(f/f_turbine, y1, y2, facecolor="lightgray", alpha=0.2)
+        plt.fill_between(f/f_turbine, y1, y2, facecolor=color, alpha=0.3)
     plt.grid(True)
     plt.tight_layout()
     if show:
@@ -1071,13 +1062,15 @@ def plot_multi_spec(n_band_ave=4, plot_conf_int=False, save=False, show=False,
     plt.title("(a)")
     for n, u in enumerate(u_list):
         plot_vel_spec(u, y_R_a, z_H, n_band_ave=n_band_ave, newfig=False,
-                      plot_lines=(u==1.2), color=cm(int(n/4*256)))
+                      plot_conf_int=plot_conf_int, plot_lines=(u==1.2),
+                      color=cm(int(n/4*256)))
     plt.legend(loc="best")
     plt.subplot(1, 2, 2)
     plt.title("(b)")
     for n, u in enumerate(u_list):
         plot_vel_spec(u, y_R_b, z_H, n_band_ave=n_band_ave, newfig=False,
-                      plot_lines=(u==1.2), color=cm(int(n/4*256)))
+                      plot_conf_int=plot_conf_int, plot_lines=(u==1.2),
+                      color=cm(int(n/4*256)))
     if save:
         plt.savefig("Figures/wake_spectra" + savetype)
     if show:
