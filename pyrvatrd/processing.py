@@ -54,7 +54,9 @@ def calc_b_vec(vel):
 
 
 def calc_uncertainty(quantity, b):
-    return np.sqrt(nanstd(quantity)**2 + b**2)
+    """Calculate the combined standard uncertainty of a mean value."""
+    n = len(quantity)
+    return np.sqrt((nanstd(quantity)/np.sqrt(n))**2 + b**2)
 
 
 def calc_tare_torque(rpm):
@@ -113,6 +115,7 @@ class Run(object):
             self.calc_perf_exp_uncertainty()
             self.calc_wake_per_rev()
             self.calc_wake_uncertainty()
+            self.calc_wake_exp_uncertainty()
 
     def load(self):
         """Loads the data from the run into memory."""
@@ -496,12 +499,24 @@ class Run(object):
         print(str(self.nbad)+"/"+str(ntotal), "data points omitted")
 
     def calc_wake_uncertainty(self):
-        """Compute uncertainty for wake measurements."""
-        # self.unc_mean_u = np.sqrt(self.std_u_per_rev**2 \
-        #                 + calc_b_vec(self.mean_u))
-        # Use only Vectrino specs
-        self.unc_mean_u = np.nanmean(calc_b_vec(self.u))
+        """Compute uncertainty for wake statistics."""
+        self.unc_mean_u = np.sqrt(np.nanmean(calc_b_vec(self.u))**2 \
+                          + (self.std_u_per_rev/np.sqrt(self.n_revs))**2)
+        self.exp_unc_mean_u = self.unc_mean_u*student_t(self.n_revs)
         self.unc_std_u = np.nan
+
+    def calc_wake_exp_uncertainty(self):
+        """Calculate expanded uncertainty of wake statistics."""
+        # Mean u
+        s_u = self.std_u_per_rev
+        nu_s_u = self.n_revs - 1
+        b_u = np.nanmean(calc_b_vec(self.u))
+        b_u_rel_unc = 0.25 # A guess
+        nu_b_u = 0.5*b_u_rel_unc**(-2)
+        nu_u = ((s_u**2 + b_u**2)**2)/(s_u**4/nu_s_u + b_u**4/nu_b_u)
+        t = scipy.stats.t.interval(alpha=0.95, df=nu_u)[-1]
+        self.exp_unc_mean_u = t*self.unc_mean_u
+        self.dof_mean_u = nu_u
 
     def calc_perf_per_rev(self):
         """Computes mean power coefficient over each revolution."""
@@ -537,16 +552,18 @@ class Run(object):
         angle = self.angle.copy()
         angle -= angle[0]
         angle = decimate(angle, 10)
-        mean_u = np.zeros(self.n_revs)
-        mean_v = np.zeros(self.n_revs)
-        mean_w = np.zeros(self.n_revs)
+        angle = angle[:len(self.u)]
+        mean_u = np.zeros(self.n_revs)*np.nan
+        mean_v = np.zeros(self.n_revs)*np.nan
+        mean_w = np.zeros(self.n_revs)*np.nan
         start_angle = 0.0
         for n in range(self.n_revs):
             end_angle = start_angle + 360
             ind = np.logical_and(angle >= start_angle, angle < end_angle)
-            mean_u[n] = np.nanmean(self.u[ind])
-            mean_v[n] = np.nanmean(self.v[ind])
-            mean_w[n] = np.nanmean(self.w[ind])
+            if np.any(ind):
+                mean_u[n] = np.nanmean(self.u[ind])
+                mean_v[n] = np.nanmean(self.v[ind])
+                mean_w[n] = np.nanmean(self.w[ind])
             start_angle += 360
         self.std_u_per_rev = mean_u.std()
         self.std_v_per_rev = mean_v.std()
@@ -590,6 +607,9 @@ class Run(object):
         s["std_tsr_per_rev"] = self.std_tsr_per_rev
         s["std_cp_per_rev"] = self.std_cp_per_rev
         s["std_cd_per_rev"] = self.std_cd_per_rev
+        s["sys_unc_tsr"] = self.b_tsr
+        s["sys_unc_cp"]  = self.b_cp
+        s["sys_unc_cd"] = self.b_cd
         s["exp_unc_tsr"] = self.exp_unc_tsr
         s["exp_unc_cp"] = self.exp_unc_cp
         s["exp_unc_cd"] = self.exp_unc_cd
@@ -613,6 +633,7 @@ class Run(object):
         s["mean_vpwp"] = self.mean_vpwp
         s["mean_wpwp"] = self.mean_wpwp
         s["k"] = self.k
+        s["exp_unc_mean_u"] = self.exp_unc_mean_u
         return s
 
     def plot_perf(self, quantity="power coefficient", verbose=True):
@@ -688,7 +709,7 @@ class Section(object):
     @property
     def mean_cp(self):
         return self.data.mean_cp
-    def process(self, nproc=8, save=True):
+    def process(self, nproc=4, save=True):
         """Process an entire section of data."""
         if nproc > 1:
             self.process_parallel(nproc=nproc)
@@ -697,7 +718,7 @@ class Section(object):
         self.data.run = [int(run) for run in self.data.run]
         if save:
             self.data.to_csv(self.processed_path, na_rep="NaN", index=False)
-    def process_parallel(self, nproc=8, nruns="all"):
+    def process_parallel(self, nproc=4, nruns="all"):
         s = self.name
         runs = self.test_plan["Run"]
         if nruns != "all":
@@ -933,36 +954,25 @@ def combine_std(n, mean, std):
     return np.sqrt(var_tot)
 
 
-def combine_exp_unc(exp_unc, n, mean, std, dof, expanded=False,
-                    confidence=0.95):
+def combined_exp_unc(sys_unc, n, mean, std, dof, expanded=True,
+                     confidence=0.95):
     """
-    Combine expanded uncertainties given sample standard deviations and
-    degrees of freedom.
+    Calculate combined expanded uncertainties given sample standard deviations
+    and degrees of freedom.
 
     Parameters
     ----------
-    exp_unc : numpy array of expanded uncertainties
+    sys_unc : numpy array of systematic uncertainties
     n : numpy array of numbers of samples per set
     std : numpy array of sample standard deviations
     dof : numpy array of degrees of freedom
     expanded : bool whether or not to return expanded uncertainty
     confidence : Confidence interval for t-statistic
     """
-    # First obtain array of standard uncertainty by dividing t-value
-    t = np.zeros(len(exp_unc))
-    for i in range(len(t)):
-        t[i] = scipy.stats.t.interval(alpha=confidence, df=dof[i])[-1]
-    std_unc = exp_unc/t
-    # Compute the systematic error by subtracting the sample std
-    b_squared = np.mean(std_unc**2 - std**2)
-    # Combine the sample standard deviations
-    if len(exp_unc) > 2:
-        std_combined = mean.std()
-        dof = len(exp_unc)
-    else:
-        std_combined = combine_std(n, mean, std)
-        dof = dof.sum()
-    std_unc_combined = np.sqrt(std_combined**2 + b_squared)
+    sys_unc = sys_unc.mean()
+    std_combined = combine_std(n, mean, std)
+    dof = dof.sum()
+    std_unc_combined = np.sqrt((std_combined/np.sqrt(n.sum()))**2 + sys_unc**2)
     if expanded:
         t_combined = scipy.stats.t.interval(alpha=confidence, df=dof)[-1]
     else:
