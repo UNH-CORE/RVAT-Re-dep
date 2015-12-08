@@ -907,7 +907,8 @@ def combine_std(n, mean, std):
     return np.sqrt(var_tot)
 
 
-def combine_exp_unc(exp_unc, n, mean, std, dof, confidence=0.95):
+def combine_exp_unc(exp_unc, n, mean, std, dof, expanded=False,
+                    confidence=0.95):
     """
     Combine expanded uncertainties given sample standard deviations and
     degrees of freedom.
@@ -918,6 +919,7 @@ def combine_exp_unc(exp_unc, n, mean, std, dof, confidence=0.95):
     n : numpy array of numbers of samples per set
     std : numpy array of sample standard deviations
     dof : numpy array of degrees of freedom
+    expanded : bool whether or not to return expanded uncertainty
     confidence : Confidence interval for t-statistic
     """
     # First obtain array of standard uncertainty by dividing t-value
@@ -928,8 +930,22 @@ def combine_exp_unc(exp_unc, n, mean, std, dof, confidence=0.95):
     # Compute the systematic error by subtracting the sample std
     b_squared = np.mean(std_unc**2 - std**2)
     # Combine the sample standard deviations
-    std_combined = combine_std(n, mean, std)
+    if len(exp_unc) > 2:
+        std_combined = mean.std()
+        dof = len(exp_unc)
+    else:
+        std_combined = combine_std(n, mean, std)
+        dof = dof.sum()
     std_unc_combined = np.sqrt(std_combined**2 + b_squared)
-    t_combined = scipy.stats.t.interval(alpha=confidence, df=dof.sum())[-1]
+    if expanded:
+        t_combined = scipy.stats.t.interval(alpha=confidence, df=dof)[-1]
+    else:
+        t_combined = 1
     exp_unc_combined = t_combined*std_unc_combined
     return exp_unc_combined
+
+
+def student_t(degrees_of_freedom, confidence=0.95):
+    """Return Student-t statistic for given DOF and confidence invertal."""
+    return scipy.stats.t.interval(alpha=confidence,
+                                  df=degrees_of_freedom)[-1]
