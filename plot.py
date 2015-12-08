@@ -5,7 +5,7 @@ stores them in the `Figures` directory.
 
 """
 
-from py_rvat_re_dep.plotting import *
+from pyrvatrd.plotting import *
 import argparse
 
 kwargs = {"markerfacecolor": "none",
