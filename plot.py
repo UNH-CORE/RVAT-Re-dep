@@ -23,7 +23,7 @@ if __name__ == "__main__":
                         default=[])
     parser.add_argument("--all", "-A", help="Plot all figures",
                         action="store_true", default=False)
-    parser.add_argument("--errorbars", "-e", help="Plot error bars",
+    parser.add_argument("--no-errorbars", "-e", help="Do not plot error bars",
                         action="store_true", default=False)
     parser.add_argument("--save", "-s", help="Save figures",
                         action="store_true", default=False)
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         set_sns()
     savetype = args.savetype
     save = args.save
-    errorbars = args.errorbars
+    errorbars = not args.no_errorbars
     if save:
         if not os.path.isdir("Figures"):
             os.makedirs("Figures")
