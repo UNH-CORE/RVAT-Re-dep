@@ -23,6 +23,7 @@ if sys.version_info[0] == 3:
 else:
     from urllib import urlretrieve
 
+
 # Dict for runs corresponding to each height
 wakeruns = {0.0 : np.arange(0, 45),
             0.125 : np.arange(45, 90),
@@ -44,17 +45,21 @@ chord = 0.14
 raw_data_dir = os.path.join("Data", "Raw")
 processed_data_dir = os.path.join("Data", "Processed")
 
+
 def calc_b_vec(vel):
     """Calculates the systematic error of a Vectrino measurement (in m/s)
     from their published specs. Returns half the +/- value as b."""
     return 0.5*(0.005*np.abs(vel) + 0.001)
 
+
 def calc_uncertainty(quantity, b):
     return np.sqrt(nanstd(quantity)**2 + b**2)
+
 
 def calc_tare_torque(rpm):
     """Returns tare torque array given RPM array."""
     return 0.000474675989476*rpm + 0.876750155952
+
 
 times = {0.3 : (20.0, 80.0),
          0.4 : (20.0, 60.0),
@@ -68,11 +73,6 @@ times = {0.3 : (20.0, 80.0),
          1.2 : (14.0, 27.0),
          1.3 : (13.0, 23.0),
          1.4 : (12.0, 20.0)}
-
-if "linux" in sys.platform:
-    cfd_path = "/media/pete/BigPocket/OpenFOAM/pete-2.3.0/run/unh-rvat-2d_re-dep_2"
-elif "win" in sys.platform:
-    cfd_path = "G:/OpenFOAM/pete-2.3.0/run/unh-rvat-2d_re-dep_2"
 
 
 class Run(object):
