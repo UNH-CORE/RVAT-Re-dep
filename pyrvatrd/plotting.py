@@ -554,13 +554,14 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
             section = "Wake-"+str(speeds[n])
         df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
         cp[n] = df.mean_cp.mean()
-        exp_unc_cp[n] = combine_exp_unc(df.exp_unc_cp, df.n_revs,
-                                        df.mean_cp, df.std_cp_per_rev,
-                                        df.dof_cp)
         cd[n] = df.mean_cd.mean()
-        exp_unc_cd[n] = combine_exp_unc(df.exp_unc_cd, df.n_revs,
-                                        df.mean_cd, df.std_cd_per_rev,
-                                        df.dof_cd)
+        if errorbars:
+            exp_unc_cp[n] = combine_exp_unc(df.exp_unc_cp, df.n_revs,
+                                            df.mean_cp, df.std_cp_per_rev,
+                                            df.dof_cp)
+            exp_unc_cd[n] = combine_exp_unc(df.exp_unc_cd, df.n_revs,
+                                            df.mean_cd, df.std_cd_per_rev,
+                                            df.dof_cd)
     df = pd.DataFrame()
     df["Re_D"] = Re_D
     df["Re_c_ave"] = Re_c
@@ -589,10 +590,10 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
     else:
         ax1.set_ylabel(r"$C_P$")
     if dual_xaxes:
-        x, y = 1.345e6, 0.268/norm_cp
+        x, y = 0.95, 1.08
         if subplots:
-            x, y = x*0.96, y*1.01
-        ax1.text(x, y, "1e5")
+            x, y = x*0.955, y*1.03
+        ax1.text(x, y, "1e5", transform=ax1.transAxes)
         ax12 = ax1.twiny()
         ax1.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
@@ -618,7 +619,7 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
                  label=r"${:.3f}Re_c^{{ {:.3f} }}$".format(coeffs_cp[0],
                  coeffs_cp[1]))
         ax1.legend(loc="lower right")
-    ax1.set_ylim((0.17/normalize_by, 0.26/normalize_by))
+    ax1.set_ylim((0.14/normalize_by, 0.28/normalize_by))
     ax1.xaxis.major.formatter.set_powerlimits((0, 0))
     ax1.grid(True)
     try:
@@ -631,17 +632,14 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
         ax2.errorbar(Re_D, cd/norm_cd, yerr=exp_unc_cd/norm_cd,
                      label="Experiment", **kwargs)
     else:
-        ax2.plot(Re_D, cd/cd[-4], label="Experiment", **kwargs)
+        ax2.plot(Re_D, cd/norm_cd, label="Experiment", **kwargs)
     ax2.set_xlabel(r"$Re_D$")
     if normalize_by == "default":
         ax2.set_ylabel(r"$C_D/C_{D_0}$")
     else:
         ax2.set_ylabel(r"$C_D$")
     if dual_xaxes:
-        x, y = 1.345e6, 1.029/norm_cd
-        if subplots:
-            x, y = x*0.96, y*1.003
-        ax2.text(x, y, "1e5")
+        ax2.text(x, y, "1e5", transform=ax2.transAxes)
         ax22 = ax2.twiny()
         ax2.xaxis.get_majorticklocs()
         ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
@@ -652,7 +650,7 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
         ax22.set_xticklabels(ticklabs)
         ax22.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
         ax22.grid(False)
-    ax2.set_ylim((0.92/norm_cd, 1.02/norm_cd))
+    ax2.set_ylim((0.82/norm_cd, 0.96/norm_cd))
     ax2.xaxis.major.formatter.set_powerlimits((0,0))
     ax2.grid(True)
     if power_law:
