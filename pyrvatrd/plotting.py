@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 This module contains classes and functions for plotting data.
-
 """
+
 from .processing import *
 import os
 from scipy.optimize import curve_fit
@@ -530,6 +530,7 @@ def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir=
     plt.grid(True)
     plt.tight_layout()
 
+
 def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
                      savetype=".pdf", errorbars=False, subplots=True,
                      normalize_by=1.0, dual_xaxes=True, power_law=False,
@@ -690,6 +691,7 @@ def plot_old_wake(quantity, y_R):
     plt.plot(y_R, q, 'xr', label=r"$Re_D=1.0 \times 10^6$",
              markerfacecolor="none")
 
+
 def plot_cfd_perf(quantity="cp", normalize_by="CFD"):
     Re_D = np.load(cfd_path + "/processed/Re_D.npy")
     q = np.load(cfd_path + "/processed/" + quantity + ".npy")
@@ -699,6 +701,7 @@ def plot_cfd_perf(quantity="cp", normalize_by="CFD"):
         normval = normalize_by
     plt.plot(Re_D, q/normval, "--^k", label="Simulation")
 
+
 def plot_tare_drag():
     df = pd.read_csv("Data/Processed/Tare drag.csv")
     plt.figure()
@@ -706,6 +709,7 @@ def plot_tare_drag():
     plt.xlabel("Tow speed (m/s)")
     plt.ylabel("Tare drag (N)")
     plt.show()
+
 
 def plot_settling(tow_speed):
     """Plot data from the settling experiments."""
@@ -730,6 +734,7 @@ def plot_settling(tow_speed):
     plt.ylabel(r"$\sigma_u$")
     plt.tight_layout()
 
+
 def plot_cp_curve(u_infty, save=False, show=False, savedir="Figures",
                   savetype=".pdf"):
     pc = PerfCurve(u_infty)
@@ -739,6 +744,7 @@ def plot_cp_curve(u_infty, save=False, show=False, savedir="Figures",
         plt.savefig(savepath)
     if show:
         plt.show()
+
 
 def plot_perf_curves(ax1=None, ax2=None, subplots=True, save=False,
                      savedir="Figures", savetype=".pdf", **kwargs):
@@ -807,11 +813,13 @@ def plot_wake_profiles(z_H=0.0, save=False, show=False, savedir="Figures",
     if show:
         plt.show()
 
+
 def plot_meancontquiv(U_infty=1.0, save=False, savetype=".pdf", show=False,
                       cb_orientation="vertical"):
     wm = WakeMap(U_infty)
     wm.plot_meancontquiv(save=save, show=show, savetype=savetype,
                          cb_orientation=cb_orientation)
+
 
 def plot_all_meancontquiv(save=False, savetype=".pdf", show=False):
     """Plot all mean velocity contours/quivers."""
@@ -820,6 +828,7 @@ def plot_all_meancontquiv(save=False, savetype=".pdf", show=False):
     if show:
         plt.show()
 
+
 def plot_all_kcont(save=False, savetype=".pdf"):
     """
     Plots contours of turbulence kinetic energy for all Reynolds numbers
@@ -827,6 +836,7 @@ def plot_all_kcont(save=False, savetype=".pdf"):
     """
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
         WakeMap(U).plot_k(save=save, savetype=savetype)
+
 
 def make_k_bar_graph(save=False, savetype=".pdf", show=False,
                      print_analysis=True):
@@ -871,6 +881,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
         plt.savefig("Figures/K_trans_bar_graph" + savetype)
     if show:
         plt.show()
+
 
 def make_mom_bar_graph(ax=None, save=False, savetype=".pdf",
                        print_analysis=True):
@@ -987,6 +998,7 @@ def plot_wake_trans_totals(ax=None, save=False, savetype=".pdf", ucolor="black",
     if save:
         plt.savefig("Figures/wake_trans_totals" + savetype)
 
+
 def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
                   show=False, newfig=True, plot_lines=True, color="black"):
     """
@@ -1042,6 +1054,7 @@ def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
     if show:
         plt.show()
 
+
 def plot_multi_spec(n_band_ave=4, plot_conf_int=False, save=False, show=False,
                     savetype=".pdf"):
     """
@@ -1070,6 +1083,7 @@ def plot_multi_spec(n_band_ave=4, plot_conf_int=False, save=False, show=False,
     if show:
         plt.show()
 
+
 def plot_vertical_lines(xlist, ymaxscale=1, color="gray"):
     if not isinstance(xlist, list):
         x = [x]
@@ -1079,6 +1093,7 @@ def plot_vertical_lines(xlist, ymaxscale=1, color="gray"):
         plt.vlines(x, ymin, ymax,
                    color=color, linestyles="dashed")
     plt.ylim((ymin, ymax))
+
 
 def plot_wake_re_dep(y_R=0.0, z_H=0.25, save=False):
     """
