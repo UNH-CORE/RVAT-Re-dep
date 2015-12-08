@@ -11,6 +11,7 @@ from scipy.io import loadmat
 import multiprocessing as mp
 import scipy.stats
 from scipy.stats import nanmean, nanstd
+from scipy.signal import decimate
 from pxl import fdiff
 import progressbar
 import json
@@ -110,6 +111,8 @@ class Run(object):
             self.calc_wake_stats()
             self.calc_perf_uncertainty()
             self.calc_perf_exp_uncertainty()
+            self.calc_wake_per_rev()
+            self.calc_wake_uncertainty()
 
     def load(self):
         """Loads the data from the run into memory."""
@@ -525,6 +528,28 @@ class Run(object):
         self.std_tsr_per_rev = tsr.std()
         self.torque_per_rev = torque
         self.std_torque_per_rev = torque.std()
+
+    def calc_wake_per_rev(self):
+        """Computes wake stats per revolution."""
+        # Downsample angle measurements to match Vectrino sample rate
+        angle = self.angle.copy()
+        angle -= angle[0]
+        angle = decimate(angle, 10)
+        mean_u = np.zeros(self.n_revs)
+        mean_v = np.zeros(self.n_revs)
+        mean_w = np.zeros(self.n_revs)
+        start_angle = 0.0
+        for n in range(self.n_revs):
+            end_angle = start_angle + 360
+            ind = np.logical_and(angle >= start_angle, angle < end_angle)
+            mean_u[n] = np.nanmean(self.u[ind])
+            mean_v[n] = np.nanmean(self.v[ind])
+            mean_w[n] = np.nanmean(self.w[ind])
+            start_angle += 360
+        print(mean_u)
+        self.std_u_per_rev = mean_u.std()
+        self.std_v_per_rev = mean_v.std()
+        self.std_w_per_rev = mean_w.std()
 
     @property
     def cp_conf_interval(self, alpha=0.95):
