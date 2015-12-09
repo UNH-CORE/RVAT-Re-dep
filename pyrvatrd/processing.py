@@ -53,10 +53,44 @@ def calc_b_vec(vel):
     return 0.5*(0.005*np.abs(vel) + 0.001)
 
 
-def calc_uncertainty(quantity, b):
-    """Calculate the combined standard uncertainty of a mean value."""
+def calc_uncertainty(quantity, sys_unc, mean=True):
+    """Calculate the combined standard uncertainty of a quantity."""
     n = len(quantity)
-    return np.sqrt((nanstd(quantity)/np.sqrt(n))**2 + b**2)
+    std = np.nanstd(quantity)
+    if mean:
+        std /= np.sqrt(n)
+    return np.sqrt(std**2 + sys_unc**2)
+
+
+def calc_exp_uncertainty(n, std, combined_unc, sys_unc, rel_unc=0.25,
+                         confidence=0.95, mean=True):
+    """
+    Calculate expanded uncertainty.
+
+    Parameters
+    ----------
+    n : Number of independent samples
+    std : Sample standard deviation
+    sys_unc : Systematic uncertainty (b in Coleman and Steele)
+    rel_unc : Relative uncertainty of each systematic error source (guess 0.25)
+    confidence : Confidence interval (0, 1)
+    mean : bool whether or not the quantity is a mean value
+
+    Returns
+    -------
+    exp_unc : Expanded uncertainty
+    dof : Degrees of freedom
+    """
+    s_x = std
+    if mean:
+        s_x /= np.sqrt(n)
+    nu_s_x = n - 1
+    b = sys_unc
+    nu_b = 0.5*rel_unc**(-2)
+    nu_x = ((s_x**2 + b**2)**2)/(s_x**4/nu_s_x + b**4/nu_b)
+    t = scipy.stats.t.interval(alpha=0.95, df=nu_x)[-1]
+    exp_unc = t*combined_unc
+    return exp_unc, nu_x
 
 
 def calc_tare_torque(rpm):
@@ -386,35 +420,14 @@ class Run(object):
     def calc_perf_exp_uncertainty(self):
         """See uncertainty IPython notebook for equations."""
         # Power coefficient
-        s_cp = self.std_cp_per_rev
-        nu_s_cp = len(self.cp_per_rev) - 1
-        b_cp = self.b_cp
-        b_cp_rel_unc = 0.25 # A guess
-        nu_b_cp = 0.5*b_cp_rel_unc**(-2)
-        nu_cp = ((s_cp**2 + b_cp**2)**2)/(s_cp**4/nu_s_cp + b_cp**4/nu_b_cp)
-        t = scipy.stats.t.interval(alpha=0.95, df=nu_cp)[-1]
-        self.exp_unc_cp = t*self.unc_cp
-        self.dof_cp = nu_cp
+        self.exp_unc_cp, self.dof_cp = calc_exp_uncertainty(self.n_revs,
+                self.std_cp_per_rev, self.unc_cp, self.b_cp)
         # Drag coefficient
-        s_cd = self.std_cd_per_rev
-        nu_s_cd = len(self.cd_per_rev) - 1
-        b_cd = self.b_cd
-        b_cd_rel_unc = 0.25 # A guess
-        nu_b_cd = 0.5*b_cd_rel_unc**(-2)
-        nu_cd = ((s_cd**2 + b_cd**2)**2)/(s_cd**4/nu_s_cd + b_cd**4/nu_b_cd)
-        t = scipy.stats.t.interval(alpha=0.95, df=nu_cd)[-1]
-        self.exp_unc_cd = t*self.unc_cd
-        self.dof_cd = nu_cd
+        self.exp_unc_cd, self.dof_cd = calc_exp_uncertainty(self.n_revs,
+                self.std_cd_per_rev, self.unc_cd, self.b_cd)
         # Tip speed ratio
-        s_tsr = self.std_tsr_per_rev
-        nu_s_tsr = len(self.tsr_per_rev) - 1
-        b_tsr = self.b_tsr
-        b_tsr_rel_unc = 0.25 # A guess
-        nu_b_tsr = 0.5*b_tsr_rel_unc**(-2)
-        nu_tsr = ((s_tsr**2 + b_tsr**2)**2)/(s_tsr**4/nu_s_tsr + b_tsr**4/nu_b_tsr)
-        t = scipy.stats.t.interval(alpha=0.95, df=nu_tsr)[-1]
-        self.exp_unc_tsr = t*self.unc_tsr
-        self.dof_tsr = nu_tsr
+        self.exp_unc_tsr, self.dof_tsr = calc_exp_uncertainty(self.n_revs,
+                self.std_tsr_per_rev, self.unc_tsr, self.b_tsr)
 
     def calc_wake_instantaneous(self):
         """Creates fluctuating and Reynolds stress time series. Note that
@@ -500,23 +513,32 @@ class Run(object):
 
     def calc_wake_uncertainty(self):
         """Compute uncertainty for wake statistics."""
+        # Mean u
         self.unc_mean_u = np.sqrt(np.nanmean(calc_b_vec(self.u))**2 \
                           + (self.std_u_per_rev/np.sqrt(self.n_revs))**2)
-        self.exp_unc_mean_u = self.unc_mean_u*student_t(self.n_revs)
+        # Mean v
+        self.unc_mean_v = np.sqrt(np.nanmean(calc_b_vec(self.v))**2 \
+                          + (self.std_v_per_rev/np.sqrt(self.n_revs))**2)
+        # Mean w
+        self.unc_mean_w = np.sqrt(np.nanmean(calc_b_vec(self.w))**2 \
+                          + (self.std_w_per_rev/np.sqrt(self.n_revs))**2)
+        # TODO: Standard deviations
         self.unc_std_u = np.nan
 
     def calc_wake_exp_uncertainty(self):
         """Calculate expanded uncertainty of wake statistics."""
         # Mean u
-        s_u = self.std_u_per_rev
-        nu_s_u = self.n_revs - 1
-        b_u = np.nanmean(calc_b_vec(self.u))
-        b_u_rel_unc = 0.25 # A guess
-        nu_b_u = 0.5*b_u_rel_unc**(-2)
-        nu_u = ((s_u**2 + b_u**2)**2)/(s_u**4/nu_s_u + b_u**4/nu_b_u)
-        t = scipy.stats.t.interval(alpha=0.95, df=nu_u)[-1]
-        self.exp_unc_mean_u = t*self.unc_mean_u
-        self.dof_mean_u = nu_u
+        self.exp_unc_mean_u, self.dof_mean_u = calc_exp_uncertainty(
+                self.n_revs, self.std_u_per_rev, self.unc_mean_u,
+                np.nanmean(calc_b_vec(self.u)))
+        # Mean v
+        self.exp_unc_mean_v, self.dof_mean_v = calc_exp_uncertainty(
+                self.n_revs, self.std_v_per_rev, self.unc_mean_v,
+                np.nanmean(calc_b_vec(self.v)))
+        # Mean w
+        self.exp_unc_mean_w, self.dof_mean_w = calc_exp_uncertainty(
+                self.n_revs, self.std_w_per_rev, self.unc_mean_w,
+                np.nanmean(calc_b_vec(self.w)))
 
     def calc_perf_per_rev(self):
         """Computes mean power coefficient over each revolution."""
@@ -634,6 +656,8 @@ class Run(object):
         s["mean_wpwp"] = self.mean_wpwp
         s["k"] = self.k
         s["exp_unc_mean_u"] = self.exp_unc_mean_u
+        s["exp_unc_mean_v"] = self.exp_unc_mean_v
+        s["exp_unc_mean_w"] = self.exp_unc_mean_w
         return s
 
     def plot_perf(self, quantity="power coefficient", verbose=True):
