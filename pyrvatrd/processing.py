@@ -6,6 +6,7 @@ This module contains classes and functions for processing data.
 from __future__ import division, print_function
 import numpy as np
 from pxl import timeseries as ts
+from pxl.timeseries import calc_uncertainty, calc_exp_uncertainty
 import matplotlib.pyplot as plt
 from scipy.io import loadmat
 import multiprocessing as mp
