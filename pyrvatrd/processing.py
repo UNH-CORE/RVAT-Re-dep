@@ -53,46 +53,6 @@ def calc_b_vec(vel):
     return 0.5*(0.005*np.abs(vel) + 0.001)
 
 
-def calc_uncertainty(quantity, sys_unc, mean=True):
-    """Calculate the combined standard uncertainty of a quantity."""
-    n = len(quantity)
-    std = np.nanstd(quantity)
-    if mean:
-        std /= np.sqrt(n)
-    return np.sqrt(std**2 + sys_unc**2)
-
-
-def calc_exp_uncertainty(n, std, combined_unc, sys_unc, rel_unc=0.25,
-                         confidence=0.95, mean=True):
-    """
-    Calculate expanded uncertainty.
-
-    Parameters
-    ----------
-    n : Number of independent samples
-    std : Sample standard deviation
-    sys_unc : Systematic uncertainty (b in Coleman and Steele)
-    rel_unc : Relative uncertainty of each systematic error source (guess 0.25)
-    confidence : Confidence interval (0, 1)
-    mean : bool whether or not the quantity is a mean value
-
-    Returns
-    -------
-    exp_unc : Expanded uncertainty
-    dof : Degrees of freedom
-    """
-    s_x = std
-    if mean:
-        s_x /= np.sqrt(n)
-    nu_s_x = n - 1
-    b = sys_unc
-    nu_b = 0.5*rel_unc**(-2)
-    nu_x = ((s_x**2 + b**2)**2)/(s_x**4/nu_s_x + b**4/nu_b)
-    t = scipy.stats.t.interval(alpha=0.95, df=nu_x)[-1]
-    exp_unc = t*combined_unc
-    return exp_unc, nu_x
-
-
 def calc_tare_torque(rpm):
     """Returns tare torque array given RPM array."""
     return 0.000474675989476*rpm + 0.876750155952
@@ -957,50 +917,3 @@ def download_raw(section, nrun, name):
     pbar.start()
     urlretrieve(url, local_path, reporthook=download_progress)
     pbar.finish()
-
-
-def combine_std(n, mean, std):
-    """
-    Compute combined standard deviation for subsets.
-    See https://stats.stackexchange.com/questions/43159/\
-    how-to-calculate-pooled-variance-of-two-groups-given-known-group-variances-\
-    mean for derivation.
-
-    Parameters
-    ----------
-    n : numpy array of sample sizes
-    mean : numpy array of sample means
-    std : numpy array of sample standard deviations
-    """
-    # Calculate weighted mean
-    mean_tot = np.sum(n*mean)/np.sum(n)
-    var_tot = np.sum(n*(std**2 + mean**2))/np.sum(n) - mean_tot**2
-    return np.sqrt(var_tot)
-
-
-def calc_multi_exp_unc(sys_unc, n, mean, std, dof, confidence=0.95):
-    """
-    Calculate expanded uncertainty using values from multiple runs.
-
-    Parameters
-    ----------
-    sys_unc : numpy array of systematic uncertainties
-    n : numpy array of numbers of samples per set
-    std : numpy array of sample standard deviations
-    dof : numpy array of degrees of freedom
-    expanded : bool whether or not to return expanded uncertainty
-    confidence : Confidence interval for t-statistic
-    """
-    sys_unc = sys_unc.mean()
-    std_combined = combine_std(n, mean, std)
-    dof = dof.sum()
-    std_unc_combined = np.sqrt((std_combined/np.sqrt(n.sum()))**2 + sys_unc**2)
-    t_combined = scipy.stats.t.interval(alpha=confidence, df=dof)[-1]
-    exp_unc_combined = t_combined*std_unc_combined
-    return exp_unc_combined
-
-
-def student_t(degrees_of_freedom, confidence=0.95):
-    """Return Student-t statistic for given DOF and confidence invertal."""
-    return scipy.stats.t.interval(alpha=confidence,
-                                  df=degrees_of_freedom)[-1]

@@ -123,26 +123,6 @@ def test_calc_mom_transport():
     print("PASS")
 
 
-def test_combine_std():
-    n = 1e5
-    ts = np.random.normal(size=n)
-    std_tot = ts.std()
-    ts1 = ts[:n/2]
-    ts2 = ts[n/2:]
-    n1 = len(ts1)
-    mean1 = ts1.mean()
-    std1 = ts1.std()
-    n2 = len(ts2)
-    mean2 = ts2.mean()
-    std2 = ts2.std()
-    assert_almost_equal(ts.mean(), np.mean((mean1, mean2)))
-    assert n1 + n2 == n
-    n = np.array((n1, n2))
-    mean = np.array((mean1, mean2))
-    std = np.array((std1, std2))
-    assert_almost_equal(std_tot, combine_std(n, mean, std), places=2)
-
-
 def test_all():
     test_run()
     test_section()

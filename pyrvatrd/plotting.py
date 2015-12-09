@@ -556,12 +556,12 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
         cp[n] = df.mean_cp.mean()
         cd[n] = df.mean_cd.mean()
         if errorbars:
-            exp_unc_cp[n] = calc_multi_exp_unc(df.sys_unc_cp, df.n_revs,
-                                               df.mean_cp, df.std_cp_per_rev,
-                                               df.dof_cp)
-            exp_unc_cd[n] = calc_multi_exp_unc(df.sys_unc_cd, df.n_revs,
-                                               df.mean_cd, df.std_cd_per_rev,
-                                               df.dof_cd)
+            exp_unc_cp[n] = ts.calc_multi_exp_unc(df.sys_unc_cp, df.n_revs,
+                                                  df.mean_cp,
+                                                  df.std_cp_per_rev, df.dof_cp)
+            exp_unc_cd[n] = ts.calc_multi_exp_unc(df.sys_unc_cd, df.n_revs,
+                                                  df.mean_cd,
+                                                  df.std_cd_per_rev, df.dof_cd)
     df = pd.DataFrame()
     df["Re_D"] = Re_D
     df["Re_c_ave"] = Re_c
