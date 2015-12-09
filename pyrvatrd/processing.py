@@ -978,11 +978,9 @@ def combine_std(n, mean, std):
     return np.sqrt(var_tot)
 
 
-def combined_exp_unc(sys_unc, n, mean, std, dof, expanded=True,
-                     confidence=0.95):
+def calc_multi_exp_unc(sys_unc, n, mean, std, dof, confidence=0.95):
     """
-    Calculate combined expanded uncertainties given sample standard deviations
-    and degrees of freedom.
+    Calculate expanded uncertainty using values from multiple runs.
 
     Parameters
     ----------
@@ -997,10 +995,7 @@ def combined_exp_unc(sys_unc, n, mean, std, dof, expanded=True,
     std_combined = combine_std(n, mean, std)
     dof = dof.sum()
     std_unc_combined = np.sqrt((std_combined/np.sqrt(n.sum()))**2 + sys_unc**2)
-    if expanded:
-        t_combined = scipy.stats.t.interval(alpha=confidence, df=dof)[-1]
-    else:
-        t_combined = 1
+    t_combined = scipy.stats.t.interval(alpha=confidence, df=dof)[-1]
     exp_unc_combined = t_combined*std_unc_combined
     return exp_unc_combined
 
