@@ -17,7 +17,7 @@ To run the processing/plotting code we recommend the
 (Python 3.5) since it includes most dependencies. The remaining
 can be installed by executing
 
-    pip install progressbar33 pxl>=0.0.6
+    pip install progressbar33 pxl>=0.0.8
 
 After installing all dependencies, execute `python plot.py` to generate
 figures from the experiment.
