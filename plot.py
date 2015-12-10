@@ -19,7 +19,8 @@ if __name__ == "__main__":
     parser.add_argument("figures", nargs="?", help="Which figures to create",
                         choices=["perf_curves", "perf_re_dep", "wake_profiles",
                         "k_bar_graph", "mom_bar_graph", "all_meancontquiv",
-                        "all_kcont", "multi_spec", "wake_trans_totals"],
+                        "all_kcont", "multi_spec", "wake_trans_totals",
+                        "vel_unc_table"],
                         default=[])
     parser.add_argument("--all", "-A", help="Plot all figures",
                         action="store_true", default=False)
@@ -68,6 +69,8 @@ if __name__ == "__main__":
         plot_multi_spec(plot_conf_int=errorbars, save=save, savetype=savetype)
     if "wake_trans_totals" in args.figures or args.all:
         plot_wake_trans_totals(save=save, savetype=savetype)
+    if "vel_unc_table" in args.figures or args.all:
+        make_velocity_unc_table(save=save)
 
     if not args.noshow:
         plt.show()

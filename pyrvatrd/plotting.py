@@ -1129,5 +1129,34 @@ def plot_wake_re_dep(y_R=0.0, z_H=0.25, save=False):
 #    plt.ylim((0.05, 0.2))
 
 
-if __name__ == "__main__":
-    pass
+def make_velocity_unc_table(save=False):
+    """Create table with average velocity uncertainties."""
+    tow_speeds = np.arange(0.4, 1.3, 0.2)
+    mean_unc_u = []
+    mean_unc_v = []
+    mean_unc_w = []
+    for u in tow_speeds:
+        s = Section("Wake-{:.1f}".format(u))
+        mean_unc_u.append(s.data.exp_unc_mean_u.mean())
+        mean_unc_v.append(s.data.exp_unc_mean_v.mean())
+        mean_unc_w.append(s.data.exp_unc_mean_w.mean())
+    df = pd.DataFrame()
+    df[r"$U_\infty$ (m/s)"] = tow_speeds
+    df["$U$"] = mean_unc_u
+    df["$V$"] = mean_unc_v
+    df["$W$"] = mean_unc_w
+    def speed_format(speed):
+        return "{:.1f}".format(speed)
+    def unc_format(unc):
+        un = "{:.0e}".format(unc).split("e")
+        return r"${} \times 10^{{{}}}$".format(un[0], int(un[1]))
+    fmt = [speed_format, unc_format, unc_format, unc_format]
+    if save:
+        if not os.path.isdir("Tables"):
+            os.mkdir("Tables")
+        df.to_latex(buf="Tables/mean_vel_unc.tex", index=False,
+                    column_format="c|c|c", escape=False, formatters=fmt)
+        df.to_csv("Tables/mean_vel_unc.csv", index=False)
+    print("\nAverage wake velocity uncertainties (LaTeX formatted):\n")
+    print(df.to_latex(index=False, column_format="c|c|c", escape=False,
+                      formatters=fmt))
