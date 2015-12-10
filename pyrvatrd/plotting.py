@@ -83,6 +83,7 @@ class PerfCurve(object):
         if save:
             plt.savefig(os.path.join(savedir, "cd_vs_tsr" + savetype))
 
+
 class WakeProfile(object):
     def __init__(self, tow_speed, z_H, quantity, orientation="horizontal"):
         self.tow_speed = tow_speed
@@ -138,6 +139,7 @@ class WakeProfile(object):
             plt.show()
         if save:
             plt.savefig(savedir+quantity+"_Re_dep_exp"+savetype)
+
 
 class WakeMap(object):
     def __init__(self, U_infty):
@@ -214,8 +216,7 @@ class WakeMap(object):
                                          self.ddz_wwW) # Only ddz terms
 
     def calc_k_prod_mean_diss(self):
-        """
-        Calculates the production of turbulent kinetic energy and dissipation
+        """Calculate the production of turbulent kinetic energy and dissipation
         from mean shear. Note that the mean streamwise velocity derivatives
         have already been calculated by this point.
         """
@@ -245,7 +246,7 @@ class WakeMap(object):
                                   self.dVdz**2 + self.dWdy**2 + self.dWdz**2)
 
     def calc_mean_k_grad(self):
-        """Calulates $y$- and $z$-derivatives of $K$."""
+        """Calulate $y$- and $z$-derivatives of $K$."""
         z = self.z_H*H
         y = self.y_R*R
         self.dKdy = np.zeros(self.grdims)
@@ -258,8 +259,7 @@ class WakeMap(object):
                 fdiff.second_order_diff(self.df.mean_k.iloc[:,n], z)
 
     def calc_mom_transport(self):
-        """
-        Calculates relevant (and available) momentum transport terms in the
+        """Calculate relevant (and available) momentum transport terms in the
         RANS equations.
         """
         y = self.y_R*R
@@ -339,8 +339,7 @@ class WakeMap(object):
     def plot_meancontquiv(self, save=False, show=False, savedir="Figures",
                           savetype=".pdf", cb_orientation="vertical",
                           newfig=True):
-        """
-        Plot contours of mean velocity and vector arrows showing mean
+        """Plot contours of mean velocity and vector arrows showing mean
         cross-stream and vertical velocity.
         """
         if newfig:
@@ -482,8 +481,7 @@ class WakeMap(object):
 
 
 class WakeMapDiff(WakeMap):
-    """
-    Object representing the difference between two wake maps. Quantities are
+    """Object representing the difference between two wake maps. Quantities are
     calculated as `wm1 - wm2`.
     """
     def __init__(self, U1, U2):
@@ -500,10 +498,11 @@ class WakeMapDiff(WakeMap):
         self.plot_contours(self.mean_u, label="$U_{\mathrm{diff}}$")
 
 
-def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False, savedir="Figures",
-                            savetype=".pdf", newfig=True, marker="-ok",
-                            fill="none", oldwake=False, figsize=(7.5, 3.75)):
-    """Plots the transverse wake profile of some quantity. These can be
+def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False,
+                            savedir="Figures", savetype=".pdf", newfig=True,
+                            marker="-ok", fill="none", oldwake=False,
+                            figsize=(7.5, 3.75)):
+    """Plot the transverse wake profile of some quantity. These can be
       * mean_u
       * mean_v
       * mean_w
@@ -781,21 +780,21 @@ def plot_perf_curves(ax1=None, ax2=None, subplots=True, save=False,
 
 def plot_wake_profiles(z_H=0.0, save=False, show=False, savedir="Figures",
                        savetype=".pdf"):
-    """Plots all wake profiles of interest."""
+    """Plot all wake profiles of interest."""
     legendlocs = {"mean_u" : 4,
                   "std_u" : 1,
                   "mean_upvp" : 1}
     for q in ["mean_u", "std_u", "mean_upvp"]:
-        plot_trans_wake_profile(q, U_infty=0.4, z_H=z_H, newfig=True, marker="--v",
-                                fill=None)
-        plot_trans_wake_profile(q, U_infty=0.6, z_H=z_H, newfig=False, marker="s",
-                                fill=None)
-        plot_trans_wake_profile(q, U_infty=0.8, z_H=z_H, newfig=False, marker="<",
-                                fill=None)
-        plot_trans_wake_profile(q, U_infty=1.0, z_H=z_H, newfig=False, marker="-o",
-                                fill=None)
-        plot_trans_wake_profile(q, U_infty=1.2, z_H=z_H, newfig=False, marker="^",
-                                fill=None)
+        plot_trans_wake_profile(q, U_infty=0.4, z_H=z_H, newfig=True,
+                                marker="--v", fill=None)
+        plot_trans_wake_profile(q, U_infty=0.6, z_H=z_H, newfig=False,
+                                marker="s", fill=None)
+        plot_trans_wake_profile(q, U_infty=0.8, z_H=z_H, newfig=False,
+                                marker="<", fill=None)
+        plot_trans_wake_profile(q, U_infty=1.0, z_H=z_H, newfig=False,
+                                marker="-o", fill=None)
+        plot_trans_wake_profile(q, U_infty=1.2, z_H=z_H, newfig=False,
+                                marker="^", fill=None)
         plt.legend(loc=legendlocs[q])
         if q == "mean_upvp":
             plt.ylim((-0.015, 0.025))
@@ -821,8 +820,7 @@ def plot_all_meancontquiv(save=False, savetype=".pdf", show=False):
 
 
 def plot_all_kcont(save=False, savetype=".pdf"):
-    """
-    Plots contours of turbulence kinetic energy for all Reynolds numbers
+    """Plot contours of turbulence kinetic energy for all Reynolds numbers
     tested.
     """
     for n, U in enumerate([0.4, 0.6, 0.8, 1.0, 1.2]):
@@ -831,8 +829,7 @@ def plot_all_kcont(save=False, savetype=".pdf"):
 
 def make_k_bar_graph(save=False, savetype=".pdf", show=False,
                      print_analysis=True):
-    """
-    Makes a bar graph from the mean kinetic energy transport terms for four
+    """Makes a bar graph from the mean kinetic energy transport terms for four
     Reynolds numbers.
     """
     names = [r"$y$-adv.", r"$z$-adv.", r"$y$-turb.", r"$z$-turb.",
@@ -876,8 +873,7 @@ def make_k_bar_graph(save=False, savetype=".pdf", show=False,
 
 def make_mom_bar_graph(ax=None, save=False, savetype=".pdf",
                        print_analysis=True):
-    """
-    Creates a bar graph of terms contributing to dU/dx:
+    """Create a bar graph of terms contributing to dU/dx:
       * Cross-stream advection
       * Vertical advection
       * Cross-stream Re stress gradient
@@ -935,8 +931,7 @@ def make_mom_bar_graph(ax=None, save=False, savetype=".pdf",
 
 def plot_wake_trans_totals(ax=None, save=False, savetype=".pdf", ucolor="black",
                            kcolor="black", emptymarkers=True, **kwargs):
-    """
-    Plots totals for wake transport quantities for all Reynolds numbers
+    """Plot totals for wake transport quantities for all Reynolds numbers
     tested, both for the momentum and kinetic energy.
     """
     momentum_totals = []
@@ -992,16 +987,17 @@ def plot_wake_trans_totals(ax=None, save=False, savetype=".pdf", ucolor="black",
 
 def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
                   show=False, newfig=True, plot_lines=True, color="black"):
-    """
-    Plots the cross-stream velocity spectrum (normalized by the free stream
-    velocity) for a single run. Any NaNs in the velocity data are replaced with
-    the mean.
+    """Plot the cross-stream velocity spectrum (normalized by the free stream
+    velocity) for a single run.
+
+    Any NaNs in the velocity data are replaced with the mean.
 
     Bachant and Wosnik (2015, JoT) used locations y/R = (-1, 1.5) and
     z/H = 0.25 to compare spectra with high and low levels of turbulence,
     respectively.
     """
-    print("Plotting cross-stream velocity spectrum at ({}, {})".format(y_R, z_H))
+    print("Plotting cross-stream velocity spectrum at ({}, {})".format(y_R,
+                                                                       z_H))
     # Find index for the desired parameters
     s_name = "Wake-{:.1f}".format(U_infty)
     tp = Section(s_name).test_plan
@@ -1048,8 +1044,7 @@ def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
 
 def plot_multi_spec(n_band_ave=4, plot_conf_int=False, save=False, show=False,
                     savetype=".pdf"):
-    """
-    Plots the cross-stream velocity spectra for two cross-stream locations at
+    """Plot the cross-stream velocity spectra for two cross-stream locations at
     all Reynolds numbers.
     """
     u_list = [0.4, 0.6, 0.8, 1.0, 1.2]
@@ -1089,8 +1084,7 @@ def plot_vertical_lines(xlist, ymaxscale=1, color="gray"):
 
 
 def plot_wake_re_dep(y_R=0.0, z_H=0.25, save=False):
-    """
-    Plots the Reynolds number dependence of the streamwise mean velocity and
+    """Plot the Reynolds number dependence of the streamwise mean velocity and
     turbulence intensity at y/R = 0, z/H = 0.25. Averages are taken from two
     runs for each speed.
     """
