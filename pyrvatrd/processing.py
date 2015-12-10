@@ -727,9 +727,9 @@ def process_run(section, nrun):
     run = Run(section, nrun)
     return run.summary
 
+
 def process_latest_run(section):
-    """
-    Automatically detects the most recently acquired run and processes it,
+    """Automatically detects the most recently acquired run and processes it,
     printing a summary to the shell.
     """
     print("Processing latest run in", section)
@@ -746,6 +746,7 @@ def process_latest_run(section):
     print("\nSummary for {} run {}:".format(section, nrun))
     print(Run(section, nrun).summary)
 
+
 def load_test_plan_section(section):
     df = pd.read_csv(os.path.join("Config", "Test plan", section+".csv"))
     df = df.dropna(how="all", axis=1).dropna(how="all", axis=0)
@@ -753,9 +754,11 @@ def load_test_plan_section(section):
         df["Run"] = df["Run"].astype(int)
     return df
 
+
 def process_section(name):
     s = Section(name)
     s.process()
+
 
 def batch_process_all():
     """Batch processes all sections."""
@@ -769,8 +772,9 @@ def batch_process_all():
         print("Processing {}".format(section))
         process_section(section)
 
+
 def process_tare_drag(nrun, plot=False):
-    """Processes a single tare drag run."""
+    """Process a single tare drag run."""
     print("Processing tare drag run", nrun)
     times = {0.3 : (10, 77),
              0.4 : (8, 60),
@@ -801,6 +805,7 @@ def process_tare_drag(nrun, plot=False):
         plt.show()
     return speed, meandrag
 
+
 def batch_process_tare_drag(plot=False):
     """Processes all tare drag data."""
     runs = os.listdir("Raw/Tare drag")
@@ -821,6 +826,7 @@ def batch_process_tare_drag(plot=False):
         plt.ylabel("Tare drag (N)")
         plt.tight_layout()
         plt.show()
+
 
 def process_tare_torque(nrun, plot=False):
     """Processes a single tare torque run."""
@@ -854,6 +860,7 @@ def process_tare_torque(nrun, plot=False):
         plt.show()
     return meanrpm, -meantorque
 
+
 def batch_process_tare_torque(plot=False):
     """Processes all tare torque data."""
     runs = os.listdir("Data/Raw/Tare torque")
@@ -879,13 +886,15 @@ def batch_process_tare_torque(plot=False):
         plt.tight_layout()
         plt.show()
 
+
 def make_remote_name(local_path):
     return "_".join(local_path.split("\\")[-3:])
 
+
 def download_raw(section, nrun, name):
-    """
-    Downloads a run's raw data. `name` can be either the file name with
-    extension, or
+    """Download a run's raw data.
+
+    `name` can be either the file name with extension, or
       * `"metadata"` -- Metadata in JSON format
       * `"nidata"` -- Data from the NI DAQ system
       * `"acsdata"` -- Data from the tow tank's motion controller
