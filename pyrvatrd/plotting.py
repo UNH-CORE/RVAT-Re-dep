@@ -8,14 +8,15 @@ import os
 from scipy.optimize import curve_fit
 
 
-ylabels = {"mean_u" : r"$U/U_\infty$",
-           "std_u" : r"$\sigma_u/U_\infty$",
-           "mean_v" : r"$V/U_\infty$",
-           "mean_w" : r"$W/U_\infty$",
-           "mean_upvp" : r"$\overline{u^\prime v^\prime}/U_\infty^2$",
-           "mean_u_diff" : r"$\Delta U$ (\%)",
-           "mean_v_diff" : r"$\Delta V$ (\%)",
-           "mean_w_diff" : r"$\Delta W$ (\%)"}
+ylabels = {"mean_u": r"$U/U_\infty$",
+           "std_u": r"$\sigma_u/U_\infty$",
+           "mean_v": r"$V/U_\infty$",
+           "mean_w": r"$W/U_\infty$",
+           "mean_upvp": r"$\overline{u^\prime v^\prime}/U_\infty^2$",
+           "mean_u_diff": r"$\Delta U$ (\%)",
+           "mean_v_diff": r"$\Delta V$ (\%)",
+           "mean_w_diff": r"$\Delta W$ (\%)",
+           "k": r"$k/U_\infty^2$"}
 
 
 class PerfCurve(object):
@@ -498,11 +499,12 @@ class WakeMapDiff(WakeMap):
         self.plot_contours(self.mean_u, label="$U_{\mathrm{diff}}$")
 
 
-def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False,
-                            savedir="Figures", savetype=".pdf", newfig=True,
-                            marker="-ok", fill="none", oldwake=False,
-                            figsize=(7.5, 3.75)):
-    """Plot the transverse wake profile of some quantity. These can be
+def plot_trans_wake_profile(ax=None, quantity="mean_u", U_infty=0.4, z_H=0.0,
+                            save=False, marker="-ok", color="black",
+                            oldwake=False, figsize=(7.5, 3.75)):
+    """Plot the transverse wake profile of some quantity.
+
+    These can be
       * mean_u
       * mean_v
       * mean_w
@@ -515,19 +517,20 @@ def plot_trans_wake_profile(quantity, U_infty=0.4, z_H=0.0, save=False,
     df = df[df.z_H==z_H]
     q = df[quantity]
     y_R = df.y_R
-    if newfig:
-        plt.figure(figsize=figsize)
-    if oldwake:
-        plot_old_wake(quantity, y_R)
-    if quantity in ["mean_upvp"]:
+    if quantity in ["mean_upvp", "k"]:
         unorm = U_infty**2
     else:
         unorm = U_infty
-    plt.plot(y_R, q/unorm, marker, markerfacecolor=fill, label=label)
-    plt.xlabel(r"$y/R$")
-    plt.ylabel(ylabels[quantity])
-    plt.grid(True)
-    plt.tight_layout()
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    ax.plot(y_R, q/unorm, marker, color=color, label=label)
+    ax.set_xlabel(r"$y/R$")
+    ax.set_ylabel(ylabels[quantity])
+    ax.grid(True)
+    try:
+        fig.tight_layout()
+    except UnboundLocalError:
+        pass
 
 
 def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
@@ -672,16 +675,6 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
             fig2.savefig(savedir + "/re_dep_cd" + savetype)
 
 
-def plot_old_wake(quantity, y_R):
-    plt.hold(True)
-    runs = range(32, 77)
-    ind = [run-1 for run in runs]
-    f = "../2013.03 VAT/Processed/"+quantity+".npy"
-    q = np.load(f)[ind]
-    plt.plot(y_R, q, 'xr', label=r"$Re_D=1.0 \times 10^6$",
-             markerfacecolor="none")
-
-
 def plot_cfd_perf(quantity="cp", normalize_by="CFD"):
     Re_D = np.load(cfd_path + "/processed/Re_D.npy")
     q = np.load(cfd_path + "/processed/" + quantity + ".npy")
@@ -779,29 +772,33 @@ def plot_perf_curves(ax1=None, ax2=None, subplots=True, save=False,
 
 
 def plot_wake_profiles(z_H=0.0, save=False, show=False, savedir="Figures",
-                       savetype=".pdf"):
-    """Plot all wake profiles of interest."""
-    legendlocs = {"mean_u" : 4,
-                  "std_u" : 1,
-                  "mean_upvp" : 1}
-    for q in ["mean_u", "std_u", "mean_upvp"]:
-        plot_trans_wake_profile(q, U_infty=0.4, z_H=z_H, newfig=True,
-                                marker="--v", fill=None)
-        plot_trans_wake_profile(q, U_infty=0.6, z_H=z_H, newfig=False,
-                                marker="s", fill=None)
-        plot_trans_wake_profile(q, U_infty=0.8, z_H=z_H, newfig=False,
-                                marker="<", fill=None)
-        plot_trans_wake_profile(q, U_infty=1.0, z_H=z_H, newfig=False,
-                                marker="-o", fill=None)
-        plot_trans_wake_profile(q, U_infty=1.2, z_H=z_H, newfig=False,
-                                marker="^", fill=None)
-        plt.legend(loc=legendlocs[q])
+                       quantities=["mean_u", "k"], figsize=(7.5, 3.25),
+                       savetype=".pdf", subplots=True):
+    """Plot wake profiles for all Re."""
+    tow_speeds = np.arange(0.4, 1.3, 0.2)
+    cm = plt.cm.coolwarm
+    colors = [cm(int(n/4*256)) for n in range(len(tow_speeds))]
+    markers = ["--v", "s", "<", "-o", "^"]
+    if subplots:
+        fig, ax = plt.subplots(figsize=figsize, nrows=1, ncols=len(quantities))
+    else:
+        ax = [None]*len(quantities)
+    for a, q in zip(ax, quantities):
+        if not subplots:
+            fig, a = plt.subplots(figsize=figsize)
+        for U, marker, color in zip(tow_speeds, markers, colors):
+            plot_trans_wake_profile(ax=a, quantity=q, U_infty=U, z_H=z_H,
+                                    marker=marker, color=color)
+        if q == quantities[0] or not subplots:
+            a.legend(loc="best")
         if q == "mean_upvp":
-            plt.ylim((-0.015, 0.025))
-        if save:
-            plt.savefig(os.path.join(savedir, q+savetype))
-    if show:
-        plt.show()
+            a.set_ylim((-0.015, 0.025))
+        fig.tight_layout()
+        if save and not subplots:
+            fig.savefig(os.path.join(savedir, q + "_profiles" + savetype))
+    if save and subplots:
+        fig.savefig(os.path.join(savedir,
+                                 "_".join(quantities) + "_profiles" + savetype))
 
 
 def plot_meancontquiv(U_infty=1.0, save=False, savetype=".pdf", show=False,
@@ -1158,5 +1155,5 @@ def make_velocity_unc_table(save=False):
                     column_format="cccc", escape=False, formatters=fmt)
         df.to_csv("Tables/mean_vel_unc.csv", index=False)
     print("\nAverage wake velocity uncertainties (LaTeX formatted):\n")
-    print(df.to_latex(index=False, column_format="c|c|c", escape=False,
+    print(df.to_latex(index=False, column_format="cccc", escape=False,
                       formatters=fmt))
