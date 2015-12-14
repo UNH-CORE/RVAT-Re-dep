@@ -1146,7 +1146,7 @@ def make_velocity_unc_table(save=False):
     df["$V$"] = mean_unc_v
     df["$W$"] = mean_unc_w
     def speed_format(speed):
-        return "{:.1f}".format(speed)
+        return "${:.1f}$".format(speed)
     def unc_format(unc):
         un = "{:.0e}".format(unc).split("e")
         return r"${} \times 10^{{{}}}$".format(un[0], int(un[1]))
@@ -1155,7 +1155,7 @@ def make_velocity_unc_table(save=False):
         if not os.path.isdir("Tables"):
             os.mkdir("Tables")
         df.to_latex(buf="Tables/mean_vel_unc.tex", index=False,
-                    column_format="c|c|c", escape=False, formatters=fmt)
+                    column_format="cccc", escape=False, formatters=fmt)
         df.to_csv("Tables/mean_vel_unc.csv", index=False)
     print("\nAverage wake velocity uncertainties (LaTeX formatted):\n")
     print(df.to_latex(index=False, column_format="c|c|c", escape=False,
