@@ -536,7 +536,7 @@ def plot_trans_wake_profile(ax=None, quantity="mean_u", U_infty=0.4, z_H=0.0,
 def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
                      savetype=".pdf", errorbars=False, subplots=True,
                      normalize_by=1.0, dual_xaxes=True, power_law=False,
-                     **kwargs):
+                     letter_labels=True, **kwargs):
     """Plot the Reynolds number dependence of power and drag coefficients."""
     if not "marker" in kwargs.keys():
         kwargs["marker"] = "o"
@@ -626,6 +626,8 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
     ax1.set_ylim((0.14/normalize_by, 0.28/normalize_by))
     ax1.xaxis.major.formatter.set_powerlimits((0, 0))
     ax1.grid(True)
+    if letter_labels:
+        label_subplot(ax1, text="(a)")
     try:
         fig1.tight_layout()
     except UnboundLocalError:
@@ -656,6 +658,8 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
         ax22.grid(False)
     ax2.set_ylim((0.82/norm_cd, 0.96/norm_cd))
     ax2.xaxis.major.formatter.set_powerlimits((0,0))
+    if letter_labels:
+        label_subplot(text="(b)")
     ax2.grid(True)
     if power_law:
         cd_power_law = coeffs_cd[0]*(Re_D_curve/D*chord*1.9)**coeffs_cd[1]
@@ -1119,6 +1123,13 @@ def plot_wake_re_dep(y_R=0.0, z_H=0.25, save=False):
     plt.figure()
     plt.plot(speeds, std_u/speeds, "-o")
 #    plt.ylim((0.05, 0.2))
+
+
+def label_subplot(ax=None, x=0.47, y=-0.3, text="(a)", **kwargs):
+    """Create a subplot label."""
+    if ax is None:
+        ax = plt.gca()
+    ax.text(x=x, y=y, s=text, transform=ax.transAxes, **kwargs)
 
 
 def make_velocity_unc_table(save=False):

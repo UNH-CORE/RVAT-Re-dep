@@ -30,6 +30,9 @@ if __name__ == "__main__":
     parser.add_argument("--style", help="Matplotlib stylesheet")
     parser.add_argument("--noshow", help="Do not show figures",
                         action="store_true", default=False)
+    parser.add_argument("--no-subplots", help="Do not use subplots for "
+                        "perf_re_dep figure", action="store_true",
+                        default=False)
     args = parser.parse_args()
 
     if args.figures == "none" and not args.all:
@@ -45,17 +48,16 @@ if __name__ == "__main__":
     savetype = args.savetype
     save = args.save
     errorbars = not args.no_errorbars
+    subplots = not args.no_subplots
     if save:
         if not os.path.isdir("Figures"):
             os.makedirs("Figures")
 
     if "perf_curves" in args.figures or args.all:
         plot_perf_curves(subplots=False, save=save, savetype=savetype)
-        plot_perf_curves(save=save, savetype=savetype)
     if "perf_re_dep" in args.figures or args.all:
-        plot_perf_re_dep(errorbars=errorbars, save=save, savetype=savetype)
-        plot_perf_re_dep(subplots=False, errorbars=errorbars, save=save,
-                         savetype=savetype)
+        plot_perf_re_dep(subplots=subplots, errorbars=errorbars, save=save,
+                         savetype=savetype, letter_labels=subplots)
     if "wake_profiles" in args.figures or args.all:
         plot_wake_profiles(save=save, savetype=savetype)
     if "k_bar_graph" in args.figures or args.all:
