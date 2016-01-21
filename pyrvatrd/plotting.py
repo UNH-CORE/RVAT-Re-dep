@@ -1125,11 +1125,12 @@ def plot_wake_re_dep(y_R=0.0, z_H=0.25, save=False):
 #    plt.ylim((0.05, 0.2))
 
 
-def label_subplot(ax=None, x=0.47, y=-0.3, text="(a)", **kwargs):
+def label_subplot(ax=None, x=0.5, y=-0.25, text="(a)", **kwargs):
     """Create a subplot label."""
     if ax is None:
         ax = plt.gca()
-    ax.text(x=x, y=y, s=text, transform=ax.transAxes, **kwargs)
+    ax.text(x=x, y=y, s=text, transform=ax.transAxes,
+            horizontalalignment="center", verticalalignment="top", **kwargs)
 
 
 def make_velocity_unc_table(save=False):
