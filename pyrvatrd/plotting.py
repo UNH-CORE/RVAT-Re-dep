@@ -6,6 +6,7 @@ This module contains classes and functions for plotting data.
 from .processing import *
 import os
 from scipy.optimize import curve_fit
+import string
 
 
 ylabels = {"mean_u": r"$U/U_\infty$",
@@ -775,17 +776,19 @@ def plot_perf_curves(ax1=None, ax2=None, subplots=True, save=False,
 
 def plot_wake_profiles(z_H=0.0, save=False, show=False, savedir="Figures",
                        quantities=["mean_u", "k"], figsize=(7.5, 3.25),
-                       savetype=".pdf", subplots=True):
+                       savetype=".pdf", subplots=True, label_subplots=True):
     """Plot wake profiles for all Re."""
     tow_speeds = np.arange(0.4, 1.3, 0.2)
     cm = plt.cm.coolwarm
     colors = [cm(int(n/4*256)) for n in range(len(tow_speeds))]
     markers = ["--v", "s", "<", "-o", "^"]
+    letters = list(string.ascii_lowercase)[:len(quantities)]
     if subplots:
         fig, ax = plt.subplots(figsize=figsize, nrows=1, ncols=len(quantities))
     else:
         ax = [None]*len(quantities)
-    for a, q in zip(ax, quantities):
+        label_subplots = False
+    for a, q, letter in zip(ax, quantities, letters):
         if not subplots:
             fig, a = plt.subplots(figsize=figsize)
         for U, marker, color in zip(tow_speeds, markers, colors):
@@ -796,6 +799,8 @@ def plot_wake_profiles(z_H=0.0, save=False, show=False, savedir="Figures",
         if q == "mean_upvp":
             a.set_ylim((-0.015, 0.025))
         fig.tight_layout()
+        if label_subplots:
+            label_subplot(ax=a, text="({})".format(letter))
         if save and not subplots:
             fig.savefig(os.path.join(savedir, q + "_profiles" + savetype))
     if save and subplots:
