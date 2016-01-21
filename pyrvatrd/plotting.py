@@ -1057,14 +1057,14 @@ def plot_multi_spec(n_band_ave=4, plot_conf_int=False, save=False, show=False,
     z_H = 0.25
     plt.figure(figsize=(7.5, 3.75))
     plt.subplot(1, 2, 1)
-    plt.title("(a)")
+    label_subplot(text="(a)")
     for n, u in enumerate(u_list):
         plot_vel_spec(u, y_R_a, z_H, n_band_ave=n_band_ave, newfig=False,
                       plot_conf_int=plot_conf_int, plot_lines=(u==1.2),
                       color=cm(int(n/4*256)))
     plt.legend(loc="best")
     plt.subplot(1, 2, 2)
-    plt.title("(b)")
+    label_subplot(text="(b)")
     for n, u in enumerate(u_list):
         plot_vel_spec(u, y_R_b, z_H, n_band_ave=n_band_ave, newfig=False,
                       plot_conf_int=plot_conf_int, plot_lines=(u==1.2),
