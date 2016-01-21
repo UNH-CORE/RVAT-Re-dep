@@ -924,8 +924,7 @@ def make_mom_bar_graph(ax=None, save=False, savetype=".pdf",
         plt.savefig("Figures/mom_bar_graph"+savetype)
 
 
-def plot_wake_trans_totals(ax=None, save=False, savetype=".pdf", ucolor="black",
-                           kcolor="black", emptymarkers=True, **kwargs):
+def plot_wake_trans_totals(ax=None, save=False, savetype=".pdf", **kwargs):
     """Plot totals for wake transport quantities for all Reynolds numbers
     tested, both for the momentum and kinetic energy.
     """
@@ -962,12 +961,10 @@ def plot_wake_trans_totals(ax=None, save=False, savetype=".pdf", ucolor="black",
                       ts.average_over_area(2*kprod/meanu/(0.5*U**2)*D, y_R, z_H),
                       ts.average_over_area(2*meandiss/meanu/(0.5*U**2)*D, y_R, z_H)]
         energy_totals.append(np.sum(quantities))
-    if emptymarkers:
-        kwargs["markerfacecolor"] = "none"
     if ax is None:
         fig, ax = plt.subplots()
-    ax.plot(Re_D, momentum_totals, "-o", color=ucolor, label="$U$", **kwargs)
-    ax.plot(Re_D, energy_totals, "--s", color=kcolor, label="$K$", **kwargs)
+    ax.plot(Re_D, momentum_totals, marker="o", label="$U$", **kwargs)
+    ax.plot(Re_D, energy_totals, marker="s", label="$K$", **kwargs)
     ax.set_xlabel("$Re_D$")
     ax.set_ylabel("Normalized total transport")
     ax.legend(loc="best")
