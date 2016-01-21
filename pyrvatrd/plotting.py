@@ -537,8 +537,10 @@ def plot_trans_wake_profile(ax=None, quantity="mean_u", U_infty=0.4, z_H=0.0,
 def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
                      savetype=".pdf", errorbars=False, subplots=True,
                      normalize_by=1.0, dual_xaxes=True, power_law=False,
-                     letter_labels=True, **kwargs):
+                     label_subplots=True, **kwargs):
     """Plot the Reynolds number dependence of power and drag coefficients."""
+    if not subplots:
+        label_subplots = False
     if not "marker" in kwargs.keys():
         kwargs["marker"] = "o"
     speeds = np.array([0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3])
@@ -627,7 +629,7 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
     ax1.set_ylim((0.14/normalize_by, 0.28/normalize_by))
     ax1.xaxis.major.formatter.set_powerlimits((0, 0))
     ax1.grid(True)
-    if letter_labels:
+    if label_subplots:
         label_subplot(ax1, text="(a)")
     try:
         fig1.tight_layout()
@@ -659,7 +661,7 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
         ax22.grid(False)
     ax2.set_ylim((0.82/norm_cd, 0.96/norm_cd))
     ax2.xaxis.major.formatter.set_powerlimits((0,0))
-    if letter_labels:
+    if label_subplots:
         label_subplot(text="(b)")
     ax2.grid(True)
     if power_law:

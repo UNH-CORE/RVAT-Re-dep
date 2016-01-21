@@ -57,7 +57,7 @@ if __name__ == "__main__":
         plot_perf_curves(subplots=False, save=save, savetype=savetype)
     if "perf_re_dep" in args.figures or args.all:
         plot_perf_re_dep(subplots=subplots, errorbars=errorbars, save=save,
-                         savetype=savetype, letter_labels=subplots)
+                         savetype=savetype)
     if "wake_profiles" in args.figures or args.all:
         plot_wake_profiles(save=save, savetype=savetype)
     if "k_bar_graph" in args.figures or args.all:
