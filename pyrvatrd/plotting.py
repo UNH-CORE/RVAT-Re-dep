@@ -737,11 +737,12 @@ def plot_perf_curves(ax1=None, ax2=None, subplots=True, save=False,
     elif ax1 is None and ax2 is None and not subplots:
         fig1, ax1 = plt.subplots()
         fig2, ax2 = plt.subplots()
-    PerfCurve(0.4).plotcp(ax=ax1, marker=">", **kwargs)
-    PerfCurve(0.6).plotcp(ax=ax1, marker="s", **kwargs)
-    PerfCurve(0.8).plotcp(ax=ax1, marker="<", **kwargs)
-    PerfCurve(1.0).plotcp(ax=ax1, marker="o", **kwargs)
-    PerfCurve(1.2).plotcp(ax=ax1, marker="^", **kwargs)
+    speeds = np.round(np.arange(0.4, 1.3, 0.2), decimals=1)
+    cm = plt.cm.coolwarm
+    colors = [cm(int(n/4*256)) for n in range(len(speeds))]
+    markers = [">", "s", "<", "o", "^"]
+    for speed, color, marker, in zip(speeds, colors, markers):
+        PerfCurve(speed).plotcp(ax=ax1, marker=marker, color=color, **kwargs)
     ax1.grid(True)
     if not subplots:
         ax1.legend(loc="best", ncol=2)
@@ -751,11 +752,8 @@ def plot_perf_curves(ax1=None, ax2=None, subplots=True, save=False,
         pass
     if save and not subplots:
         fig1.savefig(os.path.join(savedir, "cp_curves" + savetype))
-    PerfCurve(0.4).plotcd(ax=ax2, marker=">", **kwargs)
-    PerfCurve(0.6).plotcd(ax=ax2, marker="s", **kwargs)
-    PerfCurve(0.8).plotcd(ax=ax2, marker="<", **kwargs)
-    PerfCurve(1.0).plotcd(ax=ax2, marker="o", **kwargs)
-    PerfCurve(1.2).plotcd(ax=ax2, marker="^", **kwargs)
+    for speed, color, marker, in zip(speeds, colors, markers):
+        PerfCurve(speed).plotcd(ax=ax2, marker=marker, color=color, **kwargs)
     ax2.legend(loc="lower right", ncol=2)
     ax2.set_ylim((0, 1.2))
     ax2.grid(True)

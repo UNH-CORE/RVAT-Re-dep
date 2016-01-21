@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-This script generates all relevant figures from the experiment and
-stores them in the `Figures` directory.
+"""This script generates all relevant figures from the experiment and stores
+them in the `Figures` directory.
 """
 
 from pyrvatrd.plotting import *
 import argparse
-
-kwargs = {"markerfacecolor": "none",
-          "color": "black"}
 
 
 if __name__ == "__main__":
@@ -48,13 +44,12 @@ if __name__ == "__main__":
             os.makedirs("Figures")
 
     if "perf_curves" in args.figures or args.all:
-        plot_perf_curves(subplots=False, save=save, savetype=savetype, **kwargs)
-        plot_perf_curves(save=save, savetype=savetype, **kwargs)
+        plot_perf_curves(subplots=False, save=save, savetype=savetype)
+        plot_perf_curves(save=save, savetype=savetype)
     if "perf_re_dep" in args.figures or args.all:
-        plot_perf_re_dep(errorbars=errorbars, save=save, savetype=savetype,
-                         **kwargs)
+        plot_perf_re_dep(errorbars=errorbars, save=save, savetype=savetype)
         plot_perf_re_dep(subplots=False, errorbars=errorbars, save=save,
-                         savetype=savetype, **kwargs)
+                         savetype=savetype)
     if "wake_profiles" in args.figures or args.all:
         plot_wake_profiles(save=save, savetype=savetype)
     if "k_bar_graph" in args.figures or args.all:
