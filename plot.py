@@ -6,18 +6,19 @@ them in the `Figures` directory.
 
 from pyrvatrd.plotting import *
 import argparse
+import sys
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create figures from the "
                                      "UNH-RVAT Reynolds number dependence "
                                      "experiment")
-    parser.add_argument("figures", nargs="?", help="Which figures to create",
+    parser.add_argument("figures", nargs="*", help="Which figures to create",
                         choices=["perf_curves", "perf_re_dep", "wake_profiles",
                         "k_bar_graph", "mom_bar_graph", "all_meancontquiv",
                         "all_kcont", "multi_spec", "wake_trans_totals",
-                        "vel_unc_table"],
-                        default=[])
+                        "vel_unc_table", "none"],
+                        default="none")
     parser.add_argument("--all", "-A", help="Plot all figures",
                         action="store_true", default=False)
     parser.add_argument("--no-errorbars", "-e", help="Do not plot error bars",
@@ -30,6 +31,11 @@ if __name__ == "__main__":
     parser.add_argument("--noshow", help="Do not show figures",
                         action="store_true", default=False)
     args = parser.parse_args()
+
+    if args.figures == "none" and not args.all:
+        print("No plots selected")
+        parser.print_help()
+        sys.exit(2)
 
     if args.style:
         plt.style.use(args.style)
@@ -56,9 +62,9 @@ if __name__ == "__main__":
         make_k_bar_graph(save=save, savetype=savetype)
     if "mom_bar_graph" in args.figures or args.all:
         make_mom_bar_graph(save=save, savetype=savetype)
-    if "all_meancontquiv" in args.figures:
+    if "all_meancontquiv" in args.figures or args.all:
         plot_all_meancontquiv(save=save, savetype=savetype)
-    if "all_kcont" in args.figures:
+    if "all_kcont" in args.figures or args.all:
         plot_all_kcont(save=save, savetype=savetype)
     if "multi_spec" in args.figures or args.all:
         plot_multi_spec(plot_conf_int=errorbars, save=save, savetype=savetype)
