@@ -45,6 +45,7 @@ if __name__ == "__main__":
     else:
         from pxl.styleplot import set_sns
         set_sns()
+        plt.rcParams["axes.formatter.use_mathtext"] = True
     savetype = args.savetype
     save = args.save
     errorbars = not args.no_errorbars

@@ -1141,10 +1141,10 @@ def twiny_sci_label(ax=None, power=5, subplots=True):
         ax = plt.gca()
     use_mathtext = plt.rcParams["axes.formatter.use_mathtext"]
     if use_mathtext:
-        x, y = 0.95, 1.08
+        x, y = 0.90, 1.1
         if subplots:
             x, y = x*0.955, y*1.03
-        text = r"$\times$ 10$^{}$".format(power)
+        text = r"$\times\mathregular{{10^{}}}$".format(power)
     else:
         x, y = 0.95, 1.08
         if subplots:
