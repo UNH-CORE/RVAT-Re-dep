@@ -606,7 +606,7 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
         ticklabs = ticklabs/D*1.9*0.14/1e5
         ticklabs = [str(np.round(ticklab, decimals=1)) for ticklab in ticklabs]
         ax12.set_xticks(ax1.xaxis.get_ticklocs())
-        ax12.set_xlim((0.2e6, 1.4e6))
+        ax12.set_xlim(ax1.get_xlim())
         ax12.set_xticklabels(ticklabs)
         ax12.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
         ax12.grid(False)
@@ -653,7 +653,7 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
         ticklabs = ticklabs/D*1.9*0.14/1e5
         ticklabs = [str(np.round(ticklab, decimals=1)) for ticklab in ticklabs]
         ax22.set_xticks(ax2.xaxis.get_ticklocs())
-        ax22.set_xlim((0.2e6, 1.4e6))
+        ax22.set_xlim(ax2.get_xlim())
         ax22.set_xticklabels(ticklabs)
         ax22.set_xlabel(r"$Re_{c, \mathrm{ave}}$")
         ax22.grid(False)
