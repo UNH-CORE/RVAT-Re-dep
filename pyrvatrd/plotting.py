@@ -597,10 +597,7 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
     else:
         ax1.set_ylabel(r"$C_P$")
     if dual_xaxes:
-        x, y = 0.95, 1.08
-        if subplots:
-            x, y = x*0.955, y*1.03
-        ax1.text(x, y, "1e5", transform=ax1.transAxes)
+        twiny_sci_label(ax=ax1, power=5, subplots=subplots)
         ax12 = ax1.twiny()
         ticklabs = ax1.xaxis.get_majorticklocs()
         ticklabs = ticklabs/D*1.9*0.14/1e5
@@ -647,7 +644,7 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
     else:
         ax2.set_ylabel(r"$C_D$")
     if dual_xaxes:
-        ax2.text(x, y, "1e5", transform=ax2.transAxes)
+        twiny_sci_label(ax=ax2, power=5, subplots=subplots)
         ax22 = ax2.twiny()
         ticklabs = ax2.xaxis.get_majorticklocs()
         ticklabs = ticklabs/D*1.9*0.14/1e5
@@ -1136,6 +1133,25 @@ def label_subplot(ax=None, x=0.5, y=-0.25, text="(a)", **kwargs):
         ax = plt.gca()
     ax.text(x=x, y=y, s=text, transform=ax.transAxes,
             horizontalalignment="center", verticalalignment="top", **kwargs)
+
+
+def twiny_sci_label(ax=None, power=5, subplots=True):
+    """Put scientific notation label on secondary x-axis."""
+    if ax is None:
+        ax = plt.gca()
+    use_mathtext = plt.rcParams["axes.formatter.use_mathtext"]
+    if use_mathtext:
+        x, y = 0.95, 1.08
+        if subplots:
+            x, y = x*0.955, y*1.03
+        text = r"$\times$ 10$^{}$".format(power)
+    else:
+        x, y = 0.95, 1.08
+        if subplots:
+            x, y = x*0.955, y*1.03
+        text = "1e{}".format(power)
+    ax.text(x=x, y=y, s=text, transform=ax.transAxes)
+
 
 
 def make_velocity_unc_table(save=False):
