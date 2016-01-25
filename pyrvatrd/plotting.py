@@ -602,8 +602,7 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
             x, y = x*0.955, y*1.03
         ax1.text(x, y, "1e5", transform=ax1.transAxes)
         ax12 = ax1.twiny()
-        ax1.xaxis.get_majorticklocs()
-        ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
+        ticklabs = ax1.xaxis.get_majorticklocs()
         ticklabs = ticklabs/D*1.9*0.14/1e5
         ticklabs = [str(np.round(ticklab, decimals=1)) for ticklab in ticklabs]
         ax12.set_xticks(ax1.xaxis.get_ticklocs())
@@ -650,8 +649,7 @@ def plot_perf_re_dep(ax1=None, ax2=None, save=False, savedir="Figures",
     if dual_xaxes:
         ax2.text(x, y, "1e5", transform=ax2.transAxes)
         ax22 = ax2.twiny()
-        ax2.xaxis.get_majorticklocs()
-        ticklabs = np.arange(0.2e6, 1.6e6, 0.2e6)
+        ticklabs = ax2.xaxis.get_majorticklocs()
         ticklabs = ticklabs/D*1.9*0.14/1e5
         ticklabs = [str(np.round(ticklab, decimals=1)) for ticklab in ticklabs]
         ax22.set_xticks(ax2.xaxis.get_ticklocs())
