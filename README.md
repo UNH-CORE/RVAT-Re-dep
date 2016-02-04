@@ -42,34 +42,20 @@ How to cite
 
 Please cite
 
-```bibtex
-@Misc{Bachant2014-Re-dep-data,
-  Title                    = {UNH-RVAT Reynolds number dependence experiment: Reduced dataset and processing code},
-  Author                   = {Peter Bachant and Martin Wosnik},
-  HowPublished             = {fig\textbf{share}. http://dx.doi.org/10.6084/m9.figshare.1286960,
-  Month                    = {January},
-  Year                     = {2015},
-  Doi                      = {10.6084/m9.figshare.1286960},
-  Url                      = {http://dx.doi.org/10.6084/m9.figshare.1286960}
-}
-```
+Bachant, P. and Wosnik, M. (2016) UNH-RVAT Reynolds number dependence experiment: Reduced dataset and processing code. figshare.
+DOI: [10.6084/m9.figshare.1286960.v5](https://dx.doi.org/10.6084/m9.figshare.1286960.v5)
 
 
 Publications
 ------------
 These data were used in the following publications:
 
-```bibtex
-@INPROCEEDINGS{Bachant2014-METS
-  Author                   = {Bachant, P. and Wosnik, M.},
-  Title                    = {Reynolds Number Dependence of Cross-Flow Turbine Performance and Near-Wake Characteristics},
-  Booktitle                = {Proceedings of the 2nd Marine Energy Technology Symposium METS2014},
-  Month                    = {April},
-  Year                     = {2014},
-  Address                  = {Seattle, WA}
-  Url                      = {http://hdl.handle.net/10919/49210}
-}
-```
+Bachant, P. and Wosnik, M. (2016) [Effects of Reynolds Number on the Energy Conversion and Near-Wake Dynamics of a High Solidity 
+Vertical-Axis Cross-Flow Turbine](http://doi.org/10.3390/en9020073). _Energies_, 9
+
+Bachant, P. and Wosnik, M. (2014) [Reynolds Number Dependence of Cross-Flow Turbine Performance and Near-Wake 
+Characteristics](http://hdl.handle.net/10919/49210). _In Proceedings of the 2nd Marine Energy Technology Symposium METS2014_, April 
+15--18, Seattle, WA
 
 
 License
