@@ -28,7 +28,7 @@ if __name__ == "__main__":
     parser.add_argument("--savetype", help="Format to save figures",
                         default=".pdf")
     parser.add_argument("--style", help="Matplotlib stylesheet")
-    parser.add_argument("--noshow", help="Do not show figures",
+    parser.add_argument("--no-show", help="Do not show figures",
                         action="store_true", default=False)
     parser.add_argument("--no-subplots", help="Do not use subplots for "
                         "perf_re_dep figure", action="store_true",
@@ -76,5 +76,5 @@ if __name__ == "__main__":
     if "vel_unc_table" in args.figures or args.all:
         make_velocity_unc_table(save=save)
 
-    if not args.noshow:
+    if not args.no_show:
         plt.show()
