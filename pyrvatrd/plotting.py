@@ -792,7 +792,7 @@ def plot_wake_profiles(z_H=0.0, save=False, show=False, savedir="Figures",
             plot_trans_wake_profile(ax=a, quantity=q, U_infty=U, z_H=z_H,
                                     marker=marker, color=color)
         if q == quantities[0] or not subplots:
-            a.legend(loc="best")
+            a.legend(loc="lower left")
         if q == "mean_upvp":
             a.set_ylim((-0.015, 0.025))
         fig.tight_layout()
