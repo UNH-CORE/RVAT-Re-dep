@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-This module contains classes and functions for processing data.
+"""This module contains classes and functions for processing data."""
 
-"""
 from __future__ import division, print_function
 import numpy as np
 from pxl import timeseries as ts
