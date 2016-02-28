@@ -336,6 +336,15 @@ class Run(object):
         else:
             self.mean_u_enc = np.nan
             self.std_u_enc = np.nan
+        # Calculate cosine fits for performance
+        self.amp_tsr, self.phase_tsr = np.nan, np.nan
+        self.amp_cp, self.phase_cp = np.nan, np.nan
+        if self.n_revs >= 1:
+            angle_seg = np.deg2rad(self.angle)
+            self.amp_tsr, self.phase_tsr = ts.find_amp_phase(angle_seg,
+                    self.tsr, min_phase=np.deg2rad(10))
+            self.amp_cp, self.phase_cp = ts.find_amp_phase(angle_seg, self.cp,
+                    min_phase=np.deg2rad(10))
 
     def print_perf_stats(self):
         print("tow_speed_nom =", self.tow_speed_nom)
@@ -582,6 +591,10 @@ class Run(object):
         s["mean_tsr"] = self.mean_tsr
         s["mean_cp"] = self.mean_cp
         s["mean_cd"] = self.mean_cd
+        s["amp_tsr"] = self.amp_tsr
+        s["phase_tsr"] = self.phase_tsr
+        s["amp_cp"] = self.amp_cp
+        s["phase_cp"] = self.phase_cp
         s["std_tsr"] = self.std_tsr
         s["std_cp"] = self.std_cp
         s["std_cd"] = self.std_cd
