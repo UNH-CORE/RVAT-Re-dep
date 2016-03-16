@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This module contains classes and functions for plotting data.
-"""
+"""This module contains classes and functions for plotting data."""
 
 from .processing import *
 import os
@@ -1151,7 +1149,6 @@ def twiny_sci_label(ax=None, power=5, subplots=True):
             x, y = x*0.955, y*1.03
         text = "1e{}".format(power)
     ax.text(x=x, y=y, s=text, transform=ax.transAxes)
-
 
 
 def make_velocity_unc_table(save=False):
