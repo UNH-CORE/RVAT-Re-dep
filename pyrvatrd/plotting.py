@@ -283,7 +283,7 @@ class WakeMap(object):
                 fdiff.second_order_diff(self.df.mean_u.iloc[:, n], z)
             self.d2Udz2[:, n] = fdiff.second_order_diff(self.dUdz[:, n], z)
 
-    def turb_lines(self, linestyles="solid", linewidth=3, color="gray"):
+    def turb_lines(self, linestyles="solid", linewidth=2, color="gray"):
         plt.hlines(0.5, -1, 1, linestyles=linestyles, colors=color,
                    linewidth=linewidth)
         plt.vlines(-1, -0.2, 0.5, linestyles=linestyles, colors=color,
@@ -295,7 +295,7 @@ class WakeMap(object):
                       newfig=True, levels=None):
         """Plots contours of given quantity."""
         if newfig:
-            plt.figure(figsize=(7.5, 1.9))
+            plt.figure(figsize=(7.5, 2.0))
         cs = plt.contourf(self.y_R, self.z_H, quantity, 20,
                           cmap=plt.cm.coolwarm, levels=levels)
         plt.xlabel(r"$y/R$")
