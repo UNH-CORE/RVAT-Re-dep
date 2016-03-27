@@ -373,8 +373,7 @@ class WakeMap(object):
         self.turb_lines()
         ax = plt.axes()
         ax.set_aspect(2)
-        plt.yticks([0,0.13,0.25,0.38,0.5,0.63])
-        plt.grid(True)
+        plt.yticks([0, 0.13, 0.25, 0.38, 0.5, 0.63])
         plt.tight_layout()
         if save:
             label = str(self.U_infty).replace(".", "")
