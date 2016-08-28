@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from scipy.io import loadmat
 import multiprocessing as mp
 import scipy.stats
-from scipy.stats import nanmean, nanstd
+from numpy import nanmean, nanstd
 from scipy.signal import decimate
 from pxl import fdiff
 import progressbar
