@@ -33,6 +33,9 @@ if __name__ == "__main__":
     parser.add_argument("--no-subplots", help="Do not use subplots for "
                         "perf_re_dep figure", action="store_true",
                         default=False)
+    parser.add_argument("--no-subplot-labels", help="Do not use subplot labels "
+                        "for perf_re_dep figure", action="store_true",
+                        default=False)
     args = parser.parse_args()
 
     if args.figures == "none" and not args.all:
@@ -58,7 +61,8 @@ if __name__ == "__main__":
         plot_perf_curves(subplots=False, save=save, savetype=savetype)
     if "perf_re_dep" in args.figures or args.all:
         plot_perf_re_dep(subplots=subplots, errorbars=errorbars, save=save,
-                         savetype=savetype)
+                         savetype=savetype,
+                         label_subplots=not args.no_subplot_labels)
     if "wake_profiles" in args.figures or args.all:
         plot_wake_profiles(save=save, savetype=savetype)
     if "k_bar_graph" in args.figures or args.all:
