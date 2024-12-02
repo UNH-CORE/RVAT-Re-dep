@@ -1,0 +1,19 @@
+name: rvat-re-dep
+channels:
+  - conda-forge
+dependencies:
+  - matplotlib
+  - nose
+  - numpy
+  - pandas[version='<2']
+  - python=3.11
+  - scipy
+  - ca-certificates
+  - certifi
+  - openssl
+  - h5py
+  - jupyter
+  - notebook
+  - pip:
+      - progressbar33
+      - pxl
