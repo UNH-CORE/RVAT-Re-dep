@@ -354,7 +354,6 @@ class WakeMap(object):
             cb = plt.colorbar(cs, shrink=0.83, extend="both",
                               orientation="vertical", pad=0.02)
         cb.set_label(r"$U/U_{\infty}$")
-        plt.hold(True)
         # Make quiver plot of v and w velocities
         Q = plt.quiver(self.y_R, self.z_H, self.df.mean_v/self.U_infty,
                        self.df.mean_w/self.U_infty, width=0.0022, scale=3,
@@ -438,7 +437,6 @@ class WakeMap(object):
             cb = plt.colorbar(cs, shrink=0.785, extend="both",
                               orientation="vertical", pad=0.02)
         cb.set_label(r"$\Delta U$ (\%)")
-        plt.hold(True)
         # Make quiver plot of v and w velocities
         Q = plt.quiver(self.y_R, self.z_H, mean_v_diff,
                        mean_w_diff, width=0.0022, edgecolor="none", scale=3)
@@ -510,7 +508,7 @@ def plot_trans_wake_profile(ax=None, quantity="mean_u", U_infty=0.4, z_H=0.0,
     """
     Re_D = U_infty*D/nu
     label = "{:.1f}e6".format(Re_D/1e6)
-    section = "Wake-" + str(U_infty)
+    section = f"Wake-{U_infty:.1f}"
     df = pd.read_csv(os.path.join("Data", "Processed", section+".csv"))
     df = df[df.z_H==z_H]
     q = df[quantity]
@@ -1021,7 +1019,6 @@ def plot_vel_spec(U_infty, y_R, z_H, n_band_ave=4, plot_conf_int=False,
     if plot_lines:
         f_line = np.linspace(10,40)
         spec_line = f_line**(-5./3)*0.5*1e-2
-        plt.hold(True)
         plt.loglog(f_line, spec_line, "black")
         plt.ylim((1e-8, 1e-1))
         plot_vertical_lines([1, 3, 6, 9], color="lightgray")
