@@ -1,0 +1,10 @@
+stages:
+  build-docker:
+    cmd: calkit build-docker rvat-re-dep -i Dockerfile
+    deps:
+    - Dockerfile
+    outs:
+    - Dockerfile-lock.json:
+        cache: false
+        persist: true
+    always_changed: true

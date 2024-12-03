@@ -1,0 +1,8 @@
+environments:
+  main:
+    kind: docker
+    image: rvat-re-dep
+    wdir: /work
+    path: Dockerfile
+    stage: build-docker
+    description: A custom Python 3.6 environment
