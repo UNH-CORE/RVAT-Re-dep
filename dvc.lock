@@ -5,13 +5,13 @@ stages:
     deps:
     - path: Dockerfile
       hash: md5
-      md5: a7f2668f17bcd48abae4883436ed7e64
-      size: 134
+      md5: 1f44b69ebb9e27b16170e6c916e402a4
+      size: 372
     outs:
     - path: Dockerfile-lock.json
       hash: md5
-      md5: d9959817605b79e9f7d0a158522097c5
-      size: 2077
+      md5: 01ad30a38db8717afefd6e835ab63100
+      size: 2259
   plot-perf-re-dep:
     cmd: calkit runenv -n main python plot.py perf_re_dep --save --no-show
     deps:
@@ -22,8 +22,8 @@ stages:
       nfiles: 19
     - path: Dockerfile-lock.json
       hash: md5
-      md5: d9959817605b79e9f7d0a158522097c5
-      size: 2077
+      md5: 01ad30a38db8717afefd6e835ab63100
+      size: 2259
     - path: plot.py
       hash: md5
       md5: ce7e27bd5ab6aa407723c4002889a705
@@ -35,5 +35,5 @@ stages:
     outs:
     - path: Figures/perf_re_dep.pdf
       hash: md5
-      md5: a072c5057fffe393933b2482186acb93
+      md5: d1fd20f6145bee9bf6907ce5dfe02846
       size: 15291
