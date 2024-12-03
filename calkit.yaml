@@ -5,4 +5,5 @@ environments:
     wdir: /work
     path: Dockerfile
     stage: build-docker
+    platform: linux/amd64
     description: A custom Python 3.6 environment
