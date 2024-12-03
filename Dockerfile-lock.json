@@ -1,0 +1,59 @@
+[
+    {
+        "RepoTags": [
+            "rvat-re-dep:latest"
+        ],
+        "Parent": "",
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2024-12-03T16:51:29.45879126Z",
+        "Author": "",
+        "Config": {
+            "Hostname": "",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "LANG=C.UTF-8",
+                "LC_ALL=C.UTF-8"
+            ],
+            "Cmd": [
+                "/bin/bash"
+            ],
+            "ArgsEscaped": true,
+            "Image": "",
+            "Volumes": null,
+            "WorkingDir": "/work",
+            "Entrypoint": [
+                "/usr/bin/tini",
+                "--"
+            ],
+            "OnBuild": null,
+            "Labels": null
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 1632591402,
+        "GraphDriver": {
+            "Data": null,
+            "Name": "overlayfs"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:0f3a12fef684003e8dc0dfdcea32789db2179c6f9ad1e1e89bc05754ac44c6c5",
+                "sha256:48768004f9f8c96cc87695694a8585815a4914d425f1c15671108d14c142a573",
+                "sha256:82ad0684c2340b474e3d47ccdf67dd6bc99af9f28d568fe744ee7641eb6ee46d",
+                "sha256:248c9669afaed92813e5e1000c6c40ad0b991b04a044d07c24ecc59b433f9441",
+                "sha256:ca9c387cde81120457f24441cb8738ef07ad37b56de75354a66f7cd0e3f1d3af",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+            ]
+        },
+        "DockerfileMD5": "f4b95aead3450251b281b0a109cefedc"
+    }
+]

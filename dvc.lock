@@ -1,0 +1,14 @@
+schema: '2.0'
+stages:
+  build-docker:
+    cmd: calkit build-docker rvat-re-dep -i Dockerfile
+    deps:
+    - path: Dockerfile
+      hash: md5
+      md5: f4b95aead3450251b281b0a109cefedc
+      size: 64
+    outs:
+    - path: Dockerfile-lock.json
+      hash: md5
+      md5: 420d31c92489d983fb97db653d015cbe
+      size: 1951
