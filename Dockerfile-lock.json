@@ -5,7 +5,7 @@
         ],
         "Parent": "",
         "Comment": "buildkit.dockerfile.v0",
-        "Created": "2024-12-03T16:51:29.45879126Z",
+        "Created": "2024-12-03T16:57:31.216317344Z",
         "Author": "",
         "Config": {
             "Hostname": "",
@@ -20,7 +20,8 @@
             "Env": [
                 "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
                 "LANG=C.UTF-8",
-                "LC_ALL=C.UTF-8"
+                "LC_ALL=C.UTF-8",
+                "MPLBACKEND=Agg"
             ],
             "Cmd": [
                 "/bin/bash"
@@ -38,7 +39,7 @@
         },
         "Architecture": "amd64",
         "Os": "linux",
-        "Size": 1632591402,
+        "Size": 1632630931,
         "GraphDriver": {
             "Data": null,
             "Name": "overlayfs"
@@ -50,10 +51,11 @@
                 "sha256:48768004f9f8c96cc87695694a8585815a4914d425f1c15671108d14c142a573",
                 "sha256:82ad0684c2340b474e3d47ccdf67dd6bc99af9f28d568fe744ee7641eb6ee46d",
                 "sha256:248c9669afaed92813e5e1000c6c40ad0b991b04a044d07c24ecc59b433f9441",
-                "sha256:ca9c387cde81120457f24441cb8738ef07ad37b56de75354a66f7cd0e3f1d3af",
+                "sha256:39309ec8c16f73dd32965567553147d49ec260387638a900383aa320bdf71b8e",
+                "sha256:1420b3b03e0b0b6294ca076d384a3cc6dd10fec2c6f72a96ddee5ce13ee650fc",
                 "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
             ]
         },
-        "DockerfileMD5": "f4b95aead3450251b281b0a109cefedc"
+        "DockerfileMD5": "a7f2668f17bcd48abae4883436ed7e64"
     }
 ]
