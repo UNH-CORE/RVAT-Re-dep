@@ -8,3 +8,19 @@ stages:
           cache: false
           persist: true
     always_changed: true
+  plot-perf-re-dep:
+    cmd: calkit runenv -n main python plot.py perf_re_dep --save --no-show
+    deps:
+      - plot.py
+      - pyrvatrd/plotting.py
+      - Data/Processed
+      - Dockerfile-lock.json
+    outs:
+      - Figures/perf_re_dep.pdf
+    meta:
+      calkit:
+        type: figure
+        title: Turbine performance Reynolds number dependence
+        description: >
+          Power and drag (or thrust) curves as a function of Reynolds number,
+          computed with both the turbine diameter and blade chord length.

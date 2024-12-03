@@ -7,3 +7,10 @@ environments:
     stage: build-docker
     platform: linux/amd64
     description: A custom Python 3.6 environment
+figures:
+  - path: Figures/perf_re_dep.pdf
+    title: Turbine performance Reynolds number dependence
+    description: >
+      Power and drag (or thrust) curves as a function of Reynolds number,
+      computed with both the turbine diameter and blade chord length.
+    stage: plot-perf-re-dep
