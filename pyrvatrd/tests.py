@@ -22,10 +22,12 @@ def test_run():
     run.print_perf_stats()
     print("PASS")
 
+
 def test_section():
     print("Testing Section class")
     section = Section("Wake-1.0")
     print("PASS")
+
 
 def test_batch_process_section():
     print("Testing batch_process_section")
@@ -36,11 +38,13 @@ def test_batch_process_section():
     plt.plot(df.mean_tsr, df.mean_cp)
     plt.show()
 
+
 def test_perf_curve():
     print("Testing PerfCurve class")
     pc = PerfCurve(0.6)
     pc.plotcp()
     print("PASS")
+
 
 def test_wake_profile():
     print("Testing WakeProfile class")
@@ -48,15 +52,17 @@ def test_wake_profile():
     wp.plot("mean_u")
     print("PASS")
 
+
 def test_wake_map():
     print("Testing WakeMap class")
     wm = WakeMap(0.4)
     wm.plot_meancontquiv()
     wm2 = WakeMap(1.2)
     wm2.plot_meancontquiv()
-#    wm.plot_diff(quantity="mean_w", U_infty_diff=0.6)
-#    wm.plot_meancontquiv_diff(0.8, percent=False)
+    #    wm.plot_diff(quantity="mean_w", U_infty_diff=0.6)
+    #    wm.plot_meancontquiv_diff(0.8, percent=False)
     print("PASS")
+
 
 def test_process_section_parallel():
     nproc = 4
@@ -71,10 +77,11 @@ def test_process_section_parallel():
         r = Run(s.name, n)
         df = df.append(r.summary, ignore_index=True)
     print("Serial elapsed time: {} seconds".format(time.time() - t0))
-    assert(np.all(s.data.run == df.run))
-    assert(np.all(s.data.mean_cp == df.mean_cp))
-    assert(np.all(s.data.mean_cd == df.mean_cd))
+    assert np.all(s.data.run == df.run)
+    assert np.all(s.data.mean_cp == df.mean_cp)
+    assert np.all(s.data.mean_cd == df.mean_cd)
     print("PASS")
+
 
 def test_batch_process_section_vs_parallel():
     name = "Perf-1.0"
@@ -84,6 +91,7 @@ def test_batch_process_section_vs_parallel():
     t0 = time.time()
     Section(name).process()
     print(time.time() - t0)
+
 
 def test_download_raw():
     """Tests the `processing.download_raw` function."""
@@ -103,7 +111,7 @@ def test_download_raw():
         if exists:
             with open(fpath_temp) as f:
                 content_old = f.read()
-            assert(content_new == content_old)
+            assert content_new == content_old
     except ValueError as e:
         print(e)
     os.remove(fpath)
@@ -111,10 +119,12 @@ def test_download_raw():
         os.rename(fpath_temp, fpath)
     print("PASS")
 
+
 def test_plot_settling():
     print("Testing plotting.plot_settling")
     plot_settling(1.0)
     print("PASS")
+
 
 def test_calc_mom_transport():
     print("Testing WakeMap.calc_mom_transport")
@@ -153,6 +163,7 @@ def test_all():
     test_plot_settling()
     test_calc_mom_transport()
     print("All tests passed")
+
 
 if __name__ == "__main__":
     pass
