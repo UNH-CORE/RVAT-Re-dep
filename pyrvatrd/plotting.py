@@ -27,12 +27,12 @@ class PerfCurve(object):
         self.tow_speed = tow_speed
         self.Re_D = tow_speed * D / nu
         self.section = "Perf-{}".format(tow_speed)
-        self.raw_data_dir = os.path.join("Data", "Raw", self.section)
+        self.raw_data_dir = os.path.join(RAW_DATA_DIR, self.section)
         self.df = pd.read_csv(
-            os.path.join("Data", "Processed", self.section + ".csv")
+            os.path.join(PROCESSED_DATA_DIR, self.section + ".csv")
         )
         self.testplan = pd.read_csv(
-            os.path.join("Config", "Test plan", self.section + ".csv")
+            os.path.join(TEST_PLAN_DIR, self.section + ".csv")
         )
         self.label = r"$Re_D = {:.1f} \times 10^6$".format(self.Re_D / 1e6)
 
@@ -120,7 +120,7 @@ class WakeProfile(object):
         self.z_H = z_H
         self.section = "Wake-" + str(tow_speed)
         self.testplan = pd.read_csv(
-            os.path.join("Config", "Test plan", self.section + ".csv")
+            os.path.join(TEST_PLAN_DIR, self.section + ".csv")
         )
         self.runs = self.testplan.Run[self.testplan["z/H"] == z_H]
         self.quantity = quantity
@@ -129,7 +129,7 @@ class WakeProfile(object):
     def load(self):
         """Loads the processed data"""
         self.df = pd.read_csv(
-            os.path.join(processed_data_dir, self.section + ".csv")
+            os.path.join(PROCESSED_DATA_DIR, self.section + ".csv")
         )
         self.df = self.df[self.df.z_H == self.z_H]
         self.y_R = self.df["y_R"]
@@ -743,7 +743,7 @@ def plot_trans_wake_profile(
     Re_D = U_infty * D / nu
     label = "{:.1f}e6".format(Re_D / 1e6)
     section = f"Wake-{U_infty:.1f}"
-    df = pd.read_csv(os.path.join("Data", "Processed", section + ".csv"))
+    df = pd.read_csv(os.path.join(PROCESSED_DATA_DIR, section + ".csv"))
     df = df[df.z_H == z_H]
     q = df[quantity]
     y_R = df.y_R
@@ -796,7 +796,7 @@ def plot_perf_re_dep(
             section = "Perf-" + str(speeds[n])
         else:
             section = "Wake-" + str(speeds[n])
-        df = pd.read_csv(os.path.join("Data", "Processed", section + ".csv"))
+        df = pd.read_csv(os.path.join(PROCESSED_DATA_DIR, section + ".csv"))
         cp[n] = df.mean_cp.mean()
         cd[n] = df.mean_cd.mean()
         if errorbars:

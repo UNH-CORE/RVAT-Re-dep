@@ -45,8 +45,10 @@ nu = 1e-6
 chord = 0.14
 
 # Directory constants
-raw_data_dir = os.path.join("Data", "Raw")
-processed_data_dir = os.path.join("Data", "Processed")
+RAW_DATA_DIR = os.path.join("Data", "Raw")
+PROCESSED_DATA_DIR = os.path.join("Data", "Processed")
+CONFIG_DIR = "Config"
+TEST_PLAN_DIR = os.path.join(CONFIG_DIR, "Test plan")
 
 
 def calc_b_vec(vel):
@@ -82,7 +84,7 @@ class Run(object):
     def __init__(self, section, nrun):
         self.section = section
         nrun = int(nrun)
-        section_raw_dir = os.path.join("Data", "Raw", section)
+        section_raw_dir = os.path.join(RAW_DATA_DIR, section)
         if nrun < 0:
             runs = []
             for f in os.listdir(section_raw_dir):
@@ -237,7 +239,7 @@ class Run(object):
         download_raw(self.section, self.nrun, name)
 
     def subtract_tare_drag(self):
-        df = pd.read_csv(os.path.join("Data", "Processed", "Tare drag.csv"))
+        df = pd.read_csv(os.path.join(PROCESSED_DATA_DIR, "Tare drag.csv"))
         self.tare_drag = df.tare_drag[
             df.tow_speed == self.tow_speed_nom
         ].values[0]
@@ -747,10 +749,8 @@ class Run(object):
 class Section(object):
     def __init__(self, name):
         self.name = name
-        self.processed_path = os.path.join(processed_data_dir, name + ".csv")
-        self.test_plan_path = os.path.join(
-            "Config", "Test plan", name + ".csv"
-        )
+        self.processed_path = os.path.join(PROCESSED_DATA_DIR, name + ".csv")
+        self.test_plan_path = os.path.join(TEST_PLAN_DIR, name + ".csv")
         self.load()
 
     def load(self):
@@ -802,7 +802,7 @@ def process_latest_run(section):
     printing a summary to the shell.
     """
     print("Processing latest run in", section)
-    raw_dir = os.path.join("Data", "Raw", section)
+    raw_dir = os.path.join(RAW_DATA_DIR, section)
     dirlist = [
         os.path.join(raw_dir, d)
         for d in os.listdir(raw_dir)
@@ -820,7 +820,7 @@ def process_latest_run(section):
 
 
 def load_test_plan_section(section):
-    df = pd.read_csv(os.path.join("Config", "Test plan", section + ".csv"))
+    df = pd.read_csv(os.path.join(TEST_PLAN_DIR, section + ".csv"))
     df = df.dropna(how="all", axis=1).dropna(how="all", axis=0)
     if "Run" in df:
         df["Run"] = df["Run"].astype(int)
@@ -874,7 +874,7 @@ def process_tare_drag(nrun, plot=False):
         1.3: (7, 19),
         1.4: (6, 18),
     }
-    rdpath = os.path.join(raw_data_dir, "Tare drag", str(nrun))
+    rdpath = os.path.join(RAW_DATA_DIR, "Tare drag", str(nrun))
     with open(os.path.join(rdpath, "metadata.json")) as f:
         metadata = json.load(f)
     speed = float(metadata["Tow speed (m/s)"])
@@ -994,12 +994,13 @@ def download_raw(section, nrun, name):
     else:
         filename = name
     print("Downloading", filename, "from", section, "run", nrun)
-    local_dir = os.path.join("Data", "Raw", section, str(nrun))
+    local_dir = os.path.join(RAW_DATA_DIR, section, str(nrun))
     if not os.path.isdir(local_dir):
         os.makedirs(local_dir)
     local_path = os.path.join(local_dir, filename)
     remote_name = make_remote_name(local_path)
-    with open("Config/raw_data_urls.json") as f:
+    raw_data_urls_fpath = os.path.join(CONFIG_DIR, "raw_data_urls.json")
+    with open(raw_data_urls_fpath) as f:
         urls = json.load(f)
     url = urls[remote_name]
     pbar = progressbar.ProgressBar()
