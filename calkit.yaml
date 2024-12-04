@@ -14,3 +14,8 @@ figures:
       Power and drag (or thrust) curves as a function of Reynolds number,
       computed with both the turbine diameter and blade chord length.
     stage: plot-perf-re-dep
+  - path: Figures/mean_u_k_profiles.pdf
+    title: Wake profiles
+    description: >
+      Mean streamwise velocity and turbulence kinetic energy.
+    stage: plot-wake-profiles

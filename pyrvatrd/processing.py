@@ -729,11 +729,9 @@ class Run(object):
             self.load()
         plt.figure()
         plt.plot(self.time_acs, self.rpm_acs)
-        plt.hold(True)
         plt.plot(self.time_ni, self.rpm_ni)
         plt.figure()
         plt.plot(self.time_ni, self.tow_speed_ni)
-        plt.hold(True)
         plt.plot(self.time_acs, self.tow_speed_acs)
         plt.show()
 
