@@ -84,3 +84,17 @@ stages:
         title: Mean momentum transport
         description: >
           Terms in the mean streamwise momentum transport equation.
+  plot-mean-cont-quiv:
+    cmd: calkit runenv -n main python plot.py all_meancontquiv --save --no-show
+    deps:
+      - plot.py
+      - pyrvatrd/plotting.py
+      - pyrvatrd/processing.py
+      - Data/Processed
+      - Dockerfile-lock.json
+    outs:
+      - Figures/meancontquiv_04.pdf
+      - Figures/meancontquiv_06.pdf
+      - Figures/meancontquiv_08.pdf
+      - Figures/meancontquiv_10.pdf
+      - Figures/meancontquiv_12.pdf
