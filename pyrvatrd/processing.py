@@ -899,7 +899,10 @@ def batch_process_tare_torque(plot=False):
 
 
 def make_remote_name(local_path):
-    return "_".join(local_path.split("\\")[-3:])
+    path = os.path.normpath(local_path)
+    split_path = path.split(os.sep)
+    remote_name = "_".join(split_path[-3:])
+    return remote_name
 
 
 def download_raw(section, nrun, name):
