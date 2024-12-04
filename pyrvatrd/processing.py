@@ -194,7 +194,7 @@ class Run(object):
         self.drag = nidata["drag_left"] + nidata["drag_right"]
         # Remove offsets from drag, not torque
         t0 = 2
-        self.drag = self.drag - np.mean(self.drag[0 : self.sr_ni * t0])
+        self.drag = self.drag - np.mean(self.drag[0 : int(self.sr_ni * t0)])
         # Compute RPM and omega
         self.angle = nidata["turbine_angle"]
         self.rpm_ni = fdiff.second_order_diff(self.angle, self.time_ni) / 6.0
@@ -289,63 +289,49 @@ class Run(object):
         # Trim performance quantities
         self.time_ni_all = self.time_ni
         self.time_perf_all = self.time_ni
-        self.time_ni = self.time_ni_all[
-            self.t1 * self.sr_ni : self.t2 * self.sr_ni
-        ]
+        idx1, idx2 = int(self.t1 * self.sr_ni), int(self.t2 * self.sr_ni)
+        self.time_ni = self.time_ni_all[idx1:idx2]
         self.time_perf = self.time_ni
         self.angle_all = self.angle
-        self.angle = self.angle_all[
-            self.t1 * self.sr_ni : self.t2 * self.sr_ni
-        ]
+        self.angle = self.angle_all[idx1:idx2]
         self.torque_all = self.torque
-        self.torque = self.torque_all[
-            self.t1 * self.sr_ni : self.t2 * self.sr_ni
-        ]
+        self.torque = self.torque_all[idx1:idx2]
         self.torque_arm_all = self.torque_arm
-        self.torque_arm = self.torque_arm_all[
-            self.t1 * self.sr_ni : self.t2 * self.sr_ni
-        ]
+        self.torque_arm = self.torque_arm_all[idx1:idx2]
         self.omega_all = self.omega
-        self.omega = self.omega_all[
-            self.t1 * self.sr_ni : self.t2 * self.sr_ni
-        ]
+        self.omega = self.omega_all[idx1:idx2]
         self.tow_speed_all = self.tow_speed
         if self.lin_enc:
-            self.tow_speed = self.tow_speed_all[
-                self.t1 * self.sr_ni : self.t2 * self.sr_ni
-            ]
+            self.tow_speed = self.tow_speed_all[idx1:idx2]
         self.tsr_all = self.tsr
-        self.tsr = self.tsr_all[self.t1 * self.sr_ni : self.t2 * self.sr_ni]
+        self.tsr = self.tsr_all[idx1:idx2]
         self.cp_all = self.cp
-        self.cp = self.cp_all[self.t1 * self.sr_ni : self.t2 * self.sr_ni]
+        self.cp = self.cp_all[idx1:idx2]
         self.ct_all = self.ct
-        self.ct = self.ct_all[self.t1 * self.sr_ni : self.t2 * self.sr_ni]
+        self.ct = self.ct_all[idx1:idx2]
         self.cd_all = self.cd
-        self.cd = self.cd_all[self.t1 * self.sr_ni : self.t2 * self.sr_ni]
+        self.cd = self.cd_all[idx1:idx2]
         self.rpm_ni_all = self.rpm_ni
-        self.rpm_ni = self.rpm_ni_all[
-            self.t1 * self.sr_ni : self.t2 * self.sr_ni
-        ]
+        self.rpm_ni = self.rpm_ni_all[idx1:idx2]
         self.rpm = self.rpm_ni
         self.rpm_all = self.rpm_ni_all
         self.drag_all = self.drag
-        self.drag = self.drag_all[self.t1 * self.sr_ni : self.t2 * self.sr_ni]
+        self.drag = self.drag_all[idx1:idx2]
         # Trim wake quantities
         self.time_vec_all = self.time_vec
-        self.time_vec = self.time_vec_all[
-            self.t1 * self.sr_vec : self.t2 * self.sr_vec
-        ]
+        idx1, idx2 = int(self.t1 * self.sr_vec), int(self.t2 * self.sr_vec)
+        self.time_vec = self.time_vec_all[idx1:idx2]
         self.u_all = self.u
-        self.u = self.u_all[self.t1 * self.sr_vec : self.t2 * self.sr_vec]
+        self.u = self.u_all[idx1:idx2]
         self.v_all = self.v
-        self.v = self.v_all[self.t1 * self.sr_vec : self.t2 * self.sr_vec]
+        self.v = self.v_all[idx1:idx2]
         self.w_all = self.w
-        self.w = self.w_all[self.t1 * self.sr_vec : self.t2 * self.sr_vec]
+        self.w = self.w_all[idx1:idx2]
 
     def find_t2(self):
         sr = self.sr_ni
-        angle1 = self.angle[sr * self.t1]
-        angle2 = self.angle[sr * self.t2]
+        angle1 = self.angle[int(sr * self.t1)]
+        angle2 = self.angle[int(sr * self.t2)]
         n3rdrevs = np.floor((angle2 - angle1) / 120.0)
         self.n_revs = int(np.floor((angle2 - angle1) / 360.0))
         self.n_blade_pass = int(n3rdrevs)
