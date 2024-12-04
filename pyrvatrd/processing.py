@@ -45,9 +45,10 @@ nu = 1e-6
 chord = 0.14
 
 # Directory constants
-RAW_DATA_DIR = os.path.join("Data", "Raw")
-PROCESSED_DATA_DIR = os.path.join("Data", "Processed")
-CONFIG_DIR = "Config"
+PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RAW_DATA_DIR = os.path.join(PROJECT_DIR, "Data", "Raw")
+PROCESSED_DATA_DIR = os.path.join(PROJECT_DIR, "Data", "Processed")
+CONFIG_DIR = os.path.join(PROJECT_DIR, "Config")
 TEST_PLAN_DIR = os.path.join(CONFIG_DIR, "Test plan")
 
 
