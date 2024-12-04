@@ -41,6 +41,9 @@ perf_curve.plotcp()
 ```
 
 See `notebook.ipynb` for more examples.
+Also see
+[this example project](https://github.com/petebachant/reuse-rvat-re-dep)
+for a demo of how this data can be reused elsewhere.
 
 ## Contributing
 
