@@ -146,3 +146,16 @@ stages:
         description: >
           Normalized transport contributions to the mean streamwise momentum
           and kinetic energy.
+  make-vel-unc-table:
+    cmd: calkit runenv -n main python plot.py vel_unc_table --save --no-show
+    deps:
+      - plot.py
+      - pyrvatrd/plotting.py
+      - pyrvatrd/processing.py
+      - Data/Processed
+      - Dockerfile-lock.json
+    outs:
+      - Tables/mean_vel_unc.csv:
+          cache: false
+      - Tables/mean_vel_unc.tex:
+          cache: false
