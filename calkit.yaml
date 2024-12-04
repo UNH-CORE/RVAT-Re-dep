@@ -96,3 +96,7 @@ notebooks:
     description: >
       Computing uncertainty for the various experimental quantities of
       interest.
+questions:
+  - If one wanted to use a physical model test to predict full-scale cross-flow
+    turbine performance, what is the lowest Reynolds number at which reasonable
+    accuracy could be achieved?
