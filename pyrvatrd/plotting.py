@@ -156,7 +156,7 @@ class WakeProfile(object):
         if quantity == "std_u":
             q = q / self.tow_speed
             ylab = r"$\sigma_u/U_\infty$"
-        if quantity is "mean_upvp":
+        if quantity == "mean_upvp":
             q = q / (self.tow_speed**2)
             ylab = r"$\overline{u'v'}/U_\infty^2$"
         if newfig:
@@ -680,7 +680,7 @@ class WakeMapDiff(WakeMap):
         )
 
     def plot_mean_u(self):
-        self.plot_contours(self.mean_u, label="$U_{\mathrm{diff}}$")
+        self.plot_contours(self.mean_u, label=r"$U_{\mathrm{diff}}$")
 
 
 def plot_trans_wake_profile(
