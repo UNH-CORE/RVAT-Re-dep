@@ -60,3 +60,9 @@ figures:
     description: >
       Rotor drag (or thrust) coefficient curves at multiple Reynolds numbers.
     stage: plot-perf-curves
+notebooks:
+  - path: Documents/IPython notebooks/uncertainty.ipynb
+    title: Uncertainty analysis
+    description: >
+      Computing uncertainty for the various experimental quantities of
+      interest.
