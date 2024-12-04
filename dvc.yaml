@@ -98,3 +98,17 @@ stages:
       - Figures/meancontquiv_08.pdf
       - Figures/meancontquiv_10.pdf
       - Figures/meancontquiv_12.pdf
+  plot-k-contours:
+    cmd: calkit runenv -n main python plot.py all_kcont --save --no-show
+    deps:
+      - plot.py
+      - pyrvatrd/plotting.py
+      - pyrvatrd/processing.py
+      - Data/Processed
+      - Dockerfile-lock.json
+    outs:
+      - Figures/k_contours_04.pdf
+      - Figures/k_contours_06.pdf
+      - Figures/k_contours_08.pdf
+      - Figures/k_contours_10.pdf
+      - Figures/k_contours_12.pdf
