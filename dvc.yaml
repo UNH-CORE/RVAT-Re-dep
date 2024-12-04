@@ -52,3 +52,19 @@ stages:
         title: Wake profiles
         description: >
           Mean streamwise velocity and turbulence kinetic energy.
+  plot-k-bar-graph:
+    cmd: calkit runenv -n main python plot.py k_bar_graph --save --no-show
+    deps:
+      - plot.py
+      - pyrvatrd/plotting.py
+      - pyrvatrd/processing.py
+      - Data/Processed
+      - Dockerfile-lock.json
+    outs:
+      - Figures/K_trans_bar_graph.pdf
+    meta:
+      calkit:
+        type: figure
+        title: Mean kinetic energy transport
+        description: >
+          Terms in the mean kinetic energy transport equation.
