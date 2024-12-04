@@ -1,3 +1,10 @@
+datasets:
+  - path: Data/Processed
+    title: Processed data
+    description: The processed/reduced dataset.
+  - path: Data/Raw
+    title: Raw data
+    description: The raw high frequency data.
 environments:
   main:
     kind: docker
