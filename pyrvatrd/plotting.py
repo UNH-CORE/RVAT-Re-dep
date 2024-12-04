@@ -185,9 +185,11 @@ class WakeMap(object):
     def load(self):
         self.df = pd.DataFrame()
         self.y_R = WakeProfile(self.U_infty, 0, "mean_u").y_R.values
+        dfs = []
         for z_H in self.z_H:
             wp = WakeProfile(self.U_infty, z_H, "mean_u")
-            self.df = self.df.append(wp.df, ignore_index=True)
+            dfs.append(wp.df)
+        self.df = pd.concat(dfs)
         self.mean_u = self.df.mean_u
         self.mean_v = self.df.mean_v
         self.mean_w = self.df.mean_w
@@ -507,7 +509,7 @@ class WakeMap(object):
                 fontproperties={"size": "small"},
             )
         self.turb_lines()
-        ax = plt.axes()
+        ax = plt.gca()
         ax.set_aspect(2)
         plt.yticks([0, 0.13, 0.25, 0.38, 0.5, 0.63])
         plt.tight_layout()
