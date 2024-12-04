@@ -107,8 +107,15 @@ class PerfCurve(object):
             plt.savefig(os.path.join(savedir, "cd_vs_tsr" + savetype))
 
 
+def load_perf_curve(tow_speed):
+    """Load a performance curve."""
+    return PerfCurve(tow_speed)
+
+
 class WakeProfile(object):
-    def __init__(self, tow_speed, z_H, quantity, orientation="horizontal"):
+    def __init__(
+        self, tow_speed, z_H, quantity=None, orientation="horizontal"
+    ):
         self.tow_speed = tow_speed
         self.z_H = z_H
         self.section = "Wake-" + str(tow_speed)
@@ -129,7 +136,7 @@ class WakeProfile(object):
 
     def plot(
         self,
-        quantity,
+        quantity=None,
         newfig=True,
         show=True,
         save=False,
@@ -138,6 +145,10 @@ class WakeProfile(object):
         linetype="--ok",
     ):
         """Plots some quantity"""
+        if quantity is None:
+            quantity = self.quantity
+        if quantity is None:
+            raise ValueError("Quantity must be specified")
         y_R = self.df["y_R"]
         q = self.df[quantity]
         loc = 1
@@ -145,20 +156,22 @@ class WakeProfile(object):
             q = q / self.tow_speed
             ylab = r"$U/U_\infty$"
             loc = 3
-        if quantity == "mean_w":
+        elif quantity == "mean_w":
             q = q / self.tow_speed
             ylab = r"$U/U_\infty$"
             loc = 4
-        if quantity == "mean_v":
+        elif quantity == "mean_v":
             q = q / self.tow_speed
             ylab = r"$V/U_\infty$"
             loc = 4
-        if quantity == "std_u":
+        elif quantity == "std_u":
             q = q / self.tow_speed
             ylab = r"$\sigma_u/U_\infty$"
-        if quantity == "mean_upvp":
+        elif quantity == "mean_upvp":
             q = q / (self.tow_speed**2)
             ylab = r"$\overline{u'v'}/U_\infty^2$"
+        else:
+            raise ValueError("Unknown quantity")
         if newfig:
             if quantity == "mean_u":
                 plt.figure(figsize=(7.5, 3.75))
@@ -166,13 +179,29 @@ class WakeProfile(object):
                 plt.figure()
             plt.ylabel(ylab)
             plt.xlabel(r"$y/R$")
-        plt.plot(y_R, q, "-.^k", label=r"$Re_D=0.4 \times 10^6$")
+        plt.plot(
+            y_R,
+            q,
+            "-.^k",
+            label=r"$Re_D={tow_speed:.1f} \times 10^6$".format(
+                tow_speed=self.tow_speed
+            ),
+        )
         plt.legend(loc=loc)
         plt.tight_layout()
         if show:
             plt.show()
         if save:
             plt.savefig(savedir + quantity + "_Re_dep_exp" + savetype)
+
+
+def load_wake_profile(tow_speed, z_h, quantity=None, orientation="horizontal"):
+    return WakeProfile(
+        tow_speed=tow_speed,
+        z_H=z_h,
+        quantity=quantity,
+        orientation=orientation,
+    )
 
 
 class WakeMap(object):
@@ -402,7 +431,7 @@ class WakeMap(object):
         cb.set_label(label)
         self.turb_lines(color="black")
         plt.ylim((0, 0.63))
-        ax = plt.axes()
+        ax = plt.gca()
         ax.set_aspect(2)
         plt.yticks([0, 0.13, 0.25, 0.38, 0.5, 0.63])
         plt.tight_layout()
@@ -551,7 +580,7 @@ class WakeMap(object):
         cb.set_label(ylabels[quantity + "_diff"])
         plt.xlabel(r"$y/R$")
         plt.ylabel(r"$z/H$")
-        plt.axes().set_aspect(2)
+        plt.gca().set_aspect(2)
         plt.yticks([0, 0.13, 0.25, 0.38, 0.5, 0.63])
         plt.tight_layout()
         if show:
@@ -636,7 +665,7 @@ class WakeMap(object):
         plt.ylabel(r"$z/H$")
         plt.ylim(-0.2, 0.78)
         plt.xlim(-3.2, 3.2)
-        plt.axes().set_aspect(2)
+        plt.gca().set_aspect(2)
         plt.yticks([0, 0.13, 0.25, 0.38, 0.5, 0.63])
         plt.tight_layout()
         if show:
@@ -683,6 +712,13 @@ class WakeMapDiff(WakeMap):
 
     def plot_mean_u(self):
         self.plot_contours(self.mean_u, label=r"$U_{\mathrm{diff}}$")
+
+
+def load_wake_map(tow_speed):
+    """Load a wake map (velocity measurements in a cross-stream--vertical
+    plane behind the rotor.)
+    """
+    return WakeMap(tow_speed)
 
 
 def plot_trans_wake_profile(
