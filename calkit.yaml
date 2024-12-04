@@ -40,3 +40,12 @@ figures:
       Normalized transport contributions to the mean streamwise momentum
       and kinetic energy.
     stage: plot-wake-trans-totals
+  - path: Figures/cp_curves.pdf
+    title: Power coefficient curves
+    description: Power coefficient curves at multiple Reynolds numbers.
+    stage: plot-perf-curves
+  - path: Figures/cd_curves.pdf
+    title: Drag coefficient curves
+    description: >
+      Rotor drag (or thrust) coefficient curves at multiple Reynolds numbers.
+    stage: plot-perf-curves
