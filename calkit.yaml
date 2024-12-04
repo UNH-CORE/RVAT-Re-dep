@@ -60,6 +60,36 @@ figures:
     description: >
       Rotor drag (or thrust) coefficient curves at multiple Reynolds numbers.
     stage: plot-perf-curves
+  - path: Figures/meancontquiv_04.pdf
+    title: Mean velocity at 0.4 m/s
+    description: >
+      Mean streamwise velocity contours and cross-stream/vertical
+      velocity vectors at a tow speed of 0.4 m/s.
+    stage: plot-mean-cont-quiv
+  - path: Figures/meancontquiv_06.pdf
+    title: Mean velocity at 0.6 m/s
+    description: >
+      Mean streamwise velocity contours and cross-stream/vertical
+      velocity vectors at a tow speed of 0.6 m/s.
+    stage: plot-mean-cont-quiv
+  - path: Figures/meancontquiv_08.pdf
+    title: Mean velocity at 0.8 m/s
+    description: >
+      Mean streamwise velocity contours and cross-stream/vertical
+      velocity vectors at a tow speed of 0.8 m/s.
+    stage: plot-mean-cont-quiv
+  - path: Figures/meancontquiv_10.pdf
+    title: Mean velocity at 1.0 m/s
+    description: >
+      Mean streamwise velocity contours and cross-stream/vertical
+      velocity vectors at a tow speed of 1.0 m/s.
+    stage: plot-mean-cont-quiv
+  - path: Figures/meancontquiv_12.pdf
+    title: Mean velocity at 1.2 m/s
+    description: >
+      Mean streamwise velocity contours and cross-stream/vertical
+      velocity vectors at a tow speed of 1.2 m/s.
+    stage: plot-mean-cont-quiv
 notebooks:
   - path: Documents/IPython notebooks/uncertainty.ipynb
     title: Uncertainty analysis
