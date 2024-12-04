@@ -129,3 +129,20 @@ stages:
         title: Wake spectra
         description: >
           Power spectral density of wake velocity at various Reynolds numbers.
+  plot-wake-trans-totals:
+    cmd: calkit runenv -n main python plot.py wake_trans_totals --save --no-show
+    deps:
+      - plot.py
+      - pyrvatrd/plotting.py
+      - pyrvatrd/processing.py
+      - Data/Processed
+      - Dockerfile-lock.json
+    outs:
+      - Figures/wake_trans_totals.pdf
+    meta:
+      calkit:
+        type: figure
+        title: Wake transport totals
+        description: >
+          Normalized transport contributions to the mean streamwise momentum
+          and kinetic energy.
