@@ -24,3 +24,8 @@ figures:
     description: >
       Terms in the mean kinetic energy transport equation.
     stage: plot-k-bar-graph
+  - path: Figures/mom_bar_graph.pdf
+    title: Mean momentum transport
+    description: >
+      Terms in the mean streamwise momentum transport equation.
+    stage: plot-mom-bar-graph
