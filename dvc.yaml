@@ -19,22 +19,6 @@ stages:
     outs:
       - Figures/cp_curves.pdf
       - Figures/cd_curves.pdf
-  plot-wake-profiles:
-    cmd: calkit runenv -n main python plot.py wake_profiles --save --no-show
-    deps:
-      - plot.py
-      - pyrvatrd/plotting.py
-      - pyrvatrd/processing.py
-      - Data/Processed
-      - Dockerfile-lock.json
-    outs:
-      - Figures/mean_u_k_profiles.pdf
-    meta:
-      calkit:
-        type: figure
-        title: Wake profiles
-        description: >
-          Mean streamwise velocity and turbulence kinetic energy.
   plot-perf-re-dep:
     cmd: calkit runenv -n main python plot.py perf_re_dep --save --no-show
     deps:
@@ -52,3 +36,19 @@ stages:
         description: >
           Power and drag (or thrust) curves as a function of Reynolds number,
           computed with both the turbine diameter and blade chord length.
+  plot-wake-profiles:
+    cmd: calkit runenv -n main python plot.py wake_profiles --save --no-show
+    deps:
+      - plot.py
+      - pyrvatrd/plotting.py
+      - pyrvatrd/processing.py
+      - Data/Processed
+      - Dockerfile-lock.json
+    outs:
+      - Figures/mean_u_k_profiles.pdf
+    meta:
+      calkit:
+        type: figure
+        title: Wake profiles
+        description: >
+          Mean streamwise velocity and turbulence kinetic energy.
