@@ -1,0 +1,170 @@
+stages:
+  build-docker:
+    cmd: calkit build-docker rvat-re-dep -i Dockerfile --platform linux/amd64
+    deps:
+    - Dockerfile
+    outs:
+    - Dockerfile-lock.json:
+        cache: false
+        persist: true
+    always_changed: true
+  plot-perf-curves:
+    cmd: calkit runenv -n main python plot.py perf_curves --save --no-show
+    deps:
+    - plot.py
+    - pyrvatrd/plotting.py
+    - pyrvatrd/processing.py
+    - Data/Processed
+    - Dockerfile-lock.json
+    outs:
+    - Figures/cp_curves.pdf
+    - Figures/cd_curves.pdf
+  plot-perf-re-dep:
+    cmd: calkit runenv -n main python plot.py perf_re_dep --save --no-show
+    deps:
+    - plot.py
+    - pyrvatrd/plotting.py
+    - pyrvatrd/processing.py
+    - Data/Processed
+    - Dockerfile-lock.json
+    outs:
+    - Figures/perf_re_dep.pdf
+    meta:
+      calkit:
+        type: figure
+        title: Turbine performance Reynolds number dependence
+        description: >
+          Power and drag (or thrust) curves as a function of Reynolds number,
+          computed with both the turbine diameter and blade chord length.
+  plot-wake-profiles:
+    cmd: calkit runenv -n main python plot.py wake_profiles --save --no-show
+    deps:
+    - plot.py
+    - pyrvatrd/plotting.py
+    - pyrvatrd/processing.py
+    - Data/Processed
+    - Dockerfile-lock.json
+    outs:
+    - Figures/mean_u_k_profiles.pdf
+    meta:
+      calkit:
+        type: figure
+        title: Wake profiles
+        description: >
+          Mean streamwise velocity and turbulence kinetic energy.
+  plot-k-bar-graph:
+    cmd: calkit runenv -n main python plot.py k_bar_graph --save --no-show
+    deps:
+    - plot.py
+    - pyrvatrd/plotting.py
+    - pyrvatrd/processing.py
+    - Data/Processed
+    - Dockerfile-lock.json
+    outs:
+    - Figures/K_trans_bar_graph.pdf
+    meta:
+      calkit:
+        type: figure
+        title: Mean kinetic energy transport
+        description: >
+          Terms in the mean kinetic energy transport equation.
+  plot-mom-bar-graph:
+    cmd: calkit runenv -n main python plot.py mom_bar_graph --save --no-show
+    deps:
+    - plot.py
+    - pyrvatrd/plotting.py
+    - pyrvatrd/processing.py
+    - Data/Processed
+    - Dockerfile-lock.json
+    outs:
+    - Figures/mom_bar_graph.pdf
+    meta:
+      calkit:
+        type: figure
+        title: Mean momentum transport
+        description: >
+          Terms in the mean streamwise momentum transport equation.
+  plot-mean-cont-quiv:
+    cmd: calkit runenv -n main python plot.py all_meancontquiv --save --no-show
+    deps:
+    - plot.py
+    - pyrvatrd/plotting.py
+    - pyrvatrd/processing.py
+    - Data/Processed
+    - Dockerfile-lock.json
+    outs:
+    - Figures/meancontquiv_04.pdf
+    - Figures/meancontquiv_06.pdf
+    - Figures/meancontquiv_08.pdf
+    - Figures/meancontquiv_10.pdf
+    - Figures/meancontquiv_12.pdf
+  plot-k-contours:
+    cmd: calkit runenv -n main python plot.py all_kcont --save --no-show
+    deps:
+    - plot.py
+    - pyrvatrd/plotting.py
+    - pyrvatrd/processing.py
+    - Data/Processed
+    - Dockerfile-lock.json
+    outs:
+    - Figures/k_contours_04.pdf
+    - Figures/k_contours_06.pdf
+    - Figures/k_contours_08.pdf
+    - Figures/k_contours_10.pdf
+    - Figures/k_contours_12.pdf
+  plot-wake-spectra:
+    cmd: calkit runenv -n main python plot.py multi_spec --save --no-show
+    deps:
+    - plot.py
+    - pyrvatrd/plotting.py
+    - pyrvatrd/processing.py
+    - Data/Processed
+    - Dockerfile-lock.json
+    - Data/Raw
+    outs:
+    - Figures/wake_spectra.pdf
+    meta:
+      calkit:
+        type: figure
+        title: Wake spectra
+        description: >
+          Power spectral density of wake velocity at various Reynolds numbers.
+  plot-wake-trans-totals:
+    cmd: calkit runenv -n main python plot.py wake_trans_totals --save --no-show
+    deps:
+    - plot.py
+    - pyrvatrd/plotting.py
+    - pyrvatrd/processing.py
+    - Data/Processed
+    - Dockerfile-lock.json
+    outs:
+    - Figures/wake_trans_totals.pdf
+    meta:
+      calkit:
+        type: figure
+        title: Wake transport totals
+        description: >
+          Normalized transport contributions to the mean streamwise momentum
+          and kinetic energy.
+  make-vel-unc-table:
+    cmd: calkit runenv -n main python plot.py vel_unc_table --save --no-show
+    deps:
+    - plot.py
+    - pyrvatrd/plotting.py
+    - pyrvatrd/processing.py
+    - Data/Processed
+    - Dockerfile-lock.json
+    outs:
+    - Tables/mean_vel_unc.csv:
+        cache: false
+    - Tables/mean_vel_unc.tex:
+        cache: false
+  check-conda-env:
+    cmd: calkit check-conda-env -f environment.yml
+    deps:
+    - environment.yml
+    outs:
+    - environment-lock.yml:
+        cache: false
+        persist: true
+    always_changed: true

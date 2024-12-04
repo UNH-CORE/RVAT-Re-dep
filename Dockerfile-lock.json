@@ -1,0 +1,61 @@
+[
+    {
+        "RepoTags": [
+            "rvat-re-dep:latest"
+        ],
+        "Parent": "",
+        "Comment": "buildkit.dockerfile.v0",
+        "Created": "2024-12-04T12:28:34.649151169Z",
+        "Author": "",
+        "Config": {
+            "Hostname": "",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "LANG=C.UTF-8",
+                "LC_ALL=C.UTF-8",
+                "MPLBACKEND=Agg"
+            ],
+            "Cmd": [
+                "/bin/bash"
+            ],
+            "ArgsEscaped": true,
+            "Image": "",
+            "Volumes": null,
+            "WorkingDir": "/work",
+            "Entrypoint": [
+                "/usr/bin/tini",
+                "--"
+            ],
+            "OnBuild": null,
+            "Labels": null
+        },
+        "Architecture": "amd64",
+        "Os": "linux",
+        "Size": 1633662550,
+        "GraphDriver": {
+            "Data": null,
+            "Name": "overlayfs"
+        },
+        "RootFS": {
+            "Type": "layers",
+            "Layers": [
+                "sha256:0f3a12fef684003e8dc0dfdcea32789db2179c6f9ad1e1e89bc05754ac44c6c5",
+                "sha256:48768004f9f8c96cc87695694a8585815a4914d425f1c15671108d14c142a573",
+                "sha256:82ad0684c2340b474e3d47ccdf67dd6bc99af9f28d568fe744ee7641eb6ee46d",
+                "sha256:248c9669afaed92813e5e1000c6c40ad0b991b04a044d07c24ecc59b433f9441",
+                "sha256:515eb4e81f385b337cbdae95a45d667e54c06ce23ea089e6a444b31007702a08",
+                "sha256:6d52f5a81c9c316c88e9ff47d173d838e2a3999102249e704fd3c72ccd685520",
+                "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
+            ]
+        },
+        "DockerfileMD5": "33f88aff8e870c342f15d9bbf9bbdc39"
+    }
+]

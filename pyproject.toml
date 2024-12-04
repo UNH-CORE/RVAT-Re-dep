@@ -1,0 +1,38 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[project]
+authors = [
+  {name = "Pete Bachant", email = "petebachant@gmail.com"},
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "numpy",
+  "scipy",
+  "pandas",
+  "seaborn",
+  "matplotlib",
+  "jupyter",
+  "h5py",
+  "pxl>=0.0.10"
+]
+description = "Python package for working with the UNH-RVAT Reynolds number dependence experimental data."
+dynamic = ["version"]
+name = "pyrvatrd"
+readme = "README.md"
+requires-python = ">=3.5"
+
+[project.urls]
+Homepage = "https://github.com/UNH-CORE/RVAT-Re-dep"
+Issues = "https://github.com/UNH-CORE/RVAT-Re-dep/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["pyrvatrd"]
+
+[tool.hatch.version]
+path = "pyrvatrd/__init__.py"
