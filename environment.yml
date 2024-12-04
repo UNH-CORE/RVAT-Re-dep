@@ -2,18 +2,11 @@ name: rvat-re-dep
 channels:
   - conda-forge
 dependencies:
+  - python=3.12
+  - pip
   - matplotlib
-  - nose
-  - numpy
-  - pandas[version='<2']
-  - python=3.11
-  - scipy
-  - ca-certificates
-  - certifi
-  - openssl
-  - h5py
+  - pandas
   - jupyter
-  - notebook
   - pip:
-      - progressbar33
-      - pxl
+      - pxl==0.0.10
+      - progressbar

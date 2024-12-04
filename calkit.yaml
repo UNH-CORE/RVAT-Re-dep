@@ -7,6 +7,10 @@ environments:
     stage: build-docker
     platform: linux/amd64
     description: A custom Python 3.6 environment
+  rvat-re-dep:
+    path: environment.yml
+    kind: conda
+    stage: check-conda-env
 figures:
   - path: Figures/perf_re_dep.pdf
     title: Turbine performance Reynolds number dependence
