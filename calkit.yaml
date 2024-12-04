@@ -29,3 +29,8 @@ figures:
     description: >
       Terms in the mean streamwise momentum transport equation.
     stage: plot-mom-bar-graph
+  - path: Figures/wake_spectra.pdf
+    title: Wake spectra
+    description: >
+      Power spectral density of wake velocity at various Reynolds numbers.
+    stage: plot-wake-spectra

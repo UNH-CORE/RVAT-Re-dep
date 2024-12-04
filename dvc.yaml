@@ -112,3 +112,20 @@ stages:
       - Figures/k_contours_08.pdf
       - Figures/k_contours_10.pdf
       - Figures/k_contours_12.pdf
+  plot-wake-spectra:
+    cmd: calkit runenv -n main python plot.py multi_spec --save --no-show
+    deps:
+      - plot.py
+      - pyrvatrd/plotting.py
+      - pyrvatrd/processing.py
+      - Data/Processed
+      - Dockerfile-lock.json
+      - Data/Raw
+    outs:
+      - Figures/wake_spectra.pdf
+    meta:
+      calkit:
+        type: figure
+        title: Wake spectra
+        description: >
+          Power spectral density of wake velocity at various Reynolds numbers.

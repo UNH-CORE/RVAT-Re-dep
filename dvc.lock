@@ -251,3 +251,37 @@ stages:
       hash: md5
       md5: 9da57f8f4ad604adea98e7ac915112df
       size: 20060
+  plot-wake-spectra:
+    cmd: calkit runenv -n main python plot.py multi_spec --save --no-show
+    deps:
+    - path: Data/Processed
+      hash: md5
+      md5: 4cb84fd93aad3d6f879c240458d624ae.dir
+      size: 1312275
+      nfiles: 19
+    - path: Data/Raw
+      hash: md5
+      md5: 970e0acbd8d7a5eb227fef633505d52c.dir
+      size: 138176361
+      nfiles: 42
+    - path: Dockerfile-lock.json
+      hash: md5
+      md5: 78c4abfbc49f62835aebd8064104af3a
+      size: 2077
+    - path: plot.py
+      hash: md5
+      md5: ce7e27bd5ab6aa407723c4002889a705
+      size: 3744
+    - path: pyrvatrd/plotting.py
+      hash: md5
+      md5: a752d7c0523690d4f04f18b03d8b82a5
+      size: 50282
+    - path: pyrvatrd/processing.py
+      hash: md5
+      md5: 2a73dcddac5770ae41133cab673412dd
+      size: 36057
+    outs:
+    - path: Figures/wake_spectra.pdf
+      hash: md5
+      md5: ecac7d7277215500e0d970629d87d388
+      size: 152032
