@@ -1,4 +1,4 @@
-FROM continuumio/anaconda3:4.1.0
+FROM continuumio/anaconda3:4.2.0
 
 ENV MPLBACKEND=Agg
 

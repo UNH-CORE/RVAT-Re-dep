@@ -5,7 +5,7 @@
         ],
         "Parent": "",
         "Comment": "buildkit.dockerfile.v0",
-        "Created": "2024-12-05T13:28:16.176303171Z",
+        "Created": "2024-12-05T13:25:22.540730549Z",
         "Author": "Kamil Kwiek <kamil.kwiek@continuum.io>",
         "Config": {
             "Hostname": "",
@@ -39,7 +39,7 @@
         },
         "Architecture": "amd64",
         "Os": "linux",
-        "Size": 619891490,
+        "Size": 688816651,
         "GraphDriver": {
             "Data": null,
             "Name": "overlayfs"
@@ -47,15 +47,15 @@
         "RootFS": {
             "Type": "layers",
             "Layers": [
-                "sha256:42755cf4ee95900a105b4e33452e787026ecdefffcc1992f961aa286dc3f7f95",
-                "sha256:118101814f3016e2715e8547d3021d01a2b89d58bb049908f3f0fc0811b7f1d0",
-                "sha256:591ab81d83cffcf211e354c8bc791e0f4b2142c494567136a070290bfeb83b7c",
-                "sha256:46225649272e5cbf32a5c71785bc1c1a418318d35b3493cae1811c1468ca9cb7",
-                "sha256:239e1135cd7a732ed920ec2caa6efea4a272ab80c39bbdf87463be632c282d61",
-                "sha256:888c7dbfd145d471c9d9a5c30bb121d11daa16851c7fb1ce0023807e73e15da7",
+                "sha256:9e63c5bce4585dd7038d830a1f1f4e44cb1a1515b00e620ac718e934b484c938",
+                "sha256:a2f9e5559ac85b274d633b35815ed63bfba49e85e2987f4a5a285de5e9c7bed3",
+                "sha256:084b9cb0d4cea1eec313f67f31ac2c062c581c3c04a58649d0ace1bb22c48366",
+                "sha256:258818e41a517e9472b291e1ae65e8bdf31bb72ef803cc4e9d545aade2462329",
+                "sha256:9d101e656f295dbab463c603c95d0bd6b38c46645143961212f247c1d11511dd",
+                "sha256:f4e39056c747194713839433436a9766f26ff3602e6397f773d5af474d9d5579",
                 "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
             ]
         },
-        "DockerfileMD5": "8a95c9406fdd38dbad0975318a403470"
+        "DockerfileMD5": "7b471c1c9ad23cf7058bee1d6f5a431d"
     }
 ]
