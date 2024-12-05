@@ -5,8 +5,8 @@
         ],
         "Parent": "",
         "Comment": "buildkit.dockerfile.v0",
-        "Created": "2024-12-04T12:28:34.649151169Z",
-        "Author": "",
+        "Created": "2024-12-05T13:28:16.176303171Z",
+        "Author": "Kamil Kwiek <kamil.kwiek@continuum.io>",
         "Config": {
             "Hostname": "",
             "Domainname": "",
@@ -39,7 +39,7 @@
         },
         "Architecture": "amd64",
         "Os": "linux",
-        "Size": 1633662550,
+        "Size": 619891490,
         "GraphDriver": {
             "Data": null,
             "Name": "overlayfs"
@@ -47,15 +47,15 @@
         "RootFS": {
             "Type": "layers",
             "Layers": [
-                "sha256:0f3a12fef684003e8dc0dfdcea32789db2179c6f9ad1e1e89bc05754ac44c6c5",
-                "sha256:48768004f9f8c96cc87695694a8585815a4914d425f1c15671108d14c142a573",
-                "sha256:82ad0684c2340b474e3d47ccdf67dd6bc99af9f28d568fe744ee7641eb6ee46d",
-                "sha256:248c9669afaed92813e5e1000c6c40ad0b991b04a044d07c24ecc59b433f9441",
-                "sha256:515eb4e81f385b337cbdae95a45d667e54c06ce23ea089e6a444b31007702a08",
-                "sha256:6d52f5a81c9c316c88e9ff47d173d838e2a3999102249e704fd3c72ccd685520",
+                "sha256:42755cf4ee95900a105b4e33452e787026ecdefffcc1992f961aa286dc3f7f95",
+                "sha256:118101814f3016e2715e8547d3021d01a2b89d58bb049908f3f0fc0811b7f1d0",
+                "sha256:591ab81d83cffcf211e354c8bc791e0f4b2142c494567136a070290bfeb83b7c",
+                "sha256:46225649272e5cbf32a5c71785bc1c1a418318d35b3493cae1811c1468ca9cb7",
+                "sha256:239e1135cd7a732ed920ec2caa6efea4a272ab80c39bbdf87463be632c282d61",
+                "sha256:888c7dbfd145d471c9d9a5c30bb121d11daa16851c7fb1ce0023807e73e15da7",
                 "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef"
             ]
         },
-        "DockerfileMD5": "33f88aff8e870c342f15d9bbf9bbdc39"
+        "DockerfileMD5": "8a95c9406fdd38dbad0975318a403470"
     }
 ]

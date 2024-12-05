@@ -5,13 +5,13 @@ stages:
     deps:
     - path: Dockerfile
       hash: md5
-      md5: 33f88aff8e870c342f15d9bbf9bbdc39
-      size: 142
+      md5: 8a95c9406fdd38dbad0975318a403470
+      size: 307
     outs:
     - path: Dockerfile-lock.json
       hash: md5
-      md5: 78c4abfbc49f62835aebd8064104af3a
-      size: 2077
+      md5: 8b1a5ee411f6ff5af49f3bde93f73e63
+      size: 2114
   plot-perf-re-dep:
     cmd: calkit runenv -n main python plot.py perf_re_dep --save --no-show
     deps:
@@ -22,25 +22,25 @@ stages:
       nfiles: 19
     - path: Dockerfile-lock.json
       hash: md5
-      md5: 78c4abfbc49f62835aebd8064104af3a
-      size: 2077
+      md5: 8b1a5ee411f6ff5af49f3bde93f73e63
+      size: 2114
     - path: plot.py
       hash: md5
       md5: ce7e27bd5ab6aa407723c4002889a705
       size: 3744
     - path: pyrvatrd/plotting.py
       hash: md5
-      md5: b63cc156587d5be7de7222eed8325199
-      size: 51152
+      md5: e90890da327e31b882ce40fd1ea3b737
+      size: 47644
     - path: pyrvatrd/processing.py
       hash: md5
-      md5: d2048d99170f2e00691e3aee209841f4
-      size: 36283
+      md5: 1a1ee7e44eb287199e4c9c0eec3bd6a3
+      size: 35800
     outs:
     - path: Figures/perf_re_dep.pdf
       hash: md5
-      md5: ab65af53d22737a2c02f21bb51783866
-      size: 15291
+      md5: a1928b83168e4054da7385ba5eb1bc17
+      size: 22898
   plot-perf-curves:
     cmd: calkit runenv -n main python plot.py perf_curves --save --no-show
     deps:
@@ -51,29 +51,29 @@ stages:
       nfiles: 19
     - path: Dockerfile-lock.json
       hash: md5
-      md5: 78c4abfbc49f62835aebd8064104af3a
-      size: 2077
+      md5: 8b1a5ee411f6ff5af49f3bde93f73e63
+      size: 2114
     - path: plot.py
       hash: md5
       md5: ce7e27bd5ab6aa407723c4002889a705
       size: 3744
     - path: pyrvatrd/plotting.py
       hash: md5
-      md5: b63cc156587d5be7de7222eed8325199
-      size: 51152
+      md5: e90890da327e31b882ce40fd1ea3b737
+      size: 47644
     - path: pyrvatrd/processing.py
       hash: md5
-      md5: d2048d99170f2e00691e3aee209841f4
-      size: 36283
+      md5: 1a1ee7e44eb287199e4c9c0eec3bd6a3
+      size: 35800
     outs:
     - path: Figures/cd_curves.pdf
       hash: md5
-      md5: 7360b7d4bf4cb00ee46afc754a5e1902
-      size: 16704
+      md5: 869f33bd12ef633b3e6d6178a8220e0e
+      size: 24326
     - path: Figures/cp_curves.pdf
       hash: md5
-      md5: 08b18cd71ebf0709fb277047d746a584
-      size: 17390
+      md5: 332e2e337a4ca1f79468a049cd3aac7b
+      size: 23988
   plot-wake-profiles:
     cmd: calkit runenv -n main python plot.py wake_profiles --save --no-show
     deps:
@@ -84,25 +84,25 @@ stages:
       nfiles: 19
     - path: Dockerfile-lock.json
       hash: md5
-      md5: 78c4abfbc49f62835aebd8064104af3a
-      size: 2077
+      md5: 8b1a5ee411f6ff5af49f3bde93f73e63
+      size: 2114
     - path: plot.py
       hash: md5
       md5: ce7e27bd5ab6aa407723c4002889a705
       size: 3744
     - path: pyrvatrd/plotting.py
       hash: md5
-      md5: b63cc156587d5be7de7222eed8325199
-      size: 51152
+      md5: e90890da327e31b882ce40fd1ea3b737
+      size: 47644
     - path: pyrvatrd/processing.py
       hash: md5
-      md5: d2048d99170f2e00691e3aee209841f4
-      size: 36283
+      md5: 1a1ee7e44eb287199e4c9c0eec3bd6a3
+      size: 35800
     outs:
     - path: Figures/mean_u_k_profiles.pdf
       hash: md5
-      md5: 210a59a3b1c5eec840ae56f944aa2e62
-      size: 21762
+      md5: 4f821a7cd74aab4eaf6ef3582acf0fca
+      size: 27652
   plot-k-bar-graph:
     cmd: calkit runenv -n main python plot.py k_bar_graph --save --no-show
     deps:
@@ -113,25 +113,25 @@ stages:
       nfiles: 19
     - path: Dockerfile-lock.json
       hash: md5
-      md5: 78c4abfbc49f62835aebd8064104af3a
-      size: 2077
+      md5: 8b1a5ee411f6ff5af49f3bde93f73e63
+      size: 2114
     - path: plot.py
       hash: md5
       md5: ce7e27bd5ab6aa407723c4002889a705
       size: 3744
     - path: pyrvatrd/plotting.py
       hash: md5
-      md5: b63cc156587d5be7de7222eed8325199
-      size: 51152
+      md5: e90890da327e31b882ce40fd1ea3b737
+      size: 47644
     - path: pyrvatrd/processing.py
       hash: md5
-      md5: d2048d99170f2e00691e3aee209841f4
-      size: 36283
+      md5: 1a1ee7e44eb287199e4c9c0eec3bd6a3
+      size: 35800
     outs:
     - path: Figures/K_trans_bar_graph.pdf
       hash: md5
-      md5: 97e0c5055d9099ebfdc8252b947ad758
-      size: 18522
+      md5: bad2476a58b959dad3af76385a5f6103
+      size: 30823
   plot-mom-bar-graph:
     cmd: calkit runenv -n main python plot.py mom_bar_graph --save --no-show
     deps:
@@ -142,25 +142,25 @@ stages:
       nfiles: 19
     - path: Dockerfile-lock.json
       hash: md5
-      md5: 78c4abfbc49f62835aebd8064104af3a
-      size: 2077
+      md5: 8b1a5ee411f6ff5af49f3bde93f73e63
+      size: 2114
     - path: plot.py
       hash: md5
       md5: ce7e27bd5ab6aa407723c4002889a705
       size: 3744
     - path: pyrvatrd/plotting.py
       hash: md5
-      md5: b63cc156587d5be7de7222eed8325199
-      size: 51152
+      md5: e90890da327e31b882ce40fd1ea3b737
+      size: 47644
     - path: pyrvatrd/processing.py
       hash: md5
-      md5: d2048d99170f2e00691e3aee209841f4
-      size: 36283
+      md5: 1a1ee7e44eb287199e4c9c0eec3bd6a3
+      size: 35800
     outs:
     - path: Figures/mom_bar_graph.pdf
       hash: md5
-      md5: 71f3dffc7e85488f0c4d1c54f420a878
-      size: 19757
+      md5: 445da154de047dd607d52fb77cd29836
+      size: 32008
   plot-mean-cont-quiv:
     cmd: calkit runenv -n main python plot.py all_meancontquiv --save --no-show
     deps:
@@ -171,41 +171,41 @@ stages:
       nfiles: 19
     - path: Dockerfile-lock.json
       hash: md5
-      md5: 78c4abfbc49f62835aebd8064104af3a
-      size: 2077
+      md5: 8b1a5ee411f6ff5af49f3bde93f73e63
+      size: 2114
     - path: plot.py
       hash: md5
       md5: ce7e27bd5ab6aa407723c4002889a705
       size: 3744
     - path: pyrvatrd/plotting.py
       hash: md5
-      md5: b63cc156587d5be7de7222eed8325199
-      size: 51152
+      md5: e90890da327e31b882ce40fd1ea3b737
+      size: 47644
     - path: pyrvatrd/processing.py
       hash: md5
-      md5: d2048d99170f2e00691e3aee209841f4
-      size: 36283
+      md5: 1a1ee7e44eb287199e4c9c0eec3bd6a3
+      size: 35800
     outs:
     - path: Figures/meancontquiv_04.pdf
       hash: md5
-      md5: 2aaac7ea029eff0dbbfc018c32ad208a
-      size: 42045
+      md5: 6bb0224f51b790ddf917bd00cf267c1b
+      size: 48735
     - path: Figures/meancontquiv_06.pdf
       hash: md5
-      md5: cb385a729c725122950e0691421c47a2
-      size: 41918
+      md5: 8cafc0a2e28766823c17d5e70b7974d7
+      size: 48582
     - path: Figures/meancontquiv_08.pdf
       hash: md5
-      md5: be13b50df3d61fb7f3c3b2b6f46605c6
-      size: 42408
+      md5: 7ec83c46a665d1c2bd7984049fa9f069
+      size: 49162
     - path: Figures/meancontquiv_10.pdf
       hash: md5
-      md5: 11e6e445fe44a39823e599e5b95da6f0
-      size: 42396
+      md5: 53d78d43bdb419ff92f668c220880218
+      size: 49033
     - path: Figures/meancontquiv_12.pdf
       hash: md5
-      md5: b4e6361f902cfcb357e5705654921267
-      size: 42439
+      md5: e1aebd14263c394301cdfb0410627395
+      size: 49114
   plot-k-contours:
     cmd: calkit runenv -n main python plot.py all_kcont --save --no-show
     deps:
@@ -216,41 +216,41 @@ stages:
       nfiles: 19
     - path: Dockerfile-lock.json
       hash: md5
-      md5: 78c4abfbc49f62835aebd8064104af3a
-      size: 2077
+      md5: 8b1a5ee411f6ff5af49f3bde93f73e63
+      size: 2114
     - path: plot.py
       hash: md5
       md5: ce7e27bd5ab6aa407723c4002889a705
       size: 3744
     - path: pyrvatrd/plotting.py
       hash: md5
-      md5: b63cc156587d5be7de7222eed8325199
-      size: 51152
+      md5: e90890da327e31b882ce40fd1ea3b737
+      size: 47644
     - path: pyrvatrd/processing.py
       hash: md5
-      md5: d2048d99170f2e00691e3aee209841f4
-      size: 36283
+      md5: 1a1ee7e44eb287199e4c9c0eec3bd6a3
+      size: 35800
     outs:
     - path: Figures/k_contours_04.pdf
       hash: md5
-      md5: d7220e800dcf25ca9dd5c5648585fea2
-      size: 20188
+      md5: 2dae118046be6910816ab51406d71a29
+      size: 27008
     - path: Figures/k_contours_06.pdf
       hash: md5
-      md5: 7b058751a0d2d7c3149eb4daa0ae9449
-      size: 20439
+      md5: 1f2504f191a37854bd61beb120985cc7
+      size: 27259
     - path: Figures/k_contours_08.pdf
       hash: md5
-      md5: 65673aef45fb81e55df05564d5fe2925
-      size: 20178
+      md5: 016c6269751082b32b23672afcd58d52
+      size: 26983
     - path: Figures/k_contours_10.pdf
       hash: md5
-      md5: adc477e4c6891f0cc623d02c91851bd2
-      size: 20043
+      md5: 3ee698fd4e257349ddeba9d80afda695
+      size: 26889
     - path: Figures/k_contours_12.pdf
       hash: md5
-      md5: 99c4df8c65100d06309cb1bdf1750152
-      size: 20060
+      md5: 1a052db5ce615de72138e7a6aa611ee1
+      size: 26927
   plot-wake-spectra:
     cmd: calkit runenv -n main python plot.py multi_spec --save --no-show
     deps:
@@ -266,25 +266,25 @@ stages:
       nfiles: 42
     - path: Dockerfile-lock.json
       hash: md5
-      md5: 78c4abfbc49f62835aebd8064104af3a
-      size: 2077
+      md5: 8b1a5ee411f6ff5af49f3bde93f73e63
+      size: 2114
     - path: plot.py
       hash: md5
       md5: ce7e27bd5ab6aa407723c4002889a705
       size: 3744
     - path: pyrvatrd/plotting.py
       hash: md5
-      md5: b63cc156587d5be7de7222eed8325199
-      size: 51152
+      md5: e90890da327e31b882ce40fd1ea3b737
+      size: 47644
     - path: pyrvatrd/processing.py
       hash: md5
-      md5: d2048d99170f2e00691e3aee209841f4
-      size: 36283
+      md5: 1a1ee7e44eb287199e4c9c0eec3bd6a3
+      size: 35800
     outs:
     - path: Figures/wake_spectra.pdf
       hash: md5
-      md5: eb4e2f48f15b83c136459ddb717a8960
-      size: 152032
+      md5: 243667063c9b97f332877b3df0d4c16b
+      size: 164192
   plot-wake-trans-totals:
     cmd: calkit runenv -n main python plot.py wake_trans_totals --save --no-show
     deps:
@@ -295,25 +295,25 @@ stages:
       nfiles: 19
     - path: Dockerfile-lock.json
       hash: md5
-      md5: 78c4abfbc49f62835aebd8064104af3a
-      size: 2077
+      md5: 8b1a5ee411f6ff5af49f3bde93f73e63
+      size: 2114
     - path: plot.py
       hash: md5
       md5: ce7e27bd5ab6aa407723c4002889a705
       size: 3744
     - path: pyrvatrd/plotting.py
       hash: md5
-      md5: b63cc156587d5be7de7222eed8325199
-      size: 51152
+      md5: e90890da327e31b882ce40fd1ea3b737
+      size: 47644
     - path: pyrvatrd/processing.py
       hash: md5
-      md5: d2048d99170f2e00691e3aee209841f4
-      size: 36283
+      md5: 1a1ee7e44eb287199e4c9c0eec3bd6a3
+      size: 35800
     outs:
     - path: Figures/wake_trans_totals.pdf
       hash: md5
-      md5: 47cb33659e612fbcbd970f6c72f2f50d
-      size: 16244
+      md5: 7a6cab46388ede021cee2fc504fb0f43
+      size: 19601
   make-vel-unc-table:
     cmd: calkit runenv -n main python plot.py vel_unc_table --save --no-show
     deps:
@@ -324,20 +324,20 @@ stages:
       nfiles: 19
     - path: Dockerfile-lock.json
       hash: md5
-      md5: 78c4abfbc49f62835aebd8064104af3a
-      size: 2077
+      md5: 8b1a5ee411f6ff5af49f3bde93f73e63
+      size: 2114
     - path: plot.py
       hash: md5
       md5: ce7e27bd5ab6aa407723c4002889a705
       size: 3744
     - path: pyrvatrd/plotting.py
       hash: md5
-      md5: b63cc156587d5be7de7222eed8325199
-      size: 51152
+      md5: e90890da327e31b882ce40fd1ea3b737
+      size: 47644
     - path: pyrvatrd/processing.py
       hash: md5
-      md5: d2048d99170f2e00691e3aee209841f4
-      size: 36283
+      md5: 1a1ee7e44eb287199e4c9c0eec3bd6a3
+      size: 35800
     outs:
     - path: Tables/mean_vel_unc.csv
       hash: md5
