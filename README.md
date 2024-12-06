@@ -24,6 +24,12 @@ After that, call `calkit run`.
 
 ## Reusing these materials
 
+The statistical data can be read from the CSVs in the `Data/Processed`
+directory.
+Each file in there is named according to which "section" of the experiment
+it corresponds to (performance or wake measurements,)
+and the tow speed at which it was performed.
+
 If you'd like to reuse some of the data loading and plotting functionality
 in other Python code outside this project,
 add it as a Git submodule in your own repo with:
