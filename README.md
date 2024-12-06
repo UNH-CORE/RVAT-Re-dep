@@ -4,7 +4,7 @@ This repository contains the processing and plotting code, as well as the
 derived dataset from the UNH-RVAT Reynolds number dependence experiment
 performed in Spring 2014.
 
-## Getting started
+## Reproducing these results
 
 You will need
 [Calkit](https://github.com/calkit/calkit)
@@ -20,15 +20,22 @@ Clone this repository with:
 calkit clone https://github.com/UNH-CORE/RVAT-Re-dep.git
 ```
 
-Alternatively, if you don't need to be able to pull the raw data
-or figures, you can use `git clone` instead of `calkit clone`.
+After that, call `calkit run`.
+
+## Reusing these materials
 
 If you'd like to reuse some of the data loading and plotting functionality
 in other Python code outside this project,
-install the Python package in local mode with:
+add it as a Git submodule in your own repo with:
 
 ```sh
-pip install -e .
+git submodule add https://github.com/UNH-CORE/RVAT-Re-dep rvat-re-dep
+```
+
+then install the Python package in local mode with:
+
+```sh
+pip install -e ./rvat-re-dep
 ```
 
 You'll then be able to run code like:
